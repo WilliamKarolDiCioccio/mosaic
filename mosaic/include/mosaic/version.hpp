@@ -1,0 +1,7 @@
+#pragma once
+
+#define _MOSAIC_VERSION_MAJOR 0
+#define _MOSAIC_VERSION_MINOR 0
+#define _MOSAIC_VERSION_PATCH 1
+#define _MOSAIC_VERSION_TWEAK
+#define _MOSAIC_VERSION "0.0.1"

@@ -1,0 +1,58 @@
+# Ignore build directories
+/build/
+/out/
+
+# Ignore Visual Studio workspace files
+*.vs
+
+# Ignore Visual Studio temporary files
+*.obj
+*.pch
+*.idb
+*.pdb
+*.ipch
+*.aps
+*.ncb
+*.sdf
+*.cache
+*.ilk
+*.log
+*.tlog
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# Ignore Visual Studio Code personal settings
+.vscode/settings.json
+
+# Ignore CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# ingore vcpkg installed packages
+vcpkg_installed/
+
+# Ignore compiled dynamic libraries
+*.dll
+*.so
+*.dylib
+
+# Ignore compiled static libraries
+*.lib
+*.a
+
+# Ignore executable files
+*.exe
+*.out
+*.app
+
+# Ignore other temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+*.dir

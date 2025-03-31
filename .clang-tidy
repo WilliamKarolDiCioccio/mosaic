@@ -1,0 +1,56 @@
+Checks:          '-*,clang-analyzer-*,cppcoreguidelines-*,modernize-*,misc-*,performance-*,readability-*,bugprone-*,cert-*,llvm-*,google-*,hicpp-*,performance-*,fuchsia-*,portability-*,build-*,android-*,safety-*,concurrency-*,testing-*,cert-*,cppcoreguidelines-*'
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+FormatStyle:     file
+CheckOptions:
+  - key:             'clang-analyzer-core.uninitialized.UndefReturnValue'
+    value:           '1'  # Ensures that uninitialized variables in return are flagged.
+  - key:             'cppcoreguidelines-pro-type-reinterpret-cast'
+    value:           '1'  # Prohibits reinterpret_casts in favor of safer alternatives.
+  - key:             'cppcoreguidelines-pro-type-static-cast-downcast'
+    value:           '1'  # Encourages static_cast for downcasting, avoiding unsafe casts.
+  - key:             'cppcoreguidelines-no-malloc'
+    value:           '1'  # Replaces raw memory allocation with safer alternatives.
+  - key:             'modernize-use-auto'
+    value:           '1'  # Encourage using `auto` for type inference.
+  - key:             'modernize-use-nullptr'
+    value:           '1'  # Replaces `NULL` with `nullptr`.
+  - key:             'google-runtime-references'
+    value:           '1'  # Encourages passing by reference to avoid unnecessary copies.
+  - key:             'llvm-header-guard'
+    value:           '1'  # Enforces header guards in headers.
+  - key:             'performance-for-range-copy'
+    value:           '1'  # Flags unnecessary copying of ranges in loops.
+  - key:             'performance-move-const-arg'
+    value:           '1'  # Flags unnecessary copies when passing const arguments by value.
+  - key:             'misc-unused-parameters'
+    value:           '1'  # Warns about unused parameters in functions.
+  - key:             'misc-misplaced-const'
+    value:           '1'  # Enforces proper use of `const` and prevents accidental mutation.
+  - key:             'bugprone-sizeof-expression'
+    value:           '1'  # Flags incorrect use of `sizeof` expressions.
+  - key:             'bugprone-integer-division'
+    value:           '1'  # Flags integer division in cases where floating point division might be more appropriate.
+  - key:             'bugprone-undefined-memory-manipulation'
+    value:           '1'  # Warns about memory manipulation that might cause undefined behavior.
+  - key:             'cert-dcl50-cpp'
+    value:           '1'  # Enforces rule on proper initialization of variables.
+  - key:             'google-readability-namespace'
+    value:           '1'  # Enforces appropriate use of namespaces and prevents excessive namespace scope.
+  - key:             'readability-braces-around-statements'
+    value:           '1'  # Ensures braces around all control statements for readability.
+  - key:             'readability-implicit-bool-conversion'
+    value:           '1'  # Avoid implicit boolean conversions, encourage explicit checks.
+  - key:             'readability-named-parameter'
+    value:           '1'  # Flags unnamed function parameters to improve readability.
+  - key:             'portability-extend-constexpr'
+    value:           '1'  # Encourages the use of `constexpr` to enable more optimizations.
+  - key:             'fuchsia-overloaded-operator'
+    value:           '1'  # Flags overly complex or confusing overloaded operators.
+  - key:             'safety-assert-macros'
+    value:           '1'  # Warns about potential issues with assert macros.
+  - key:             'concurrency-mutex'
+    value:           '1'  # Flags the improper use of mutexes that could lead to concurrency issues.
+  - key:             'testing-unused-function-argument'
+    value:           '1'  # Warns about unused function arguments in test functions.

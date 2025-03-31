@@ -1,0 +1,6 @@
+[submodule "vendor/webgpu"]
+	path = vendor/webgpu
+	url = https://github.com/eliemichel/WebGPU-distribution.git
+[submodule "vendor/glfw3webgpu"]
+	path = vendor/glfw3webgpu
+	url = https://github.com/WilliamKarolDiCioccio/glfw3webgpu
