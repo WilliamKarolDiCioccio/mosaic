@@ -1,6 +1,6 @@
 #include "web_gpu_instance.hpp"
 
-namespace mosaic::graphics
+namespace mosaic::graphics::webgpu
 {
 
 WGPUInstance createInstance()

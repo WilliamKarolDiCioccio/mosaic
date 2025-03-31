@@ -2,7 +2,7 @@
 
 #include "shared.hpp"
 
-namespace mosaic::graphics
+namespace mosaic::graphics::webgpu
 {
 
 void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _surface,

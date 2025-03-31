@@ -12,7 +12,7 @@ void Renderer::setAPI(RendererAPIType _apiType)
     switch (_apiType)
     {
         case RendererAPIType::WebGPU:
-            s_rendererAPI = std::make_unique<WebGPURendererAPI>();
+            s_rendererAPI = std::make_unique<webgpu::WebGPURendererAPI>();
             break;
     }
 }

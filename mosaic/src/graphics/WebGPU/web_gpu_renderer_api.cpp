@@ -7,7 +7,7 @@
 #include "web_gpu_commands.hpp"
 #include "web_gpu_swapchain.hpp"
 
-namespace mosaic::graphics
+namespace mosaic::graphics::webgpu
 {
 
 void WebGPURendererAPI::initialize(const Window& _window)

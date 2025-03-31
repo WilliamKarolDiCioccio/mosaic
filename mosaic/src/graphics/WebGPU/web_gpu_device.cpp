@@ -1,6 +1,6 @@
 #include "web_gpu_device.hpp"
 
-namespace mosaic::graphics
+namespace mosaic::graphics::webgpu
 {
 
 WGPUAdapter requestAdapter(WGPUInstance _instance, WGPUSurface _surface)
@@ -172,4 +172,4 @@ WGPUDevice createDevice(WGPUAdapter adapter)
     return userData.device;
 }
 
-} // namespace mosaic::graphics
+} // namespace mosaic::graphics::webgpu

@@ -3,7 +3,7 @@
 #include "mosaic/graphics/renderer_api.hpp"
 #include "shared.hpp"
 
-namespace mosaic::graphics
+namespace mosaic::graphics::webgpu
 {
 
 class WebGPURendererAPI : public RendererAPI
@@ -30,4 +30,4 @@ class WebGPURendererAPI : public RendererAPI
     WGPUQueue m_presentQueue = nullptr;
 };
 
-} // namespace mosaic::graphics
+} // namespace mosaic::graphics::webgpu

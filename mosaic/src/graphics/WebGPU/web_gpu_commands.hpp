@@ -2,7 +2,7 @@
 
 #include "shared.hpp"
 
-namespace mosaic::graphics
+namespace mosaic::graphics::webgpu
 {
 
 WGPUCommandEncoder createCommandEncoder(WGPUDevice _device, const char* _label);
