@@ -4,90 +4,27 @@
 
 #include "web_gpu_device.hpp"
 #include "web_gpu_instance.hpp"
+#include "web_gpu_commands.hpp"
+#include "web_gpu_swapchain.hpp"
 
 namespace mosaic::graphics
 {
 
-template <typename T>
-bool contains(const T* vec, size_t size, T target)
-{
-    return std::find(vec, vec + size, target) != (vec + size);
-}
-
 void WebGPURendererAPI::initialize(const Window& _window)
 {
-    WGPUInstanceDescriptor desc = {};
-    desc.nextInChain = nullptr;
-
     m_instance = createInstance();
 
     m_surface = glfwCreateWindowWGPUSurface(m_instance, _window.getNativeWindow());
 
-    WGPURequestAdapterOptions adapterOpts = {};
-    adapterOpts.nextInChain = nullptr;
-    adapterOpts.compatibleSurface = m_surface;
+    m_adapter = requestAdapter(m_instance, m_surface);
 
-    m_adapter = requestAdapterSync(m_instance, adapterOpts);
-
-    if (!m_adapter)
-    {
-        MOSAIC_ERROR("Could not request WebGPU adapter!");
-        return;
-    }
-
-    WGPUAdapterInfo infos = {};
-    infos.nextInChain = nullptr;
-
-    if (!isAdapterSuitable(m_adapter, infos))
+    if (!isAdapterSuitable(m_adapter))
     {
         MOSAIC_ERROR("WebGPU adapter is not suitable!");
         return;
     }
 
-    WGPUDeviceLostCallback onDeviceLost = [](const WGPUDevice* _device,
-                                             WGPUDeviceLostReason _reason, WGPUStringView _message,
-                                             void* _userData1, void* _userData2)
-    { MOSAIC_ERROR("WebGPU device lost: {}", _message.data); };
-
-    WGPUDeviceLostCallbackInfo onDeviceLostCallbackInfo = {
-        .callback = onDeviceLost,
-        .userdata1 = nullptr,
-        .userdata2 = nullptr,
-    };
-
-    WGPUUncapturedErrorCallback onDeviceError = [](const WGPUDevice* _device, WGPUErrorType _type,
-                                                   WGPUStringView _message, void* _userData1,
-                                                   void* _userData2)
-    {
-        switch (_type)
-        {
-            case WGPUErrorType_Validation:
-                MOSAIC_ERROR("WebGPU validation error: {}", _message.data);
-                break;
-            case WGPUErrorType_OutOfMemory:
-                MOSAIC_ERROR("WebGPU out of memory: {}", _message.data);
-                break;
-            case WGPUErrorType_Unknown:
-                MOSAIC_ERROR("WebGPU unknown error: {}", _message.data);
-                break;
-            default:
-                MOSAIC_ERROR("WebGPU error: {}", _message.data);
-                break;
-        }
-    };
-
-    WGPUUncapturedErrorCallbackInfo uncapturedErrorCallbackInfo = {
-        .callback = onDeviceError,
-        .userdata1 = nullptr,
-        .userdata2 = nullptr,
-    };
-
-    WGPUDeviceDescriptor deviceDesc = {};
-    deviceDesc.nextInChain = nullptr;
-    deviceDesc.deviceLostCallbackInfo = onDeviceLostCallbackInfo;
-    deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
-
-    m_device = requestDeviceSync(m_adapter, deviceDesc);
+    m_device = createDevice(m_adapter);
 
     m_presentQueue = wgpuDeviceGetQueue(m_device);
 
@@ -125,41 +62,7 @@ void WebGPURendererAPI::initialize(const Window& _window)
 
     wgpuQueueOnSubmittedWorkDone(m_presentQueue, workDoneCallbackInfo);
 
-    WGPUSurfaceCapabilities surfaceCapabilities;
-
-    if (wgpuSurfaceGetCapabilities(m_surface, m_adapter, &surfaceCapabilities) !=
-        WGPUStatus_Success)
-    {
-        MOSAIC_ERROR("Could not get WebGPU surface capabilities!");
-        return;
-    }
-
-    if (!contains(surfaceCapabilities.formats, surfaceCapabilities.formatCount,
-                  WGPUTextureFormat_RGBA8UnormSrgb))
-    {
-        MOSAIC_ERROR("WebGPU surface does not support RGBA8UnormSrgb!");
-        return;
-    }
-
-    if (!(surfaceCapabilities.usages & WGPUTextureUsage_RenderAttachment))
-    {
-        MOSAIC_ERROR("Surface texture does not support RenderAttachment usage!");
-        return;
-    }
-
-    WGPUSurfaceConfiguration config = {};
-    config.nextInChain = nullptr;
-    config.width = _window.getSize().x;
-    config.height = _window.getSize().y;
-    config.format = WGPUTextureFormat_RGBA8UnormSrgb;
-    config.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
-    config.device = m_device;
-    config.presentMode = WGPUPresentMode_Fifo;
-    config.alphaMode = WGPUCompositeAlphaMode_Auto;
-    config.viewFormatCount = 0;
-    config.viewFormats = nullptr;
-
-    wgpuSurfaceConfigure(m_surface, &config);
+    configureSwapchain(m_adapter, m_device, m_surface, _window);
 
     wgpuAdapterRelease(m_adapter);
 }
@@ -205,7 +108,19 @@ WGPUTextureView WebGPURendererAPI::getNextSurfaceTextureView()
     return targetView;
 }
 
-void WebGPURendererAPI::clearScreen()
+void WebGPURendererAPI::pollDevice(int _times)
+{
+    for (int i = 0; i < _times; ++i)
+    {
+#if defined(WEBGPU_BACKEND_DAWN)
+        wgpuDeviceTick(m_device);
+#elif defined(WEBGPU_BACKEND_WGPU)
+        wgpuDevicePoll(m_device, false, nullptr);
+#endif
+    }
+}
+
+void WebGPURendererAPI::beginFrame()
 {
     WGPUTextureView targetView = getNextSurfaceTextureView();
 
@@ -217,66 +132,36 @@ void WebGPURendererAPI::clearScreen()
 
     std::vector<WGPUCommandBuffer> commands;
 
-    WGPUCommandEncoderDescriptor encoderDesc = {};
-    encoderDesc.nextInChain = nullptr;
-    encoderDesc.label = WGPUStringView("Clear Screen Encoder", 21);
+    WGPUCommandEncoder encoder = createCommandEncoder(m_device, "Clear Screen Encoder");
 
-    WGPUCommandEncoder encoder = wgpuDeviceCreateCommandEncoder(m_device, &encoderDesc);
+    WGPURenderPassEncoder renderPass =
+        beginRenderPass(encoder, targetView, {0.25f, 0.1f, 0.5f, 1.0f});
 
-    WGPURenderPassColorAttachment renderPassColorAttachment = {};
-    renderPassColorAttachment.view = targetView;
-    renderPassColorAttachment.resolveTarget = nullptr;
-    renderPassColorAttachment.loadOp = WGPULoadOp_Clear;
-    renderPassColorAttachment.storeOp = WGPUStoreOp_Store;
-    renderPassColorAttachment.clearValue = WGPUColor{0.1f, 0.1f, 0.1f, 1.0f};
+    // Draw calls go here...
 
-#ifndef WEBGPU_BACKEND_WGPU
-    renderPassColorAttachment.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
-#endif
-
-    WGPURenderPassDescriptor renderPassDesc = {};
-    renderPassDesc.nextInChain = nullptr;
-    renderPassDesc.colorAttachmentCount = 1;
-    renderPassDesc.colorAttachments = &renderPassColorAttachment;
-    renderPassDesc.depthStencilAttachment = nullptr;
-    renderPassDesc.timestampWrites = nullptr;
-
-    WGPURenderPassEncoder renderPass = wgpuCommandEncoderBeginRenderPass(encoder, &renderPassDesc);
-
-    wgpuRenderPassEncoderEnd(renderPass);
-    wgpuRenderPassEncoderRelease(renderPass);
+    endRenderPass(renderPass);
 
     WGPUCommandBufferDescriptor cmdBufferDescriptor = {};
     cmdBufferDescriptor.nextInChain = nullptr;
     cmdBufferDescriptor.label = WGPUStringView("Command buffer", 15);
 
-    WGPUCommandBuffer command = wgpuCommandEncoderFinish(encoder, &cmdBufferDescriptor);
-
-    wgpuCommandEncoderRelease(encoder);
+    WGPUCommandBuffer command = createCommandBuffer(encoder, cmdBufferDescriptor);
 
     commands.push_back(command);
 
-    wgpuQueueSubmit(m_presentQueue, commands.size(), commands.data());
+    submitCommands(m_presentQueue, commands);
 
-    for (auto cmd : commands)
-    {
-        wgpuCommandBufferRelease(cmd);
-    }
-
-    for (int i = 0; i < 5; ++i)
-    {
-        MOSAIC_INFO("Polling device...");
-
-#if defined(WEBGPU_BACKEND_DAWN)
-        wgpuDeviceTick(m_device);
-#elif defined(WEBGPU_BACKEND_WGPU)
-        wgpuDevicePoll(m_device, false, nullptr);
-#endif
-    }
+    pollDevice();
 
     wgpuTextureViewRelease(targetView);
 
     wgpuSurfacePresent(m_surface);
 }
+
+void WebGPURendererAPI::updateResources() {}
+
+void WebGPURendererAPI::drawScene() {}
+
+void WebGPURendererAPI::endFrame() {}
 
 } // namespace mosaic::graphics

@@ -7,6 +7,8 @@ set(FRAMEWORK_SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_device.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_renderer_api.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/renderer.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_commands.cpp" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_swapchain.cpp"
 )
 
 add_library(mosaic SHARED ${FRAMEWORK_SRC})

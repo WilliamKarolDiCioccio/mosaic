@@ -29,7 +29,7 @@ class TestbedApplication : public mosaic::core::Application
             return shutdown();
         }
 
-        m_renderer.clearScreen();
+        m_renderer.render();
 
         m_window.update();
     }

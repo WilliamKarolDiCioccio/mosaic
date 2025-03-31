@@ -24,7 +24,7 @@ class MOSAIC_API Renderer
 
     void setAPI(RendererAPIType _apiType);
     void initialize(const Window& _window);
-    void clearScreen();
+    void render();
 };
 
 } // namespace mosaic::graphics

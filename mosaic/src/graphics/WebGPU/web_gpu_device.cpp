@@ -3,7 +3,7 @@
 namespace mosaic::graphics
 {
 
-WGPUAdapter requestAdapterSync(WGPUInstance _instance, WGPURequestAdapterOptions& _options)
+WGPUAdapter requestAdapter(WGPUInstance _instance, WGPUSurface _surface)
 {
     struct UserData
     {
@@ -37,14 +37,18 @@ WGPUAdapter requestAdapterSync(WGPUInstance _instance, WGPURequestAdapterOptions
         .userdata2 = nullptr,
     };
 
-    wgpuInstanceRequestAdapter(_instance, &_options, callbackInfo);
+    WGPURequestAdapterOptions adapterOpts = {};
+    adapterOpts.nextInChain = nullptr;
+    adapterOpts.compatibleSurface = _surface;
+
+    wgpuInstanceRequestAdapter(_instance, &adapterOpts, callbackInfo);
 
     assert(userData.requestEnded);
 
     return userData.adapter;
 }
 
-bool isAdapterSuitable(WGPUAdapter _adapter, WGPUAdapterInfo& _infos)
+bool isAdapterSuitable(WGPUAdapter _adapter)
 {
     WGPULimits supportedLimits;
     supportedLimits.nextInChain = nullptr;
@@ -71,16 +75,20 @@ bool isAdapterSuitable(WGPUAdapter _adapter, WGPUAdapterInfo& _infos)
         return false;
     }
 
-    wgpuAdapterGetInfo(_adapter, &_infos);
+    WGPUAdapterInfo infos;
 
-    MOSAIC_INFO("WebGPU adapter device: {}", _infos.device.data);
-    MOSAIC_INFO("WebGPU adapter vendor: {}", _infos.vendor.data);
-    MOSAIC_INFO("WebGPU adapter backendType: {}", static_cast<int>(_infos.backendType));
+    wgpuAdapterGetInfo(_adapter, &infos);
+
+    MOSAIC_INFO("WebGPU adapter device: {}", infos.device.data);
+    MOSAIC_INFO("WebGPU adapter vendor: {}", infos.vendor.data);
+    MOSAIC_INFO("WebGPU adapter description: {}", infos.description.data);
+    MOSAIC_INFO("WebGPU adapter type: {}", static_cast<int>(infos.adapterType));
+    MOSAIC_INFO("WebGPU adapter backendType: {}", static_cast<int>(infos.backendType));
 
     return true;
 }
 
-WGPUDevice requestDeviceSync(WGPUAdapter adapter, WGPUDeviceDescriptor& descriptor)
+WGPUDevice createDevice(WGPUAdapter adapter)
 {
     struct UserData
     {
@@ -108,13 +116,56 @@ WGPUDevice requestDeviceSync(WGPUAdapter adapter, WGPUDeviceDescriptor& descript
         userData1.requestEnded = true;
     };
 
+    WGPUDeviceLostCallback onDeviceLost = [](const WGPUDevice* _device,
+                                             WGPUDeviceLostReason _reason, WGPUStringView _message,
+                                             void* _userData1, void* _userData2)
+    { MOSAIC_ERROR("WebGPU device lost: {}", _message.data); };
+
+    WGPUDeviceLostCallbackInfo onDeviceLostCallbackInfo = {
+        .callback = onDeviceLost,
+        .userdata1 = nullptr,
+        .userdata2 = nullptr,
+    };
+
+    WGPUUncapturedErrorCallback onDeviceError = [](const WGPUDevice* _device, WGPUErrorType _type,
+                                                   WGPUStringView _message, void* _userData1,
+                                                   void* _userData2)
+    {
+        switch (_type)
+        {
+            case WGPUErrorType_Validation:
+                MOSAIC_ERROR("WebGPU validation error: {}", _message.data);
+                break;
+            case WGPUErrorType_OutOfMemory:
+                MOSAIC_ERROR("WebGPU out of memory: {}", _message.data);
+                break;
+            case WGPUErrorType_Unknown:
+                MOSAIC_ERROR("WebGPU unknown error: {}", _message.data);
+                break;
+            default:
+                MOSAIC_ERROR("WebGPU error: {}", _message.data);
+                break;
+        }
+    };
+
+    WGPUUncapturedErrorCallbackInfo uncapturedErrorCallbackInfo = {
+        .callback = onDeviceError,
+        .userdata1 = nullptr,
+        .userdata2 = nullptr,
+    };
+
     WGPURequestDeviceCallbackInfo callbackInfo = {
         .callback = onDeviceRequestEnded,
         .userdata1 = (void*)&userData,
         .userdata2 = nullptr,
     };
 
-    wgpuAdapterRequestDevice(adapter, &descriptor, callbackInfo);
+    WGPUDeviceDescriptor deviceDesc = {};
+    deviceDesc.nextInChain = nullptr;
+    deviceDesc.deviceLostCallbackInfo = onDeviceLostCallbackInfo;
+    deviceDesc.uncapturedErrorCallbackInfo = uncapturedErrorCallbackInfo;
+
+    wgpuAdapterRequestDevice(adapter, &deviceDesc, callbackInfo);
 
     assert(userData.requestEnded);
 

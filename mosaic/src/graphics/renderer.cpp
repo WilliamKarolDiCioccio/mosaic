@@ -19,6 +19,12 @@ void Renderer::setAPI(RendererAPIType _apiType)
 
 void Renderer::initialize(const Window& _window) { s_rendererAPI->initialize(_window); }
 
-void Renderer::clearScreen() { s_rendererAPI->clearScreen(); }
+void Renderer::render()
+{
+    s_rendererAPI->beginFrame();
+    s_rendererAPI->updateResources();
+    s_rendererAPI->drawScene();
+    s_rendererAPI->endFrame();
+}
 
 } // namespace mosaic::graphics

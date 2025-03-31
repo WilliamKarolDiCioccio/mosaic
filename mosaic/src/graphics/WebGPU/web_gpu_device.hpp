@@ -5,10 +5,10 @@
 namespace mosaic::graphics
 {
 
-WGPUAdapter requestAdapterSync(WGPUInstance _instance, WGPURequestAdapterOptions& _options);
+WGPUAdapter requestAdapter(WGPUInstance _instance, WGPUSurface _surface);
 
-bool isAdapterSuitable(WGPUAdapter _adapter, WGPUAdapterInfo& _infos);
+bool isAdapterSuitable(WGPUAdapter _adapter);
 
-WGPUDevice requestDeviceSync(WGPUAdapter adapter, WGPUDeviceDescriptor& descriptor);
+WGPUDevice createDevice(WGPUAdapter adapter);
 
 } // namespace mosaic::graphics
