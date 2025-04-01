@@ -1,4 +1,4 @@
-#include "web_gpu_renderer_api.hpp"
+#include "webgpu_renderer_api.hpp"
 
 #include <vector>
 

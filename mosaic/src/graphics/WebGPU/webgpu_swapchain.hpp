@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shared.hpp"
+#include "webgpu_common.hpp"
 
 namespace mosaic
 {

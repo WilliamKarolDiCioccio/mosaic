@@ -1,4 +1,4 @@
-#include "web_gpu_swapchain.hpp"
+#include "webgpu_swapchain.hpp"
 
 namespace mosaic
 {

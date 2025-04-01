@@ -3,12 +3,12 @@ set(FRAMEWORK_SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/application.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/core/tracer.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/window.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_instance.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_device.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_renderer_api.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/renderer.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_commands.cpp" 
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_swapchain.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/webgpu_instance.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/webgpu_device.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/webgpu_renderer_api.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/webgpu_commands.cpp" 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/webgpu_swapchain.cpp"
 )
 
 if(DEFINED EMSCRIPTEN)

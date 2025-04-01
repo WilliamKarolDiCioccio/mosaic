@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mosaic/graphics/renderer_api.hpp"
-#include "shared.hpp"
+#include "webgpu_common.hpp"
 
 namespace mosaic
 {

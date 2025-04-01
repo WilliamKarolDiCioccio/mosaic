@@ -1,4 +1,4 @@
-#include "web_gpu_device.hpp"
+#include "webgpu_device.hpp"
 
 namespace mosaic
 {
