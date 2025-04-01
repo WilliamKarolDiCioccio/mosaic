@@ -4,8 +4,17 @@
 
 #include "mosaic/version.h"
 
-namespace mosaic::core
+namespace mosaic
 {
+namespace core
+{
+
+bool TracerManager::s_isInitialized = false;
+std::array<std::string, 2> TracerManager::m_categories = {"function", "scope"};
+nlohmann::json TracerManager::m_data;
+std::string TracerManager::m_tracesPath;
+std::stack<Trace> TracerManager::m_activeTraces;
+std::mutex TracerManager::m_mutex;
 
 bool TracerManager::initialize(const std::string& _tracesDir) noexcept
 {
@@ -72,7 +81,9 @@ void TracerManager::beginTrace(const std::string& _name, TraceCategory _category
         .category = _category,
         .name = _name,
         .threadID = std::hash<std::thread::id>{}(threadID),
-        .start = std::chrono::time_point_cast<std::chrono::microseconds>(start).time_since_epoch().count(),
+        .start = std::chrono::time_point_cast<std::chrono::microseconds>(start)
+                     .time_since_epoch()
+                     .count(),
     };
 
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -90,7 +101,8 @@ void TracerManager::endTrace() noexcept
 
     auto& trace = m_activeTraces.top();
     const auto end = std::chrono::high_resolution_clock::now();
-    trace.end = std::chrono::time_point_cast<std::chrono::microseconds>(end).time_since_epoch().count();
+    trace.end =
+        std::chrono::time_point_cast<std::chrono::microseconds>(end).time_since_epoch().count();
 
     nlohmann::json traceEvent = {
         {"cat", m_categories[(uint8_t)trace.category]},
@@ -106,4 +118,5 @@ void TracerManager::endTrace() noexcept
     m_activeTraces.pop();
 }
 
-} // namespace mosaic::core
+} // namespace core
+} // namespace mosaic

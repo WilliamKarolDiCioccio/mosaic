@@ -5,7 +5,9 @@
 
 #include "mosaic/defines.hpp"
 
-namespace mosaic::core
+namespace mosaic
+{
+namespace core
 {
 
 struct ApplicationState
@@ -22,7 +24,8 @@ struct ApplicationData
     std::string logFilePath;
     std::string traceFilePath;
 
-    ApplicationData(const std::string& _appName, const std::string& _logFilePath, const std::string& _traceFilePath)
+    ApplicationData(const std::string& _appName, const std::string& _logFilePath,
+                    const std::string& _traceFilePath)
         : appName(_appName), logFilePath(_logFilePath), traceFilePath(_traceFilePath) {};
 };
 
@@ -49,8 +52,11 @@ class MOSAIC_API Application
     virtual void onShutdown() = 0;
 
    private:
+    void realUpdate();
+
     ApplicationData m_data;
     ApplicationState m_state;
 };
 
-} // namespace mosaic::core
+} // namespace core
+} // namespace mosaic

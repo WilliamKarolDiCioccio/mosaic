@@ -15,7 +15,9 @@ MOSAIC_DISABLE_ALL_WARNINGS
 #include <nlohmann/json.hpp>
 MOSAIC_POP_WARNINGS
 
-namespace mosaic::core
+namespace mosaic
+{
+namespace core
 {
 
 enum class TraceCategory
@@ -35,13 +37,13 @@ struct Trace
 class TracerManager final
 {
    private:
-    MOSAIC_API static inline bool s_isInitialized = false;
+    MOSAIC_API static bool s_isInitialized;
 
-    static inline std::array<std::string, 2> m_categories = {"function", "scope"};
-    static inline nlohmann::json m_data;
-    static inline std::string m_tracesPath;
-    static inline std::stack<Trace> m_activeTraces;
-    static inline std::mutex m_mutex;
+    static std::array<std::string, 2> m_categories;
+    static nlohmann::json m_data;
+    static std::string m_tracesPath;
+    static std::stack<Trace> m_activeTraces;
+    static std::mutex m_mutex;
 
    private:
     TracerManager() = delete;
@@ -57,7 +59,8 @@ class TracerManager final
     MOSAIC_API static std::shared_ptr<TracerManager> get();
 };
 
-} // namespace mosaic::core
+} // namespace core
+} // namespace mosaic
 
 #define MOSAIC_BEGIN_TRACE(name, category) mosaic::core::TracerManager::beginTrace(name, category)
 #define MOSAIC_END_TRACE() mosaic::core::TracerManager::endTrace()

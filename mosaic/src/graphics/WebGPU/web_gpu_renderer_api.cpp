@@ -7,7 +7,11 @@
 #include "web_gpu_commands.hpp"
 #include "web_gpu_swapchain.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 void WebGPURendererAPI::initialize(const Window& _window)
@@ -155,7 +159,9 @@ void WebGPURendererAPI::beginFrame()
 
     wgpuTextureViewRelease(targetView);
 
+#ifndef __EMSCRIPTEN__
     wgpuSurfacePresent(m_surface);
+#endif
 }
 
 void WebGPURendererAPI::updateResources() {}
@@ -164,4 +170,6 @@ void WebGPURendererAPI::drawScene() {}
 
 void WebGPURendererAPI::endFrame() {}
 
-} // namespace mosaic::graphics
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

@@ -2,8 +2,12 @@
 
 #include "WebGPU/web_gpu_renderer_api.hpp"
 
-namespace mosaic::graphics
+namespace mosaic
 {
+namespace graphics
+{
+
+std::unique_ptr<RendererAPI> Renderer::s_rendererAPI = nullptr;
 
 Renderer::~Renderer() { s_rendererAPI->shutdown(); }
 
@@ -27,4 +31,5 @@ void Renderer::render()
     s_rendererAPI->endFrame();
 }
 
-} // namespace mosaic::graphics
+} // namespace graphics
+} // namespace mosaic

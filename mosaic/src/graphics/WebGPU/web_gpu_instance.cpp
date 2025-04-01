@@ -1,12 +1,16 @@
 #include "web_gpu_instance.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 WGPUInstance createInstance()
 {
-    WGPUInstanceDescriptor desc = {};
-    desc.nextInChain = nullptr;
+    WGPUInstanceDescriptor instanceDesc = {};
+    instanceDesc.nextInChain = nullptr;
 
 #ifdef WEBGPU_BACKEND_DAWN
     WGPUDawnTogglesDescriptor toggles;
@@ -20,7 +24,11 @@ WGPUInstance createInstance()
     desc.nextInChain = &toggles.chain;
 #endif
 
-    WGPUInstance instance = wgpuCreateInstance(&desc);
+#ifdef WEBGPU_BACKEND_EMSCRIPTEN
+    WGPUInstance instance = wgpuCreateInstance(nullptr);
+#else
+    WGPUInstance instance = wgpuCreateInstance(&instanceDesc);
+#endif
 
     if (!instance)
     {
@@ -30,4 +38,6 @@ WGPUInstance createInstance()
     return instance;
 }
 
-} // namespace mosaic::graphics
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

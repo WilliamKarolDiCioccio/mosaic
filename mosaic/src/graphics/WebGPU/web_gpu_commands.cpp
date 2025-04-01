@@ -1,8 +1,10 @@
-#pragma once
-
 #include "web_gpu_commands.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 WGPUCommandEncoder createCommandEncoder(WGPUDevice _device, const char* _label)
@@ -66,4 +68,6 @@ void submitCommands(WGPUQueue _queue, std::vector<WGPUCommandBuffer>& _commands)
     _commands.clear();
 }
 
-} // namespace mosaic::graphics::webgpu
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

@@ -9,13 +9,15 @@ MOSAIC_POP_WARNINGS
 #include <memory>
 #include <string>
 
-namespace mosaic::core
+namespace mosaic
+{
+namespace core
 {
 
 class LoggerManager final
 {
    private:
-    MOSAIC_API static inline bool s_isInitialized = false;
+    MOSAIC_API static bool s_isInitialized;
     MOSAIC_API static std::shared_ptr<spdlog::logger> s_instance;
 
    public:
@@ -25,7 +27,8 @@ class LoggerManager final
     MOSAIC_API static std::shared_ptr<spdlog::logger> get();
 };
 
-} // namespace mosaic::core
+} // namespace core
+} // namespace mosaic
 
 #define MOSAIC_TRACE(...) mosaic::core::LoggerManager::get()->trace(__VA_ARGS__)
 #define MOSAIC_DEBUG(...) mosaic::core::LoggerManager::get()->debug(__VA_ARGS__)

@@ -10,21 +10,27 @@ MOSAIC_POP_WARNINGS
 #include <chrono>
 #include <ctime>
 
-namespace mosaic::core
+namespace mosaic
+{
+namespace core
 {
 
+bool LoggerManager::s_isInitialized = false;
 std::shared_ptr<spdlog::logger> LoggerManager::s_instance = nullptr;
 
-bool LoggerManager::initialize(const std::string& _loggerName, const std::string& _filePath) noexcept
+bool LoggerManager::initialize(const std::string& _loggerName,
+                               const std::string& _filePath) noexcept
 {
     if (s_instance != nullptr) return false;
 
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto stderr_sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
 
-    std::string timestamp = std::to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+    std::string timestamp =
+        std::to_string(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
     std::string log_filename = _filePath + "/log_" + timestamp + ".log";
-    auto file_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(log_filename, 1048576 * 5, 3);
+    auto file_sink =
+        std::make_shared<spdlog::sinks::rotating_file_sink_mt>(log_filename, 1048576 * 5, 3);
 
     stdout_sink->set_level(spdlog::level::info);
     stderr_sink->set_level(spdlog::level::err);
@@ -50,8 +56,10 @@ void LoggerManager::shutdown() noexcept
 
 std::shared_ptr<spdlog::logger> LoggerManager::get()
 {
-    if (!s_instance) throw std::runtime_error("Logger not initialized. Call LoggerManager::initialize() first.");
+    if (!s_instance)
+        throw std::runtime_error("Logger not initialized. Call LoggerManager::initialize() first.");
     return s_instance;
 }
 
-} // namespace mosaic::core
+} // namespace core
+} // namespace mosaic

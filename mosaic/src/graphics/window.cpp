@@ -5,7 +5,9 @@
 
 #include "mosaic/core/logger.hpp"
 
-namespace mosaic::graphics
+namespace mosaic
+{
+namespace graphics
 {
 
 Window::Window(const std::string& _title, glm::vec2 _size) : m_window(nullptr)
@@ -68,4 +70,5 @@ void Window::setSize(glm::vec2 size)
     glfwSetWindowSize(m_window, static_cast<int>(size.x), static_cast<int>(size.y));
 }
 
-} // namespace mosaic::graphics
+} // namespace graphics
+} // namespace mosaic

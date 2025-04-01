@@ -3,7 +3,11 @@
 #include "mosaic/graphics/renderer_api.hpp"
 #include "shared.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 class WebGPURendererAPI : public RendererAPI
@@ -14,10 +18,10 @@ class WebGPURendererAPI : public RendererAPI
 
     void initialize(const Window& _window) override;
     void shutdown() override;
-    void beginFrame();
-    void updateResources();
-    void drawScene();
-    void endFrame();
+    void beginFrame() override;
+    void updateResources() override;
+    void drawScene() override;
+    void endFrame() override;
 
    private:
     WGPUTextureView getNextSurfaceTextureView();
@@ -30,4 +34,6 @@ class WebGPURendererAPI : public RendererAPI
     WGPUQueue m_presentQueue = nullptr;
 };
 
-} // namespace mosaic::graphics::webgpu
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

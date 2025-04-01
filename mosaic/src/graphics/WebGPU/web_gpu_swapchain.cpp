@@ -1,6 +1,10 @@
 #include "web_gpu_swapchain.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _surface,
@@ -43,4 +47,6 @@ void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _s
     wgpuSurfaceConfigure(_surface, &surfaceConfig);
 }
 
-} // namespace mosaic::graphics
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

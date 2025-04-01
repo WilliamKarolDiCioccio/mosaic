@@ -2,7 +2,11 @@
 
 #include "shared.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 WGPUCommandEncoder createCommandEncoder(WGPUDevice _device, const char* _label);
@@ -17,4 +21,6 @@ void endRenderPass(WGPURenderPassEncoder _renderPass);
 
 void submitCommands(WGPUQueue _queue, std::vector<WGPUCommandBuffer>& _commands);
 
-} // namespace mosaic::graphics
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

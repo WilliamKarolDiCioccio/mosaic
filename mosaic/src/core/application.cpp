@@ -6,7 +6,9 @@
 #include "mosaic/core/tracer.hpp"
 #include "mosaic/version.hpp"
 
-namespace mosaic::core
+namespace mosaic
+{
+namespace core
 {
 
 Application::Application(const std::string& _appName, const std::string& _logFilePath,
@@ -39,16 +41,29 @@ void Application::initialize()
     MOSAIC_END_TRACE();
 }
 
+void Application::realUpdate()
+{
+    if (!m_state.isInitialized) return;
+    if (m_state.isPaused) return;
+
+    onUpdate();
+}
+
 void Application::update()
 {
 #ifdef __EMSCRIPTEN__
+    auto callback = [](void* arg)
+    {
+        Application* pApp = reinterpret_cast<Application*>(arg);
+
+        pApp->realUpdate();
+    };
+
+    emscripten_set_main_loop_arg(callback, &app, 0, true);
 #else
     while (m_state.isInitialized && !m_state.isPaused)
     {
-        if (!m_state.isInitialized) return;
-        if (m_state.isPaused) return;
-
-        onUpdate();
+        realUpdate();
     }
 #endif
 }
@@ -91,4 +106,5 @@ void Application::shutdown()
     m_state.isInitialized = false;
 }
 
-} // namespace mosaic::core
+} // namespace core
+} // namespace mosaic

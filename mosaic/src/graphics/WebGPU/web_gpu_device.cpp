@@ -1,6 +1,10 @@
 #include "web_gpu_device.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 WGPUAdapter requestAdapter(WGPUInstance _instance, WGPUSurface _surface)
@@ -43,6 +47,13 @@ WGPUAdapter requestAdapter(WGPUInstance _instance, WGPUSurface _surface)
 
     wgpuInstanceRequestAdapter(_instance, &adapterOpts, callbackInfo);
 
+#ifdef __EMSCRIPTEN__
+    while (!userData.requestEnded)
+    {
+        emscripten_sleep(100);
+    }
+#endif
+
     assert(userData.requestEnded);
 
     return userData.adapter;
@@ -50,11 +61,12 @@ WGPUAdapter requestAdapter(WGPUInstance _instance, WGPUSurface _surface)
 
 bool isAdapterSuitable(WGPUAdapter _adapter)
 {
+#ifndef __EMSCRIPTEN__
     WGPULimits supportedLimits;
     supportedLimits.nextInChain = nullptr;
 
 #ifdef WEBGPU_BACKEND_DAWN
-    if (!wgpuAdapterGetLimits(_adapter, &supportedLimits) == WGPUStatus_Success)
+    if (wgpuAdapterGetLimits(_adapter, &supportedLimits) != WGPUStatus_Success)
 #elif defined WEBGPU_BACKEND_WGPU
     if (wgpuAdapterGetLimits(_adapter, &supportedLimits) != WGPUStatus_Success)
 #else
@@ -64,6 +76,7 @@ bool isAdapterSuitable(WGPUAdapter _adapter)
         MOSAIC_ERROR("Could not get WebGPU adapter limits!");
         return false;
     }
+#endif
 
     WGPUSupportedFeatures supportedFeatures;
 
@@ -167,9 +180,18 @@ WGPUDevice createDevice(WGPUAdapter adapter)
 
     wgpuAdapterRequestDevice(adapter, &deviceDesc, callbackInfo);
 
+#ifdef __EMSCRIPTEN__
+    while (!userData.requestEnded)
+    {
+        emscripten_sleep(100);
+    }
+#endif
+
     assert(userData.requestEnded);
 
     return userData.device;
 }
 
-} // namespace mosaic::graphics::webgpu
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

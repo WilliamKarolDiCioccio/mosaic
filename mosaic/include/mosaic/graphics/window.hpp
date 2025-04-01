@@ -2,12 +2,15 @@
 
 #include <GLFW/glfw3.h>
 
-#include <glm/vec2.hpp>
+#define GLM_FORCE_PURE
+#include <glm/glm.hpp>
 #include <string>
 
 #include "mosaic/defines.hpp"
 
-namespace mosaic::graphics
+namespace mosaic
+{
+namespace graphics
 {
 
 class MOSAIC_API Window
@@ -32,4 +35,5 @@ class MOSAIC_API Window
     GLFWwindow* getNativeWindow() const { return m_window; }
 };
 
-} // namespace mosaic::graphics
+} // namespace graphics
+} // namespace mosaic

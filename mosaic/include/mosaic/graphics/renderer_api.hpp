@@ -2,7 +2,9 @@
 
 #include "window.hpp"
 
-namespace mosaic::graphics
+namespace mosaic
+{
+namespace graphics
 {
 
 class RendererAPI
@@ -18,4 +20,5 @@ class RendererAPI
     virtual void endFrame() = 0;
 };
 
-} // namespace mosaic::graphics
+} // namespace graphics
+} // namespace mosaic

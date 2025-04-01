@@ -2,9 +2,15 @@
 
 #include "shared.hpp"
 
-namespace mosaic::graphics::webgpu
+namespace mosaic
+{
+namespace graphics
+{
+namespace webgpu
 {
 
 WGPUInstance createInstance();
 
-}
+} // namespace webgpu
+} // namespace graphics
+} // namespace mosaic

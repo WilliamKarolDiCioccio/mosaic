@@ -1,12 +1,19 @@
 #pragma once
 
 // Platform detection
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(__EMSCRIPTEN__)
+#include <emscripten.h>
+#define MOSAIC_PLATFORM_EMSCRIPTEN
+#define MOSCAIC_PLATFORM_NAME "Emscripten"
+#elif defined(_WIN32) || defined(_WIN64)
 #define MOSAIC_PLATFORM_WINDOWS
+#define MOSCAIC_PLATFORM_NAME "Windows"
 #elif defined(__APPLE__) || defined(__MACH__)
 #define MOSAIC_PLATFORM_MACOS
+#define MOSCAIC_PLATFORM_NAME "macOS"
 #elif defined(__linux__)
 #define MOSAIC_PLATFORM_LINUX
+#define MOSCAIC_PLATFORM_NAME "Linux"
 #else
 #error "Unknown platform!"
 #endif
@@ -29,7 +36,12 @@
 #endif
 
 // Warning suppression macros
-#if defined(MOSAIC_PLATFORM_WINDOWS)
+#if defined(MOSAIC_PLATFORM_EMSCRIPTEN)
+#define MOSAIC_PUSH_WARNINGS
+#define MOSAIC_POP_WARNINGS
+#define MOSAIC_DISABLE_ALL_WARNINGS
+#define MOSAIC_DISABLE_WARNING(warning)
+#elif defined(MOSAIC_PLATFORM_WINDOWS)
 #define MOSAIC_PUSH_WARNINGS __pragma(warning(push))
 #define MOSAIC_POP_WARNINGS __pragma(warning(pop))
 #define MOSAIC_DISABLE_ALL_WARNINGS __pragma(warning(push, 0))

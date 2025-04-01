@@ -5,7 +5,9 @@
 #include "mosaic/defines.hpp"
 #include "renderer_api.hpp"
 
-namespace mosaic::graphics
+namespace mosaic
+{
+namespace graphics
 {
 
 enum class RendererAPIType
@@ -16,7 +18,7 @@ enum class RendererAPIType
 class MOSAIC_API Renderer
 {
    private:
-    inline static std::unique_ptr<RendererAPI> s_rendererAPI = nullptr;
+    static std::unique_ptr<RendererAPI> s_rendererAPI;
 
    public:
     Renderer() = default;
@@ -27,4 +29,5 @@ class MOSAIC_API Renderer
     void render();
 };
 
-} // namespace mosaic::graphics
+} // namespace graphics
+} // namespace mosaic
