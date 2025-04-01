@@ -11,9 +11,11 @@ set(FRAMEWORK_SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/WebGPU/web_gpu_swapchain.cpp"
 )
 
-add_library(mosaic SHARED ${FRAMEWORK_SRC})
-
-set_target_properties(mosaic PROPERTIES LINKER_LANGUAGE CXX)
+if(DEFINED EMSCRIPTEN)
+    add_library(mosaic STATIC ${FRAMEWORK_SRC})
+else()
+    add_library(mosaic SHARED ${FRAMEWORK_SRC})
+endif()
 
 target_compile_definitions(mosaic PRIVATE _MOSAIC_BUILD_DLL WEBGPU_CPP_IMPLEMENTATION)
 
@@ -25,12 +27,16 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/mosaic/version.h.in"
 target_link_libraries(
   mosaic
   PUBLIC glm::glm-header-only
-  PUBLIC glfw3webgpu
+  PUBLIC glfw
+  PUBLIC spdlog::spdlog
+  PUBLIC nlohmann_json::nlohmann_json
+  PRIVATE glfw3webgpu
   PRIVATE webgpu
-  PRIVATE glfw
-  PRIVATE spdlog::spdlog
-  PRIVATE nlohmann_json::nlohmann_json
 )
+
+if (DEFINED EMSCRIPTEN)
+    target_link_options(mosaic PRIVATE "-sASYNCIFY")
+endif()
 
 if(COMMAND target_copy_webgpu_binaries)
     target_copy_webgpu_binaries(mosaic)

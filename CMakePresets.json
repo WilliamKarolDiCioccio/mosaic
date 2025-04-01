@@ -4,13 +4,14 @@
     {
       "name": "windows-base",
       "hidden": true,
-      "generator": "Ninja",
+      "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "GLFW_BUILD_WIN32": true,
         "WEBGPU_BACKEND": "WGPU"
       },
       "condition": {
@@ -45,12 +46,13 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
-        "cacheVariables": {
-          "CMAKE_C_COMPILER": "gcc",
-          "CMAKE_CXX_COMPILER": "g++",
-          "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
-          "WEBGPU_BACKEND": "WGPU"
-        },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "GLFW_BUILD_X11": true,
+        "WEBGPU_BACKEND": "WGPU"
+      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -76,6 +78,52 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "emscripten-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "EMSCRIPTEN": true,
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "VCPKG_TARGET_TRIPLET": "wasm32-emscripten",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "WEBGPU_BACKEND": "EMSCRIPTEN",
+        "BUILD_SHARED_LIBS": false,
+        "VCPKG_LIBRARY_LINKAGE": "static",
+        "WEBGPU_LINK_TYPE": "STATIC"
+      },
+      "environment": {
+        "EMSCRIPTEN_ROOT": "$env{EMSDK}/upstream/emscripten"
+      }
+    },
+    {
+      "name": "emscripten-debug",
+      "displayName": "Emscripten Debug",
+      "inherits": "emscripten-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-fwasm-exceptions"
+      }
+    },
+    {
+      "name": "emscripten-release",
+      "displayName": "Emscripten Release",
+      "inherits": "emscripten-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS": "-fwasm-exceptions"
+      }
     }
+  ],
+  "buildPresets": [
+    { "name": "x64-debug", "configurePreset": "x64-debug" },
+    { "name": "x64-release", "configurePreset": "x64-release" },
+    { "name": "x64-debug-linux", "configurePreset": "x64-debug-linux" },
+    { "name": "x64-release-linux", "configurePreset": "x64-release-linux" },
+    { "name": "emscripten-debug", "configurePreset": "emscripten-debug" },
+    { "name": "emscripten-release", "configurePreset": "emscripten-release" }
   ]
 }

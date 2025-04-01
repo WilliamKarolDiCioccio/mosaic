@@ -4,3 +4,6 @@
 [submodule "vendor/glfw3webgpu"]
 	path = vendor/glfw3webgpu
 	url = https://github.com/WilliamKarolDiCioccio/glfw3webgpu
+[submodule "vendor/glfw3"]
+	path = vendor/glfw3
+	url = https://github.com/glfw/glfw.git

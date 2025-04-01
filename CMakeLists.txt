@@ -40,28 +40,26 @@ enable_testing()
 
 # Find dependencies
 find_package(glm CONFIG REQUIRED)
-find_package(glfw3 CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 
 # Third party dependencies unavailable via vcpkg
-
 add_subdirectory("vendor/webgpu")
 
-if (WIN32)
-    set(GLFW_BUILD_WIN32 TRUE)
-elseif (APPLE)
-    set(GLFW_BUILD_COCOA TRUE)
-elseif (UNIX)
-    set(GLFW_BUILD_X11 TRUE)
+# Despite being available via vcpkg, we need to build GLFW3 ourselves due to integration issues with the mescripten configuration
+if (DEFINED EMSCRIPTEN)
+    add_library(glfw INTERFACE)
+    target_link_options(glfw INTERFACE "-sUSE_GLFW=3")
+    target_include_directories(glfw INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/glfw3/include")
+else()
+    add_subdirectory("vendor/glfw3")
 endif()
 
 add_subdirectory("vendor/glfw3webgpu")
 
 # Add subdirectories
-
 add_subdirectory("mosaic")
 add_subdirectory("mosaic/tests")
 add_subdirectory("testbed")
