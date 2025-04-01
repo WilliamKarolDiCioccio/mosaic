@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.12...3.31)
 # Enable Hot Reload for MSVC compilers if supported.
 if(POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+  # Address sanitizer doesn't work if edit-and-continue is specified, which is enabled by default for new CMake projects
+  # set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 # See https://github.com/gabime/spdlog/issues/3251 and

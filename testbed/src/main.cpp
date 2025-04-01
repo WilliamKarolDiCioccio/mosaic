@@ -3,6 +3,7 @@
 #include <mosaic/core/logger.hpp>
 #include <mosaic/graphics/renderer.hpp>
 #include <mosaic/graphics/window.hpp>
+#include <mosaic/utils/memory_leak.hpp>
 
 class TestbedApplication : public mosaic::core::Application
 {
@@ -43,6 +44,10 @@ class TestbedApplication : public mosaic::core::Application
 
 int main()
 {
+#ifdef _DEBUG
+    mosaic::utils::enableMemoryLeakDetection();
+#endif
+
     TestbedApplication app;
     app.initialize();
     app.update();
