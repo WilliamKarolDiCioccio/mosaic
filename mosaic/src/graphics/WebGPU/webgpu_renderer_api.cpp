@@ -2,10 +2,10 @@
 
 #include <vector>
 
-#include "web_gpu_device.hpp"
-#include "web_gpu_instance.hpp"
-#include "web_gpu_commands.hpp"
-#include "web_gpu_swapchain.hpp"
+#include "webgpu_device.hpp"
+#include "webgpu_instance.hpp"
+#include "webgpu_commands.hpp"
+#include "webgpu_swapchain.hpp"
 
 namespace mosaic
 {

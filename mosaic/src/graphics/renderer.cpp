@@ -1,6 +1,6 @@
 #include "mosaic/graphics/renderer.hpp"
 
-#include "WebGPU/web_gpu_renderer_api.hpp"
+#include "WebGPU/webgpu_renderer_api.hpp"
 
 namespace mosaic
 {
