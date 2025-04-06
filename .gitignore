@@ -56,3 +56,6 @@ vcpkg_installed/
 *.bak
 *.swp
 *.dir
+
+# Ignore SPIR-V intermediate files
+*.spv
