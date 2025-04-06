@@ -18,7 +18,7 @@ void WebGPURendererAPI::initialize(const Window& _window)
 {
     m_instance = createInstance();
 
-    m_surface = glfwCreateWindowWGPUSurface(m_instance, _window.getNativeWindow());
+    m_surface = glfwCreateWindowWGPUSurface(m_instance, _window.getGLFWHandle());
 
     m_adapter = requestAdapter(m_instance, m_surface);
 

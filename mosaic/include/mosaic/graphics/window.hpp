@@ -13,6 +13,14 @@ namespace mosaic
 namespace graphics
 {
 
+struct WindowState
+{
+    bool isFullscreen = false;
+    bool isMinimized = false;
+    bool isMaximized = false;
+    bool isResizeable = false;
+};
+
 class MOSAIC_API Window
 {
    private:
@@ -32,7 +40,24 @@ class MOSAIC_API Window
     void setTitle(const std::string& title);
     void setSize(glm::vec2 size);
 
-    GLFWwindow* getNativeWindow() const { return m_window; }
+    GLFWwindow* getGLFWHandle() const { return m_window; }
+
+    glm::vec2 getFramebufferSize() const
+    {
+        int width, height;
+        glfwGetFramebufferSize(m_window, &width, &height);
+        return glm::vec2(width, height);
+    }
+
+    WindowState getState() const
+    {
+        WindowState state;
+        state.isFullscreen = glfwGetWindowMonitor(m_window) != nullptr;
+        state.isMinimized = glfwGetWindowAttrib(m_window, GLFW_ICONIFIED);
+        state.isMaximized = glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED);
+        state.isResizeable = glfwGetWindowAttrib(m_window, GLFW_RESIZABLE);
+        return state;
+    }
 };
 
 } // namespace graphics

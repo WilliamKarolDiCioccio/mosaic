@@ -48,11 +48,7 @@ Window::~Window()
 
 bool Window::shouldClose() const { return glfwWindowShouldClose(m_window); }
 
-void Window::update()
-{
-    glfwPollEvents();
-    glfwSwapBuffers(m_window);
-}
+void Window::update() { glfwPollEvents(); }
 
 const std::string Window::getTitle() const { return "[Title Management Placeholder]"; }
 
