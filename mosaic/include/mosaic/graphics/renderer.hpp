@@ -12,7 +12,8 @@ namespace graphics
 
 enum class RendererAPIType
 {
-    WebGPU
+    WebGPU,
+    Vulkan
 };
 
 class MOSAIC_API Renderer

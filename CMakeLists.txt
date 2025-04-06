@@ -11,6 +11,7 @@ endif()
 # https://github.com/gabime/spdlog/issues/3251#issue-2648376977
 if(MSVC)
   add_compile_options(/utf-8)
+  set_property(GLOBAL PROPERTY VS_STARTUP_PROJECT testbed)
 endif()
 
 # Automatically use vcpkg in manifest mode
@@ -45,6 +46,9 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
+find_package(volk CONFIG REQUIRED)
+find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
 # Third party dependencies unavailable via vcpkg
 add_subdirectory("vendor/webgpu")
@@ -65,5 +69,3 @@ add_subdirectory("mosaic")
 add_subdirectory("mosaic/tests")
 add_subdirectory("testbed")
 add_subdirectory("tests/integration")
-
-set_property(GLOBAL PROPERTY VS_STARTUP_PROJECT testbed)

@@ -1,5 +1,16 @@
 {
   "name": "mosaic",
   "version": "1.0.0",
-  "dependencies": ["clipp", "fmt", "glm", "gtest", "spdlog", "nlohmann-json"]
+  "dependencies": [
+    "clipp",
+    "fmt",
+    "glm",
+    "gtest",
+    "nlohmann-json",
+    "spdlog",
+    "vulkan",
+    "vulkan-utility-libraries",
+    "volk",
+    "vulkan-memory-allocator"
+  ]
 }

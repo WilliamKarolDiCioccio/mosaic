@@ -1,6 +1,7 @@
 #include "mosaic/graphics/renderer.hpp"
 
 #include "WebGPU/webgpu_renderer_api.hpp"
+#include "Vulkan/vulkan_renderer_api.hpp"
 
 namespace mosaic
 {
@@ -13,10 +14,18 @@ Renderer::~Renderer() { s_rendererAPI->shutdown(); }
 
 void Renderer::setAPI(RendererAPIType _apiType)
 {
+    if (s_rendererAPI)
+    {
+        s_rendererAPI->shutdown();
+    }
+
     switch (_apiType)
     {
         case RendererAPIType::WebGPU:
             s_rendererAPI = std::make_unique<webgpu::WebGPURendererAPI>();
+            break;
+        case RendererAPIType::Vulkan:
+            s_rendererAPI = std::make_unique<vulkan::VulkanRendererAPI>();
             break;
     }
 }
