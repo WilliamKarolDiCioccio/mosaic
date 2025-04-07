@@ -80,7 +80,7 @@ void WebGPURendererAPI::shutdown()
     wgpuInstanceRelease(m_instance);
 }
 
-WGPUTextureView WebGPURendererAPI::getNextSurfaceTextureView()
+std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURendererAPI::getNextSurfaceViewData()
 {
     WGPUSurfaceTexture surfaceTexture;
 
@@ -88,7 +88,7 @@ WGPUTextureView WebGPURendererAPI::getNextSurfaceTextureView()
 
     if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
     {
-        return nullptr;
+        return std::pair<WGPUSurfaceTexture, WGPUTextureView>(nullptr, nullptr);
     }
 
     WGPUTextureViewDescriptor viewDescriptor;
@@ -109,7 +109,7 @@ WGPUTextureView WebGPURendererAPI::getNextSurfaceTextureView()
     wgpuTextureRelease(surfaceTexture.texture);
 #endif
 
-    return targetView;
+    return std::pair<WGPUSurfaceTexture, WGPUTextureView>(surfaceTexture, targetView);
 }
 
 void WebGPURendererAPI::pollDevice(int _times)
@@ -126,7 +126,7 @@ void WebGPURendererAPI::pollDevice(int _times)
 
 void WebGPURendererAPI::beginFrame()
 {
-    WGPUTextureView targetView = getNextSurfaceTextureView();
+    auto [surfaceTexture, targetView] = getNextSurfaceViewData();
 
     if (!targetView)
     {
@@ -161,6 +161,10 @@ void WebGPURendererAPI::beginFrame()
 
 #ifndef __EMSCRIPTEN__
     wgpuSurfacePresent(m_surface);
+#endif
+
+#ifdef WEBGPU_BACKEND_WGPU
+    wgpuTextureRelease(surfaceTexture.texture);
 #endif
 }
 

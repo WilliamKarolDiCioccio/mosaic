@@ -24,7 +24,7 @@ class WebGPURendererAPI : public RendererAPI
     void endFrame() override;
 
    private:
-    WGPUTextureView getNextSurfaceTextureView();
+    std::pair<WGPUSurfaceTexture, WGPUTextureView> getNextSurfaceViewData();
     void pollDevice(int _times = 5);
 
     WGPUInstance m_instance = nullptr;
