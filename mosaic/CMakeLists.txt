@@ -101,6 +101,22 @@ configure_file(
 )
 
 # ----------------------------------------
+# Precompiled Headers
+# ----------------------------------------
+target_precompile_headers(mosaic PRIVATE
+  <vector>
+  <string>
+  <iostream>
+  <algorithm>
+  <unordered_map>
+  <unordered_set>
+  <functional>
+  <memory>
+  <array>
+  <chrono>
+)
+
+# ----------------------------------------
 # Link Libraries
 # ----------------------------------------
 
