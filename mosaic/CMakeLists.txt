@@ -7,6 +7,7 @@ set(FRAMEWORK_SRC
   src/core/logger.cpp
   src/core/application.cpp
   src/core/tracer.cpp
+  src/core/timer.cpp
 
   # Graphics
   src/graphics/window.cpp

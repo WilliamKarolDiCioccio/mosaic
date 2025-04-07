@@ -1,9 +1,13 @@
 #include <iostream>
 #include <mosaic/core/application.hpp>
 #include <mosaic/core/logger.hpp>
+#include <mosaic/graphics/window.hpp>
+#include <mosaic/core/timer.hpp>
 #include <mosaic/graphics/renderer.hpp>
 #include <mosaic/graphics/window.hpp>
 #include <mosaic/utils/memory_leak.hpp>
+
+using namespace std::chrono_literals;
 
 class TestbedApplication : public mosaic::core::Application
 {
@@ -26,12 +30,14 @@ class TestbedApplication : public mosaic::core::Application
 
     void onUpdate() override
     {
-        auto& renderer = mosaic::graphics::Renderer::getGlobalRendererAPI();
-
         if (m_window.shouldClose())
         {
             return shutdown();
         }
+
+        mosaic::core::Timer::tick();
+
+        auto& renderer = mosaic::graphics::Renderer::getGlobalRendererAPI();
 
         renderer.render();
 
