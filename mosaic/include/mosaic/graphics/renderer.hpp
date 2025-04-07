@@ -12,22 +12,35 @@ namespace graphics
 
 enum class RendererAPIType
 {
-    WebGPU,
-    Vulkan
+    web_gpu,
+    vulkan,
+    none
 };
 
 class MOSAIC_API Renderer
 {
    private:
-    static std::unique_ptr<RendererAPI> s_rendererAPI;
+    std::unique_ptr<RendererAPI> s_rendererAPI = nullptr;
+    RendererAPIType m_apiType = RendererAPIType::none;
 
    public:
     Renderer() = default;
-    ~Renderer();
+    ~Renderer() = default;
 
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
+
+   public:
     void setAPI(RendererAPIType _apiType);
     void initialize(const Window& _window);
+    void shutdown();
     void render();
+
+    inline static Renderer& getGlobalRendererAPI()
+    {
+        static std::unique_ptr<Renderer> instance = std::make_unique<Renderer>();
+        return *instance;
+    }
 };
 
 } // namespace graphics

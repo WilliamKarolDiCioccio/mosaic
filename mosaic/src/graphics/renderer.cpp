@@ -8,10 +8,6 @@ namespace mosaic
 namespace graphics
 {
 
-std::unique_ptr<RendererAPI> Renderer::s_rendererAPI = nullptr;
-
-Renderer::~Renderer() { s_rendererAPI->shutdown(); }
-
 void Renderer::setAPI(RendererAPIType _apiType)
 {
     if (s_rendererAPI)
@@ -21,10 +17,10 @@ void Renderer::setAPI(RendererAPIType _apiType)
 
     switch (_apiType)
     {
-        case RendererAPIType::WebGPU:
+        case RendererAPIType::web_gpu:
             s_rendererAPI = std::make_unique<webgpu::WebGPURendererAPI>();
             break;
-        case RendererAPIType::Vulkan:
+        case RendererAPIType::vulkan:
             s_rendererAPI = std::make_unique<vulkan::VulkanRendererAPI>();
             break;
     }
@@ -39,6 +35,8 @@ void Renderer::render()
     s_rendererAPI->drawScene();
     s_rendererAPI->endFrame();
 }
+
+void Renderer::shutdown() { s_rendererAPI->shutdown(); }
 
 } // namespace graphics
 } // namespace mosaic

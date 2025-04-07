@@ -9,7 +9,6 @@ class TestbedApplication : public mosaic::core::Application
 {
    private:
     mosaic::graphics::Window m_window{"Testbed", {1280, 720}};
-    mosaic::graphics::Renderer m_renderer;
 
    public:
     TestbedApplication() : Application("Testbed") {}
@@ -17,20 +16,24 @@ class TestbedApplication : public mosaic::core::Application
    private:
     void onInitialize() override
     {
-        m_renderer.setAPI(mosaic::graphics::RendererAPIType::WebGPU);
-        m_renderer.initialize(m_window);
+        auto& renderer = mosaic::graphics::Renderer::getGlobalRendererAPI();
+
+        renderer.setAPI(mosaic::graphics::RendererAPIType::web_gpu);
+        renderer.initialize(m_window);
 
         MOSAIC_INFO("Testbed initialized.");
     }
 
     void onUpdate() override
     {
+        auto& renderer = mosaic::graphics::Renderer::getGlobalRendererAPI();
+
         if (m_window.shouldClose())
         {
             return shutdown();
         }
 
-        m_renderer.render();
+        renderer.render();
 
         m_window.update();
     }
@@ -39,7 +42,14 @@ class TestbedApplication : public mosaic::core::Application
 
     void onResume() override { MOSAIC_INFO("Testbed resumed."); }
 
-    void onShutdown() override { MOSAIC_INFO("Testbed shutdown."); }
+    void onShutdown() override
+    {
+        auto& renderer = mosaic::graphics::Renderer::getGlobalRendererAPI();
+
+        renderer.shutdown();
+
+        MOSAIC_INFO("Testbed shutdown.");
+    }
 };
 
 int main()
