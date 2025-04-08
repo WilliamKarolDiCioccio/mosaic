@@ -1,4 +1,4 @@
-add_executable(integration_tests "test_integration.cpp")
+add_executable(integration_tests "src/test_integration.cpp")
 
 target_include_directories(integration_tests PRIVATE "${CMAKE_SOURCE_DIR}/mosaic/include")
 
