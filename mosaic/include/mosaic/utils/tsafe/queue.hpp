@@ -93,23 +93,12 @@ class ThreadSafeQueue
         return value;
     }
 
-    /**
-     * @brief Check if the queue is empty.
-     *
-     * @return true if the queue is empty
-     * @return false if the queue is not empty
-     */
     bool empty() const
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         return m_queue.empty();
     }
 
-    /**
-     * @brief Get the number of elements in the queue.
-     *
-     * @return size_t The number of elements in the queue.
-     */
     size_t size() const
     {
         std::lock_guard<std::mutex> lock(m_mutex);

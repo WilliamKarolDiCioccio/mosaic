@@ -167,23 +167,18 @@ class ThreadSafeMap
         return m_map.erase(_key) > 0;
     }
 
-    /**
-     * @brief Get the number of key-value pairs in the map.
-     *
-     * @return The number of key-value pairs in the map.
-     */
+    bool empty() const
+    {
+        std::shared_lock<std::shared_mutex> lock(m_mutex);
+        return m_map.empty();
+    }
+
     size_t size() const
     {
         std::shared_lock<std::shared_mutex> lock(m_mutex);
         return m_map.size();
     }
 
-    /**
-     * @brief Check if the map is empty.
-     *
-     * @return true if the map is empty
-     * @return false if the map is not empty
-     */
     void clear()
     {
         std::unique_lock<std::shared_mutex> lock(m_mutex);
