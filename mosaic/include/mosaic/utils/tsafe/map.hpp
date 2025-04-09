@@ -11,6 +11,17 @@ namespace utils
 namespace tsafe
 {
 
+/**
+ * @brief Thread-safe map wrapper around std::unordered_map.
+ *
+ * This class provides a thread-safe interface for inserting, retrieving,
+ * and modifying key-value pairs in an unordered map. It uses a shared mutex
+ * to allow multiple threads to read the map concurrently while ensuring
+ * exclusive access for write operations. The object is not copyable or movable.
+ *
+ * @tparam K Key type.
+ * @tparam V Value type.
+ */
 template <typename K, typename V>
 class ThreadSafeMap
 {
@@ -23,35 +34,61 @@ class ThreadSafeMap
     ThreadSafeMap(const ThreadSafeMap&) = delete;
     ThreadSafeMap& operator=(const ThreadSafeMap&) = delete;
 
-    void insert(const K& key, const V& value)
+    /**
+     * @brief Insert a key-value pair into the map.
+     *
+     * @param _key The key to insert.
+     * @param _value The value to insert.
+     */
+    void insert(const K& _key, const V& _value)
     {
         std::unique_lock<std::shared_mutex> lock(m_mutex);
-        m_map[key] = value;
+        m_map[_key] = _value;
     }
 
-    void insert(const K& key, V&& value)
+    /**
+     * @brief Insert a key-value pair into the map with move semantics.
+     *
+     * @param _key The key to insert.
+     * @param _value The rvalue reference to insert.
+     */
+    void insert(const K& _key, V&& _value)
     {
         std::unique_lock<std::shared_mutex> lock(m_mutex);
-        m_map[key] = std::move(value);
+        m_map[_key] = std::move(_value);
     }
 
-    void insertIfAbsent(const K& key, const V& value)
+    /**
+     * @brief Insert a key-value pair into the map if the key is not already present.
+     *
+     * @param _key The key to insert.
+     * @param _value The value to insert.
+     */
+    void insertIfAbsent(const K& _key, const V& _value)
     {
         std::unique_lock lock(m_mutex);
-        if (m_map.find(key) == m_map.end())
+        if (m_map.find(_key) == m_map.end())
         {
-            m_map[key] = value;
+            m_map[_key] = _value;
         }
     }
 
-    void insertAll(const std::unordered_map<K, V>& other)
+    /**
+     * @brief Insert all key-value pairs from another map into this map.
+     *
+     * This is a transactional operation. If an exception occurs during the insertion,
+     * the changes are rolled back to the state before the operation started.
+     *
+     * @param _other The other map to insert from.
+     */
+    void insertAll(const std::unordered_map<K, V>& _other)
     {
         std::unique_lock<std::shared_mutex> lock(m_mutex);
         auto backup = m_map;
 
         try
         {
-            for (const auto& [key, value] : other)
+            for (const auto& [key, value] : _other)
             {
                 m_map[key] = value;
             }
@@ -63,6 +100,15 @@ class ThreadSafeMap
         }
     }
 
+    /**
+     * @brief Iterate over the map and apply a function to each key-value pair.
+     *
+     * This is a transactional operation. If an exception occurs during the iteration,
+     * the changes are rolled back to the state before the operation started.
+     *
+     * @tparam Func The type of the function to apply.
+     * @param _func The function to apply to each key-value pair.
+     */
     template <typename Func>
     void transform(Func _func)
     {
@@ -80,32 +126,64 @@ class ThreadSafeMap
         }
     }
 
-    std::optional<V> get(const K& key) const
+    /**
+     * @brief Get the value associated with a key.
+     *
+     * @param _key The key to look up.
+     * @return std::optional<T> The value associated with the key, or std::nullopt if the key is not
+     * found.
+     */
+    std::optional<V> get(const K& _key) const
     {
         std::shared_lock<std::shared_mutex> lock(m_mutex);
-        auto it = m_map.find(key);
+        auto it = m_map.find(_key);
         if (it != m_map.end()) return it->second;
         return std::nullopt;
     }
 
-    bool contains(const K& key) const
+    /**
+     * @brief Check if the map contains a key.
+     *
+     * @param _key The key to check.
+     * @return true if the key is found in the map
+     * @return false if the key is not found in the map
+     */
+    bool contains(const K& _key) const
     {
         std::shared_lock<std::shared_mutex> lock(m_mutex);
-        return m_map.find(key) != m_map.end();
+        return m_map.find(_key) != m_map.end();
     }
 
-    bool erase(const K& key)
+    /**
+     * @brief Remove a key-value pair from the map.
+     *
+     * @param _key The key to remove.
+     * @return true if the key was found and removed
+     * @return false if the key was not found in the map
+     */
+    bool erase(const K& _key)
     {
         std::unique_lock<std::shared_mutex> lock(m_mutex);
-        return m_map.erase(key) > 0;
+        return m_map.erase(_key) > 0;
     }
 
+    /**
+     * @brief Get the number of key-value pairs in the map.
+     *
+     * @return The number of key-value pairs in the map.
+     */
     size_t size() const
     {
         std::shared_lock<std::shared_mutex> lock(m_mutex);
         return m_map.size();
     }
 
+    /**
+     * @brief Check if the map is empty.
+     *
+     * @return true if the map is empty
+     * @return false if the map is not empty
+     */
     void clear()
     {
         std::unique_lock<std::shared_mutex> lock(m_mutex);
