@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 #include <stdexcept>
 
 namespace mosaic
@@ -75,20 +76,48 @@ class SizedQueue
     }
 
     /**
+     * @brief Builds and adds an element to the front of the queue.
+     *
+     * @param _value The value to add to the queue.
+     */
+    void emplace(const T& _value)
+    {
+        if (m_data.size() == m_capacity)
+        {
+            m_data.pop_back();
+        }
+        m_data.emplace(m_data.begin(), _value);
+    }
+
+    /**
+     * @brief Builds and adds an element to the front of the queue using move semantics.
+     *
+     * @param _value The rvalue reference to add to the queue.
+     */
+    void emplace(T&& _value)
+    {
+        if (m_data.size() == m_capacity)
+        {
+            m_data.pop_back();
+        }
+        m_data.emplace(m_data.begin(), std::move(_value));
+    }
+
+    /**
      * @brief Removes the oldest element from the queue and returns it.
      *
      * @param _out The variable to store the removed element.
      * @return true if an element was removed, false if the queue was empty.
      */
-    bool pop(T& _out)
+    std::optional<T> pop()
     {
         if (empty())
         {
-            return false;
+            return std::nullopt;
         }
-        _out = std::move(m_data.front());
+        auto out = std::move(m_data.front());
         m_data.erase(m_data.begin());
-        return true;
+        return out;
     }
 
     /**
