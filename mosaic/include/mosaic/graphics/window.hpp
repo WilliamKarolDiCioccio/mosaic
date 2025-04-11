@@ -30,8 +30,6 @@ class MOSAIC_API Window
     Window(const std::string& _title, glm::vec2 _size);
     ~Window();
 
-    void update();
-
     bool shouldClose() const;
 
     const std::string getTitle() const;
