@@ -14,6 +14,7 @@ namespace input
 
 using namespace std::chrono_literals;
 
+// Keyboard keys and mouse buttons share the same possible states, so we can use the same enum.
 enum class KeyButtonState : uint32_t
 {
     none = 0,
@@ -25,6 +26,13 @@ enum class KeyButtonState : uint32_t
 
 MOSAIC_DEFINE_ENUM_FLAGS_OPERATORS(KeyButtonState)
 
+/**
+ * @brief The `InputEventMetadata` struct contains meta-data for input events.
+ *
+ * It's the `InputArena`'s responsibility to fill this struct with the correct data.
+ *
+ * @see InputArena
+ */
 struct InputEventMetadata
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;

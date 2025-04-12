@@ -7,6 +7,14 @@ namespace mosaic
 namespace input
 {
 
+/**
+ * @brief The `KeyboardKey` enum class represents the keyboard keys supported by GLFW.
+ *
+ * The values of this enum class are the same as the GLFW key codes. This allows for easy mapping
+ * between GLFW key codes and the `KeyboardKey` enum class.
+ *
+ * @see https://www.glfw.org/docs/latest/group__keys.html
+ */
 enum class KeyboardKey : uint32_t
 {
     key_a = GLFW_KEY_A,
@@ -80,6 +88,11 @@ enum class KeyboardKey : uint32_t
     key_f12 = GLFW_KEY_F12,
 };
 
+/**
+ * @brief The `c_keyboardKeys` array contains all the keyboard keys supported by GLFW.
+ *
+ * This allows iterating over all the keyboard keys and checking their state.
+ */
 constexpr std::array<KeyboardKey, 349> c_keyboardKeys = {
     KeyboardKey::key_a,
     KeyboardKey::key_b,
@@ -152,6 +165,14 @@ constexpr std::array<KeyboardKey, 349> c_keyboardKeys = {
     KeyboardKey::key_f12,
 };
 
+/**
+ * @brief The `MouseButton` enum class represents the mouse buttons supported by GLFW.
+ *
+ * The values of this enum class are the same as the GLFW mouse button codes. This allows for easy
+ * mapping between GLFW mouse button codes and the `MouseButton` enum class.
+ *
+ * @see https://www.glfw.org/docs/latest/group__buttons.html
+ */
 enum class MouseButton : uint32_t
 {
     button_left = GLFW_MOUSE_BUTTON_LEFT,
@@ -164,6 +185,11 @@ enum class MouseButton : uint32_t
     button_8 = GLFW_MOUSE_BUTTON_8,
 };
 
+/**
+ * @brief The `c_mouseButtons` array contains all the mouse buttons supported by GLFW.
+ *
+ * This allows iterating over all the mouse buttons and checking their state.
+ */
 constexpr std::array<MouseButton, 8> c_mouseButtons = {
     MouseButton::button_left, MouseButton::button_right, MouseButton::button_middle,
     MouseButton::button_4,    MouseButton::button_5,     MouseButton::button_6,

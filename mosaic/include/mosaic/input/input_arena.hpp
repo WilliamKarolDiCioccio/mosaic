@@ -45,6 +45,21 @@ enum MovementDirection : uint32_t
 
 MOSAIC_DEFINE_ENUM_FLAGS_OPERATORS(MovementDirection)
 
+/**
+ * @brief The `InputArena` is responsible for processing raw inputs into high-level events.
+ *
+ * `InputArena` responsibilities include:
+ *
+ * - Detecting and processing keyboard, mouse button, mouse wheel scroll, and cursor position events
+ *   and generating high-level events from them.
+ *
+ * - Deriving additional information from raw input data, such as speed, acceleration, and
+ *   movement direction for mouse wheel scroll and cursor position.
+ *
+ * - Enriching events with meta-data such as timestamps and durations.
+ *
+ * @see RawInputHandler
+ */
 class InputArena
 {
    private:

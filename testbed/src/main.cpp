@@ -140,7 +140,7 @@ class TestbedApplication : public mosaic::core::Application
 
         inputSystem.updateContexts();
 
-        input::InputContext* inputContext = inputSystem.getContext(m_window.getGLFWHandle());
+        input::InputContext* inputContext = inputSystem.getContext(m_window);
 
         if (inputContext->isActionTriggered("moveLeft"))
         {

@@ -25,6 +25,14 @@ using MouseScrollInputData = glm::vec2;
 
 using CursorPosInputData = glm::vec2;
 
+/**
+ * @brief The `RawInputHandler` provides thread-safe access the input state.
+ *
+ * @note Due to latency issues we've switched from callbacks to polling the input state. This
+ * means this class now has really little responsibility and is just a wrapper around GLFW
+ * functions, except for the mouse scroll input which is still handled by callbacks. The reason for
+ * this is that GLFW does not provide a way to poll mouse scroll input.
+ */
 class RawInputHandler
 {
    private:

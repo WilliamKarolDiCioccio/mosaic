@@ -16,6 +16,28 @@ namespace mosaic
 namespace input
 {
 
+/**
+ * @brief The `InputSystem` class is responsible for managing input contexts for different windows.
+ *
+ * `InputSystem`'s responsibilities include:
+ *
+ * - Registering and unregistering input contexts for each window.
+ *
+ * - Managing GLFW window events loop.
+ *
+ * The input system as a whole consists of multiple componenets, ensuring clean separation of
+ * concerns. Each of those components adds an abstraction layer on top of the previous one, allowing
+ * for easy extensibility and maintainability.
+ *
+ * @note This class is a singleton and should be accessed through the static method
+ * `getGlobalInputSystem()`. It is not meant to be instantiated directly.
+ *
+ * @see InputContext
+ * @see InputArena
+ * @see RawInputHandler
+ * @see Window
+ * @see https://www.glfw.org/documentation.html
+ */
 class MOSAIC_API InputSystem
 {
    public:
@@ -34,6 +56,13 @@ class MOSAIC_API InputSystem
 
     inline void unregisterAllWindows() { m_contexts.clear(); }
 
+    /**
+     * @brief Polls GLFW events and updates all registered input contexts.
+     *
+     * This is the first invocation in the main loop of the application. It should be called before
+     * any other input handling functions to ensure fresh input data is available and minimize
+     * latency.
+     */
     inline void updateContexts() const
     {
         glfwPollEvents();
@@ -44,15 +73,17 @@ class MOSAIC_API InputSystem
         }
     }
 
-    inline InputContext* getContext(GLFWwindow* _window)
+    inline InputContext* getContext(const graphics::Window& _window) const
     {
-        if (m_contexts.find(_window) == m_contexts.end())
+        const auto& glfwWindow = _window.getGLFWHandle();
+
+        if (m_contexts.find(glfwWindow) == m_contexts.end())
         {
             MOSAIC_ERROR("Input context not found for the given window.");
             return nullptr;
         }
 
-        return m_contexts[_window].get();
+        return m_contexts.at(glfwWindow).get();
     }
 
     inline static InputSystem& getGlobalInputSystem()

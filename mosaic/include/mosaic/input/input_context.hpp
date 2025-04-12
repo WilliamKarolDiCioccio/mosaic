@@ -11,6 +11,26 @@ namespace mosaic
 namespace input
 {
 
+/**
+ * @brief The `InputContext` class is the main interface for handling input events and actions.
+ *
+ * `InputContext`'s responsibilities include:
+ *
+ * - Registering and unregistering actions, which are high-level abstractions of input events.
+ *
+ * - Allowing for dyamic remapping of virtual keys and buttons to their GLFW equivalents.
+ *
+ * - Allowing for easy serialization and deserialization of virtual key/button mappings in JSON
+ * format.
+ *
+ * - Improving performance by caching input and action states.
+ *
+ * @note Due to their common and limited usage some input events can also be checked outside of the
+ * action system. For example, mouse cursor and wheel have dedicated getters.
+ *
+ * @see InputArena
+ * @see Action
+ */
 class MOSAIC_API InputContext
 {
    private:
