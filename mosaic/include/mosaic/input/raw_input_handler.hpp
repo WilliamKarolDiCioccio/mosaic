@@ -40,17 +40,14 @@ class RawInputHandler
     RawInputHandler(const RawInputHandler&) = delete;
     RawInputHandler& operator=(const RawInputHandler&) = delete;
 
-    static void mouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
-    static void cursorEnterCallback(GLFWwindow* window, int entered);
-
     inline bool isActive() const { return m_isActive; }
 
-    inline int getKeyboardKeyInput(KeyboardKey _key) const
+    inline KeyboardKeyInputData getKeyboardKeyInput(KeyboardKey _key) const
     {
         return glfwGetKey(m_glfwWindow, static_cast<int>(_key));
     }
 
-    inline int getMouseButtonInput(MouseButton _button) const
+    inline MouseButtonInputData getMouseButtonInput(MouseButton _button) const
     {
         return glfwGetMouseButton(m_glfwWindow, static_cast<int>(_button));
     }
@@ -68,6 +65,10 @@ class RawInputHandler
     {
         return m_mouseScrollQueue.try_pop().value();
     }
+
+   private:
+    static void mouseScrollCallback(GLFWwindow* _window, double _xoffset, double _yoffset);
+    static void windowFocusCallback(GLFWwindow* _window, int _focused);
 };
 
 } // namespace input
