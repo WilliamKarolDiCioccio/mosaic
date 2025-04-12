@@ -4,35 +4,41 @@
 
 set(FRAMEWORK_SRC
   # Core
-  src/core/logger.cpp
-  src/core/application.cpp
-  src/core/tracer.cpp
-  src/core/timer.cpp
+  "src/core/logger.cpp"
+  "src/core/application.cpp"
+  "src/core/tracer.cpp"
+  "src/core/timer.cpp"
+
+  # Input
+  "src/input/input_system.cpp"
+  "src/input/input_arena.cpp"
+  "src/input/raw_input_handler.cpp"
+  "src/input/input_context.cpp"
 
   # Graphics
-  src/graphics/window.cpp
-  src/graphics/renderer.cpp
+  "src/graphics/window.cpp"
+  "src/graphics/renderer.cpp"
 
   # WebGPU Backend
-  src/graphics/WebGPU/webgpu_instance.cpp
-  src/graphics/WebGPU/webgpu_device.cpp
-  src/graphics/WebGPU/webgpu_renderer_api.cpp
-  src/graphics/WebGPU/webgpu_commands.cpp
-  src/graphics/WebGPU/webgpu_swapchain.cpp
+  "src/graphics/WebGPU/webgpu_instance.cpp"
+  "src/graphics/WebGPU/webgpu_device.cpp"
+  "src/graphics/WebGPU/webgpu_renderer_api.cpp"
+  "src/graphics/WebGPU/webgpu_commands.cpp"
+  "src/graphics/WebGPU/webgpu_swapchain.cpp"
 
   # Vulkan Backend
-  src/graphics/vulkan/vulkan_renderer_api.cpp
-  src/graphics/vulkan/context/vulkan_instance.cpp
-  src/graphics/vulkan/context/vulkan_device.cpp
-  src/graphics/vulkan/context/vulkan_surface.cpp
-  src/graphics/vulkan/pipelines/vulkan_shader_module.cpp
-  src/graphics/vulkan/pipelines/vulkan_pipeline.cpp
-  src/graphics/vulkan/commands/vulkan_command_pool.cpp
-  src/graphics/vulkan/commands/vulkan_command_buffer.cpp
-  src/graphics/vulkan/commands/vulkan_render_pass.cpp
-  src/graphics/vulkan/vulkan_allocator.cpp
-  src/graphics/vulkan/vulkan_framebuffers.cpp
-  src/graphics/vulkan/vulkan_swapchain.cpp
+  "src/graphics/vulkan/vulkan_renderer_api.cpp"
+  "src/graphics/vulkan/context/vulkan_instance.cpp"
+  "src/graphics/vulkan/context/vulkan_device.cpp"
+  "src/graphics/vulkan/context/vulkan_surface.cpp"
+  "src/graphics/vulkan/pipelines/vulkan_shader_module.cpp"
+  "src/graphics/vulkan/pipelines/vulkan_pipeline.cpp"
+  "src/graphics/vulkan/commands/vulkan_command_pool.cpp"
+  "src/graphics/vulkan/commands/vulkan_command_buffer.cpp"
+  "src/graphics/vulkan/commands/vulkan_render_pass.cpp"
+  "src/graphics/vulkan/vulkan_allocator.cpp"
+  "src/graphics/vulkan/vulkan_framebuffers.cpp"
+  "src/graphics/vulkan/vulkan_swapchain.cpp"
 )
 
 # ----------------------------------------
@@ -130,9 +136,15 @@ target_link_libraries(mosaic
   PRIVATE
     glfw3webgpu
     webgpu
-    volk::volk
-    GPUOpen::VulkanMemoryAllocator
 )
+
+if(NOT DEFINED EMSCRIPTEN)
+  target_link_libraries(mosaic
+    PRIVATE
+      volk::volk
+      GPUOpen::VulkanMemoryAllocator
+  )
+endif()
 
 # ----------------------------------------
 # Post-Build Step
