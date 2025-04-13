@@ -11,6 +11,7 @@
     "vulkan",
     "vulkan-utility-libraries",
     "volk",
-    "vulkan-memory-allocator"
+    "vulkan-memory-allocator",
+    "stduuid"
   ]
 }

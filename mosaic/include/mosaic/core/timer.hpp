@@ -8,6 +8,10 @@
 #include <mutex>
 #include <iostream>
 #include <string>
+#include <random>
+
+#define UUID_SYSTEM_GENERATOR
+#include <stduuid/uuid.h>
 
 #include "mosaic/defines.hpp"
 
@@ -15,6 +19,26 @@ namespace mosaic
 {
 namespace core
 {
+
+/**
+ * @brief Represents a scheduled callback.
+ *
+ * The ScheduledCallback struct contains information about a callback including its trigger time,
+ * its UUID, and whether it has been cancelled.
+ */
+struct ScheduledCallback
+{
+    uuids::uuid uuid;
+    double triggerTime;
+    bool cancelled;
+    std::function<void()> callback;
+
+    ScheduledCallback(double _triggerTime, std::function<void()> _callback)
+        : uuid(uuids::uuid_system_generator{}()),
+          triggerTime(_triggerTime),
+          cancelled(false),
+          callback(_callback) {};
+};
 
 /**
  * @brief The timer class provides both a static interface for getting the current time and an
@@ -72,24 +96,20 @@ class MOSAIC_API Timer
      *
      * @param _delaySeconds The delay before the callback is executed.
      * @param _callback The callback function to be executed.
+     *
+     * @return A ScheduledCallback object representing the scheduled callback.
      */
-    void scheduleCallback(std::chrono::duration<double> _delaySeconds,
-                          std::function<void()> _callback);
+    ScheduledCallback scheduleCallback(std::chrono::duration<double> _delaySeconds,
+                                       std::function<void()> _callback);
+
+    /**
+     * @brief Cancel a scheduled callback.
+     *
+     * @param _uuid The UUID of the callback to cancel.
+     */
+    void cancelCallback(const uuids::uuid& _uuid);
 
    private:
-    /**
-     * @brief Represents a scheduled callback with its trigger time and the
-     * callback function.
-     */
-    struct ScheduledCallback
-    {
-        double triggerTime;
-        std::function<void()> callback;
-
-        ScheduledCallback(double _triggerTime, std::function<void()> _callback)
-            : triggerTime(_triggerTime), callback(_callback) {};
-    };
-
     /**
      * @brief Runs the scheduled callbacks in a separate thread.
      *

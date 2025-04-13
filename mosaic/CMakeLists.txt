@@ -133,6 +133,7 @@ target_link_libraries(mosaic
     glfw
     spdlog::spdlog
     nlohmann_json::nlohmann_json
+    stduuid
   PRIVATE
     glfw3webgpu
     webgpu
