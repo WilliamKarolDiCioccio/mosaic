@@ -32,7 +32,7 @@ class MOSAIC_API Renderer
 
    public:
     void setAPI(RendererAPIType _apiType);
-    void initialize(const Window& _window);
+    void initialize(const Window* _window);
     void shutdown();
     void render();
 

@@ -7,10 +7,12 @@ namespace graphics
 namespace vulkan
 {
 
-void VulkanRendererAPI::initialize(const Window& _window)
+void VulkanRendererAPI::initialize(const Window* _window)
 {
+    m_window = _window;
+
     createInstance(m_instance);
-    createSurface(m_surface, m_instance, _window.getGLFWHandle());
+    createSurface(m_surface, m_instance, _window->getGLFWHandle());
     createDevice(m_device, m_instance, m_surface);
     createSwapchain(m_swapchain, m_device, m_surface, _window);
     createRenderPass(m_renderPass, m_device, m_swapchain);
@@ -37,16 +39,48 @@ void VulkanRendererAPI::shutdown()
     destroyInstance(m_instance);
 }
 
+void VulkanRendererAPI::recreateSwapchain()
+{
+    while (glm::length(m_window->getFramebufferSize()) == 0)
+    {
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(m_device.device);
+
+    destroySwapchainFramebuffers(m_swapchain, m_device);
+    destroyGraphicsPipeline(m_pipeline, m_device);
+    destroyRenderPass(m_renderPass, m_device);
+    destroySwapchain(m_swapchain);
+
+    createSwapchain(m_swapchain, m_device, m_surface, m_window);
+    createRenderPass(m_renderPass, m_device, m_swapchain);
+    createGraphicsPipeline(m_pipeline, m_device, m_swapchain, m_renderPass);
+    createSwapchainFramebuffers(m_swapchain, m_device, m_renderPass);
+}
+
 void VulkanRendererAPI::beginFrame()
 {
     auto& frame = m_frameData[m_currentFrame];
 
     vkWaitForFences(m_device.device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(m_device.device, 1, &frame.inFlightFence);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(m_device.device, m_swapchain.swapchain, UINT64_MAX,
-                          frame.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    VkResult acquireResult =
+        vkAcquireNextImageKHR(m_device.device, m_swapchain.swapchain, UINT64_MAX,
+                              frame.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+    if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        recreateSwapchain();
+        return;
+    }
+    else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+    {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
+
+    vkResetFences(m_device.device, 1, &frame.inFlightFence);
 
     vkResetCommandBuffer(frame.commandBuffer, 0);
 
@@ -115,7 +149,16 @@ void VulkanRendererAPI::beginFrame()
 
     presentInfo.pImageIndices = &imageIndex;
 
-    vkQueuePresentKHR(m_device.presentQueue, &presentInfo);
+    VkResult presentResult = vkQueuePresentKHR(m_device.presentQueue, &presentInfo);
+
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
+    {
+        recreateSwapchain();
+    }
+    else if (presentResult != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
 
     m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }

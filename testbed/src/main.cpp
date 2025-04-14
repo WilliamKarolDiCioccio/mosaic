@@ -122,8 +122,10 @@ class TestbedApplication : public mosaic::core::Application
 
         graphics::Renderer& renderer = graphics::Renderer::getGlobalRendererAPI();
 
-        renderer.setAPI(graphics::RendererAPIType::web_gpu);
-        renderer.initialize(m_window);
+        renderer.setAPI(graphics::RendererAPIType::vulkan);
+        renderer.initialize(&m_window);
+
+        m_window.setResizeable(true);
 
         MOSAIC_INFO("Testbed initialized.");
     }

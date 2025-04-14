@@ -16,8 +16,9 @@ class WebGPURendererAPI : public RendererAPI
     WebGPURendererAPI() = default;
     ~WebGPURendererAPI() override = default;
 
-    void initialize(const Window& _window) override;
+    void initialize(const Window* _window) override;
     void shutdown() override;
+    void recreateSwapchain() override;
     void beginFrame() override;
     void updateResources() override;
     void drawScene() override;

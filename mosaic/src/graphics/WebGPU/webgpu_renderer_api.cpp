@@ -14,11 +14,11 @@ namespace graphics
 namespace webgpu
 {
 
-void WebGPURendererAPI::initialize(const Window& _window)
+void WebGPURendererAPI::initialize(const Window* _window)
 {
     m_instance = createInstance();
 
-    m_surface = glfwCreateWindowWGPUSurface(m_instance, _window.getGLFWHandle());
+    m_surface = glfwCreateWindowWGPUSurface(m_instance, _window->getGLFWHandle());
 
     m_adapter = requestAdapter(m_instance, m_surface);
 
@@ -79,6 +79,8 @@ void WebGPURendererAPI::shutdown()
     wgpuSurfaceUnconfigure(m_surface);
     wgpuInstanceRelease(m_instance);
 }
+
+void WebGPURendererAPI::recreateSwapchain() {}
 
 std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURendererAPI::getNextSurfaceViewData()
 {
