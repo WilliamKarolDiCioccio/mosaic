@@ -12,6 +12,7 @@
     "vulkan-utility-libraries",
     "volk",
     "vulkan-memory-allocator",
-    "stduuid"
+    "stduuid",
+    "stb"
   ]
 }

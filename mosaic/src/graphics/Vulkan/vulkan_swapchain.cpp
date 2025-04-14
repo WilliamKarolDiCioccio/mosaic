@@ -173,7 +173,7 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
     fullScreenExclusiveInfo.pNext = &win32FullScreenExclusiveInfo;
 #endif
 
-    if (_window.getState().isFullscreen && _swapchain.exclusiveFullscreenAvailable)
+    if (_window.getWindowProperties().isFullscreen && _swapchain.exclusiveFullscreenAvailable)
     {
         headExtPtr = (void*)&fullScreenExclusiveInfo;
     }

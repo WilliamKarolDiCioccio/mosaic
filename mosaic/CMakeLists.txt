@@ -25,6 +25,7 @@ set(FRAMEWORK_SRC
   "src/graphics/WebGPU/webgpu_renderer_api.cpp"
   "src/graphics/WebGPU/webgpu_commands.cpp"
   "src/graphics/WebGPU/webgpu_swapchain.cpp"
+  "src/graphics/WebGPU/webgpu_pipeline.cpp"
 
   # Vulkan Backend
   "src/graphics/vulkan/vulkan_renderer_api.cpp"
@@ -39,6 +40,9 @@ set(FRAMEWORK_SRC
   "src/graphics/vulkan/vulkan_allocator.cpp"
   "src/graphics/vulkan/vulkan_framebuffers.cpp"
   "src/graphics/vulkan/vulkan_swapchain.cpp"
+
+  # External headers that need compilation
+  "src/stb.cpp"
 )
 
 # ----------------------------------------
@@ -94,8 +98,11 @@ endif()
 # ----------------------------------------
 
 target_include_directories(mosaic
-  PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src"
-  PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  PRIVATE 
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${Stb_INCLUDE_DIR}"
+  PUBLIC  
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
 # ----------------------------------------

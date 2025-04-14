@@ -32,10 +32,12 @@ void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _s
         return;
     }
 
+    const glm::ivec2 framebufferSize = _window.getFramebufferSize();
+
     WGPUSurfaceConfiguration surfaceConfig = {};
     surfaceConfig.nextInChain = nullptr;
-    surfaceConfig.width = _window.getSize().x;
-    surfaceConfig.height = _window.getSize().y;
+    surfaceConfig.width = framebufferSize.x;
+    surfaceConfig.height = framebufferSize.y;
     surfaceConfig.format = WGPUTextureFormat_RGBA8UnormSrgb;
     surfaceConfig.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
     surfaceConfig.device = _device;

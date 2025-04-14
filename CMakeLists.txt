@@ -54,6 +54,7 @@ find_package(Vulkan REQUIRED)
 find_package(volk CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 find_package(stduuid CONFIG REQUIRED)
+find_package(Stb REQUIRED)
 
 # ---------------------------
 # Third-Party (Vendored) Libraries
