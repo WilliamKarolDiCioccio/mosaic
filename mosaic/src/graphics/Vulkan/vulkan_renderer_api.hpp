@@ -21,8 +21,25 @@ namespace graphics
 namespace vulkan
 {
 
+constexpr auto MAX_FRAMES_IN_FLIGHT = 2;
+
 class VulkanRendererAPI : public RendererAPI
 {
+   private:
+    struct FrameData
+    {
+        VkSemaphore imageAvailableSemaphore;
+        VkSemaphore renderFinishedSemaphore;
+        VkFence inFlightFence;
+        CommandBuffer commandBuffer;
+
+        FrameData()
+            : imageAvailableSemaphore(nullptr),
+              renderFinishedSemaphore(nullptr),
+              inFlightFence(nullptr),
+              commandBuffer(nullptr) {};
+    };
+
    public:
     VulkanRendererAPI() = default;
     ~VulkanRendererAPI() override = default;
@@ -35,8 +52,8 @@ class VulkanRendererAPI : public RendererAPI
     void endFrame() override;
 
    private:
-    void createSynchronizationObjects();
-    void destroySynchronizationObjects();
+    void createFrames();
+    void destroyFrames();
 
     Instance m_instance;
     Device m_device;
@@ -45,10 +62,9 @@ class VulkanRendererAPI : public RendererAPI
     RenderPass m_renderPass;
     Pipeline m_pipeline;
     CommandPool m_commandPool;
-    CommandBuffer m_commandBuffer;
-    VkSemaphore m_imageAvailableSemaphore;
-    VkSemaphore m_renderFinishedSemaphore;
-    VkFence m_inFlightFence;
+
+    uint32_t m_currentFrame = 0;
+    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> m_frameData;
 };
 
 } // namespace vulkan
