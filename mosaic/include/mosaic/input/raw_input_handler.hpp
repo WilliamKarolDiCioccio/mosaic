@@ -7,7 +7,7 @@
 #include <functional>
 
 #include "mosaic/core/logger.hpp"
-#include "mosaic/graphics/window.hpp"
+#include "mosaic/core/window.hpp"
 
 #include "glfw_mappings.hpp"
 
@@ -38,7 +38,7 @@ class RawInputHandler
     bool m_isActive;
 
    public:
-    RawInputHandler(const graphics::Window* _window);
+    RawInputHandler(const core::Window* _window);
     ~RawInputHandler() = default;
 
     RawInputHandler(const RawInputHandler&) = delete;

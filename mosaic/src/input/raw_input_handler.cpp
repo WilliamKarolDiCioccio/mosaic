@@ -5,11 +5,11 @@ namespace mosaic
 namespace input
 {
 
-RawInputHandler::RawInputHandler(const graphics::Window* _window)
+RawInputHandler::RawInputHandler(const core::Window* _window)
     : m_glfwWindow(_window->getGLFWHandle()),
       m_isActive(glfwGetWindowAttrib(m_glfwWindow, GLFW_FOCUSED))
 {
-    const_cast<graphics::Window*>(_window)->registerWindowScrollCallback(
+    const_cast<core::Window*>(_window)->registerWindowScrollCallback(
         [this](GLFWwindow* _window, double _xoffset, double _yoffset)
         {
             if (!this)
@@ -21,7 +21,7 @@ RawInputHandler::RawInputHandler(const graphics::Window* _window)
             this->m_mouseScrollQueue.push(MouseScrollInputData(_xoffset, _yoffset));
         });
 
-    const_cast<graphics::Window*>(_window)->registerWindowFocusCallback(
+    const_cast<core::Window*>(_window)->registerWindowFocusCallback(
         [this](GLFWwindow* _window, int _focused)
         {
             if (!this)

@@ -44,7 +44,7 @@ class VulkanRendererAPI : public RendererAPI
     VulkanRendererAPI() = default;
     ~VulkanRendererAPI() override = default;
 
-    void initialize(const Window* _window) override;
+    void initialize(const core::Window* _window) override;
     void shutdown() override;
     void recreateSwapchain() override;
     void beginFrame() override;
@@ -56,7 +56,7 @@ class VulkanRendererAPI : public RendererAPI
     void createFrames();
     void destroyFrames();
 
-    const Window* m_window;
+    const core::Window* m_window;
 
     Instance m_instance;
     Device m_device;

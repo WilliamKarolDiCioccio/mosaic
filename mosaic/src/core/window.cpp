@@ -1,4 +1,4 @@
-#include "mosaic/graphics/window.hpp"
+#include "mosaic/core/window.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -10,7 +10,7 @@
 
 namespace mosaic
 {
-namespace graphics
+namespace core
 {
 
 Window::Window(const std::string& _title, glm::ivec2 _size) : m_window(nullptr)
@@ -113,16 +113,16 @@ void Window::setCursorMode(CursorMode _mode)
 {
     switch (_mode)
     {
-        case mosaic::graphics::CursorMode::normal:
+        case CursorMode::normal:
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             break;
-        case mosaic::graphics::CursorMode::captured:
+        case CursorMode::captured:
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
             break;
-        case mosaic::graphics::CursorMode::hidden:
+        case CursorMode::hidden:
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
             break;
-        case mosaic::graphics::CursorMode::disabled:
+        case CursorMode::disabled:
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             break;
     }
@@ -406,5 +406,5 @@ void Window::unregisterCallbacks()
     glfwSetWindowUserPointer(m_window, nullptr);
 }
 
-} // namespace graphics
+} // namespace core
 } // namespace mosaic

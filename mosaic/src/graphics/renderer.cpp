@@ -26,7 +26,7 @@ void Renderer::setAPI(RendererAPIType _apiType)
     }
 }
 
-void Renderer::initialize(const Window* _window) { s_rendererAPI->initialize(_window); }
+void Renderer::initialize(const core::Window* _window) { s_rendererAPI->initialize(_window); }
 
 void Renderer::render()
 {

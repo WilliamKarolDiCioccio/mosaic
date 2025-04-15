@@ -1,6 +1,6 @@
 #pragma once
 
-#include "window.hpp"
+#include "mosaic/core/window.hpp"
 
 namespace mosaic
 {
@@ -12,7 +12,7 @@ class RendererAPI
    public:
     virtual ~RendererAPI() = default;
 
-    virtual void initialize(const Window* _window) = 0;
+    virtual void initialize(const core::Window* _window) = 0;
     virtual void shutdown() = 0;
     virtual void recreateSwapchain() = 0;
     virtual void beginFrame() = 0;

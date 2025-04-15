@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mosaic/core/logger.hpp"
-#include "mosaic/graphics/window.hpp"
+#include "mosaic/core/window.hpp"
 
 #include <volk.h>
 #include <vulkan/vk_enum_string_helper.h>

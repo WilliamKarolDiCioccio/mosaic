@@ -125,7 +125,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities,
 }
 
 void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface& _surface,
-                     const Window* _window)
+                     const core::Window* _window)
 {
     _swapchain.device = _device.device;
 

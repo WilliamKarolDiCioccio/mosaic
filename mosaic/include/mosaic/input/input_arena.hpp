@@ -101,7 +101,7 @@ class InputArena
     utils::SizedQueue<MouseCursorPosSample> m_cursorPosSamples;
 
    public:
-    InputArena(const graphics::Window* _window);
+    InputArena(const core::Window* _window);
     InputArena(const InputArena&) = delete;
     InputArena& operator=(const InputArena&) = delete;
 

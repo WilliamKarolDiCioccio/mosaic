@@ -7,7 +7,7 @@ namespace graphics
 namespace vulkan
 {
 
-void VulkanRendererAPI::initialize(const Window* _window)
+void VulkanRendererAPI::initialize(const core::Window* _window)
 {
     m_window = _window;
 
@@ -22,7 +22,7 @@ void VulkanRendererAPI::initialize(const Window* _window)
 
     createFrames();
 
-    const_cast<Window*>(m_window)->registerWindowResizeCallback(
+    const_cast<core::Window*>(m_window)->registerWindowResizeCallback(
         [this](GLFWwindow* _window, int _width, int _height) { m_framebufferResized = true; });
 }
 

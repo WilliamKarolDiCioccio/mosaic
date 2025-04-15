@@ -49,8 +49,8 @@ class MOSAIC_API InputSystem
     InputSystem& operator=(const InputSystem&) = delete;
 
    public:
-    InputContext* registerWindow(const graphics::Window* _window);
-    void unregisterWindow(const graphics::Window* _window);
+    InputContext* registerWindow(const core::Window* _window);
+    void unregisterWindow(const core::Window* _window);
 
     inline void unregisterAllWindows() { m_contexts.clear(); }
 
@@ -71,7 +71,7 @@ class MOSAIC_API InputSystem
         }
     }
 
-    inline InputContext* getContext(const graphics::Window* _window) const
+    inline InputContext* getContext(const core::Window* _window) const
     {
         const auto glfwWindow = _window->getGLFWHandle();
 

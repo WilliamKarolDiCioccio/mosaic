@@ -3,7 +3,7 @@
 
 #include <mosaic/core/application.hpp>
 #include <mosaic/core/logger.hpp>
-#include <mosaic/graphics/window.hpp>
+#include <mosaic/core/window.hpp>
 #include <mosaic/core/timer.hpp>
 #include <mosaic/input/input_system.hpp>
 #include <mosaic/graphics/renderer.hpp>
@@ -14,7 +14,7 @@ using namespace mosaic;
 class TestbedApplication : public mosaic::core::Application
 {
    private:
-    std::unique_ptr<mosaic::graphics::Window> m_window;
+    std::unique_ptr<mosaic::core::Window> m_window;
 
    public:
     TestbedApplication() : Application("Testbed") {}
@@ -22,7 +22,7 @@ class TestbedApplication : public mosaic::core::Application
    private:
     void onInitialize() override
     {
-        m_window = std::make_unique<mosaic::graphics::Window>("Testbed", glm::vec2(1280, 720));
+        m_window = std::make_unique<mosaic::core::Window>("Testbed", glm::vec2(1280, 720));
 
         input::InputSystem& inputSystem = input::InputSystem::getGlobalInputSystem();
 

@@ -14,7 +14,7 @@ namespace graphics
 namespace webgpu
 {
 
-void WebGPURendererAPI::initialize(const Window* _window)
+void WebGPURendererAPI::initialize(const core::Window* _window)
 {
     m_instance = createInstance();
 

@@ -5,7 +5,7 @@ namespace mosaic
 namespace input
 {
 
-InputContext* InputSystem::registerWindow(const graphics::Window* _window)
+InputContext* InputSystem::registerWindow(const core::Window* _window)
 {
     auto glfwWindow = _window->getGLFWHandle();
 
@@ -20,7 +20,7 @@ InputContext* InputSystem::registerWindow(const graphics::Window* _window)
     return m_contexts[glfwWindow].get();
 }
 
-void InputSystem::unregisterWindow(const graphics::Window* _window)
+void InputSystem::unregisterWindow(const core::Window* _window)
 {
     auto glfwWindow = _window->getGLFWHandle();
 

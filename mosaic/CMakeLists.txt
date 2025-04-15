@@ -8,6 +8,7 @@ set(FRAMEWORK_SRC
   "src/core/application.cpp"
   "src/core/tracer.cpp"
   "src/core/timer.cpp"
+  "src/core/window.cpp"
 
   # Input
   "src/input/input_system.cpp"
@@ -16,7 +17,6 @@ set(FRAMEWORK_SRC
   "src/input/input_context.cpp"
 
   # Graphics
-  "src/graphics/window.cpp"
   "src/graphics/renderer.cpp"
 
   # WebGPU Backend

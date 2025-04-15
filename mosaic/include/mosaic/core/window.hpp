@@ -13,7 +13,7 @@
 
 namespace mosaic
 {
-namespace graphics
+namespace core
 {
 
 /**
@@ -261,5 +261,5 @@ class MOSAIC_API Window
     void unregisterCallbacks();
 };
 
-} // namespace graphics
+} // namespace core
 } // namespace mosaic

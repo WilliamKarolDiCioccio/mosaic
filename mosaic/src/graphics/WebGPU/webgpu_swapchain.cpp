@@ -8,7 +8,7 @@ namespace webgpu
 {
 
 void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _surface,
-                        const Window* _window)
+                        const core::Window* _window)
 {
     WGPUSurfaceCapabilities surfaceCapabilities;
 
