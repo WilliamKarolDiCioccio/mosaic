@@ -60,7 +60,7 @@ class MOSAIC_API InputContext
     std::unordered_map<std::string, bool> m_triggeredActionsCache;
 
    public:
-    InputContext(GLFWwindow* _glfwWindow);
+    InputContext(const graphics::Window* _window);
 
     void update();
 

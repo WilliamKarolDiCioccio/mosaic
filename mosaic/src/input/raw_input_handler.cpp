@@ -5,45 +5,33 @@ namespace mosaic
 namespace input
 {
 
-std::unordered_map<GLFWwindow*, RawInputHandler*> RawInputHandler::s_handlers = {};
-
-RawInputHandler::RawInputHandler(GLFWwindow* _glfwWindow)
-    : m_glfwWindow(_glfwWindow), m_isActive(glfwGetWindowAttrib(_glfwWindow, GLFW_FOCUSED))
+RawInputHandler::RawInputHandler(const graphics::Window* _window)
+    : m_glfwWindow(_window->getGLFWHandle()),
+      m_isActive(glfwGetWindowAttrib(m_glfwWindow, GLFW_FOCUSED))
 {
-    glfwSetScrollCallback(m_glfwWindow, mouseScrollCallback);
-    glfwSetWindowFocusCallback(m_glfwWindow, windowFocusCallback);
+    const_cast<graphics::Window*>(_window)->registerWindowScrollCallback(
+        [this](GLFWwindow* _window, double _xoffset, double _yoffset)
+        {
+            if (!this)
+            {
+                MOSAIC_ERROR("RawInputHandler: No handler found for window");
+                return;
+            }
 
-    s_handlers[m_glfwWindow] = this;
-}
+            this->m_mouseScrollQueue.push(MouseScrollInputData(_xoffset, _yoffset));
+        });
 
-RawInputHandler::~RawInputHandler()
-{
-    glfwSetScrollCallback(m_glfwWindow, nullptr);
-    glfwSetWindowFocusCallback(m_glfwWindow, nullptr);
+    const_cast<graphics::Window*>(_window)->registerWindowFocusCallback(
+        [this](GLFWwindow* _window, int _focused)
+        {
+            if (!this)
+            {
+                MOSAIC_ERROR("RawInputHandler: No handler found for window");
+                return;
+            }
 
-    s_handlers.erase(m_glfwWindow);
-}
-
-void RawInputHandler::mouseScrollCallback(GLFWwindow* _window, double _xoffset, double _yoffset)
-{
-    if (s_handlers.find(_window) == s_handlers.end())
-    {
-        MOSAIC_ERROR("RawInputHandler: No handler found for window");
-        return;
-    }
-
-    s_handlers.at(_window)->m_mouseScrollQueue.push(MouseScrollInputData(_xoffset, _yoffset));
-}
-
-void RawInputHandler::windowFocusCallback(GLFWwindow* _window, int _focused)
-{
-    if (s_handlers.find(_window) == s_handlers.end())
-    {
-        MOSAIC_ERROR("RawInputHandler: No handler found for window");
-        return;
-    }
-
-    s_handlers.at(_window)->m_isActive = _focused;
+            this->m_isActive = _focused == GLFW_TRUE;
+        });
 }
 
 } // namespace input

@@ -1,5 +1,7 @@
 #include "mosaic/core/application.hpp"
 
+#include <GLFW/glfw3.h>
+
 #include <iostream>
 
 #include "mosaic/core/logger.hpp"
@@ -33,6 +35,11 @@ void Application::initialize()
     MOSAIC_INFO("Initializing Mosaic {0} application", _MOSAIC_VERSION);
 
     if (m_state.isInitialized) return;
+
+    if (!glfwInit())
+    {
+        throw std::runtime_error("Failed to initialize GLFW.");
+    }
 
     onInitialize();
 
@@ -101,6 +108,8 @@ void Application::shutdown()
     if (!m_state.isInitialized) return;
 
     onShutdown();
+
+    glfwTerminate();
 
     MOSAIC_INFO("Shutting down application");
     m_state.isInitialized = false;

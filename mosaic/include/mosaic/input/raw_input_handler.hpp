@@ -2,28 +2,19 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <queue>
 #include <optional>
 #include <functional>
-#include <GLFW/glfw3.h>
-#include <glm/vec2.hpp>
 
 #include "mosaic/core/logger.hpp"
+#include "mosaic/graphics/window.hpp"
+
 #include "glfw_mappings.hpp"
-#include "mosaic/utils/tsafe/queue.hpp"
 
 namespace mosaic
 {
 namespace input
 {
-
-using KeyboardKeyInputData = int;
-
-using MouseButtonInputData = int;
-
-using MouseScrollInputData = glm::vec2;
-
-using CursorPosInputData = glm::vec2;
 
 /**
  * @brief The `RawInputHandler` provides thread-safe access the input state.
@@ -36,14 +27,19 @@ using CursorPosInputData = glm::vec2;
 class RawInputHandler
 {
    private:
+    using KeyboardKeyInputData = int;
+    using MouseButtonInputData = int;
+    using MouseScrollInputData = glm::vec2;
+    using CursorPosInputData = glm::vec2;
+
+   private:
     GLFWwindow* m_glfwWindow;
-    static std::unordered_map<GLFWwindow*, RawInputHandler*> s_handlers;
+    std::queue<MouseScrollInputData> m_mouseScrollQueue;
     bool m_isActive;
-    utils::tsafe::ThreadSafeQueue<MouseScrollInputData> m_mouseScrollQueue;
 
    public:
-    RawInputHandler(GLFWwindow* _glfwWindow);
-    ~RawInputHandler();
+    RawInputHandler(const graphics::Window* _window);
+    ~RawInputHandler() = default;
 
     RawInputHandler(const RawInputHandler&) = delete;
     RawInputHandler& operator=(const RawInputHandler&) = delete;
@@ -71,12 +67,10 @@ class RawInputHandler
 
     inline MouseScrollInputData getMouseScrollInput()
     {
-        return m_mouseScrollQueue.try_pop().value();
+        MouseScrollInputData scrollInput = m_mouseScrollQueue.front();
+        m_mouseScrollQueue.pop();
+        return scrollInput;
     }
-
-   private:
-    static void mouseScrollCallback(GLFWwindow* _window, double _xoffset, double _yoffset);
-    static void windowFocusCallback(GLFWwindow* _window, int _focused);
 };
 
 } // namespace input

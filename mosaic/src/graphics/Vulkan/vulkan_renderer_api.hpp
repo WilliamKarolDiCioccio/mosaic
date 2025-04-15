@@ -68,6 +68,8 @@ class VulkanRendererAPI : public RendererAPI
 
     uint32_t m_currentFrame = 0;
     std::array<FrameData, MAX_FRAMES_IN_FLIGHT> m_frameData;
+
+    bool m_framebufferResized = false;
 };
 
 } // namespace vulkan

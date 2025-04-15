@@ -5,11 +5,13 @@ namespace mosaic
 namespace input
 {
 
-InputContext::InputContext(GLFWwindow* _window)
+InputContext::InputContext(const graphics::Window* _window)
     : m_arena(std::make_unique<InputArena>(_window)),
+      m_wheelOffset(0.f),
       m_averagedWheelDeltas(0.f),
       m_wheelSpeed(0.f),
       m_wheelAccelleration(0.f),
+      m_cursorPosition(0.f),
       m_cursorDelta(0.f),
       m_averagedCursorDeltas(0.f),
       m_cursorSpeed(0.f),

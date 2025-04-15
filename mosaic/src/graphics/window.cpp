@@ -13,66 +13,46 @@ namespace mosaic
 namespace graphics
 {
 
-Window::Window(const std::string& _title, glm::vec2 _size) : m_window(nullptr)
+Window::Window(const std::string& _title, glm::ivec2 _size) : m_window(nullptr)
 {
-    if (!glfwInit())
-    {
-        throw std::runtime_error("Failed to initialize GLFW.");
-    }
+    m_properties.title = _title;
+    m_properties.size = _size;
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+    glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+    glfwWindowHint(GLFW_POSITION_X, m_properties.position.x);
+    glfwWindowHint(GLFW_POSITION_Y, m_properties.position.y);
 
-    m_window = glfwCreateWindow(static_cast<int>(_size.x), static_cast<int>(_size.y),
-                                _title.c_str(), nullptr, nullptr);
+    m_window = glfwCreateWindow(_size.x, _size.y, _title.c_str(), nullptr, nullptr);
 
     if (!m_window)
     {
-        glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window.");
     }
 
-    glfwSetWindowUserPointer(m_window, this);
+    registerCallbacks();
 
-    glfwSetWindowSizeCallback(m_window,
-                              [](GLFWwindow* window, int width, int height)
-                              {
-                                  Window* win =
-                                      static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                  if (win) win->m_properties.size = {width, height};
-                              });
-
-    glfwSetWindowIconifyCallback(m_window,
-                                 [](GLFWwindow* window, int iconified)
-                                 {
-                                     Window* win =
-                                         static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                     if (win) win->m_properties.isMinimized = iconified;
-                                 });
-
-    glfwSetWindowMaximizeCallback(m_window,
-                                  [](GLFWwindow* window, int maximized)
-                                  {
-                                      Window* win =
-                                          static_cast<Window*>(glfwGetWindowUserPointer(window));
-                                      if (win) win->m_properties.isMaximized = maximized;
-                                  });
-
-    MOSAIC_INFO("Window created: {0} ({1} x {2})", _title, _size.x, _size.y);
+    MOSAIC_DEBUG("Window created: {0} ({1} x {2})", _title, _size.x, _size.y);
 }
 
 Window::~Window()
 {
-    if (m_window)
+    if (!m_window)
     {
-        glfwDestroyWindow(m_window);
+        MOSAIC_ERROR("Window already destroyed.");
+        return;
     }
 
-    glfwTerminate();
+    unregisterCallbacks();
+
+    glfwDestroyWindow(m_window);
 
     m_window = nullptr;
 
-    MOSAIC_INFO("Window destroyed.");
+    MOSAIC_DEBUG("Window destroyed.");
 }
 
 bool Window::shouldClose() const { return glfwWindowShouldClose(m_window); }
@@ -258,6 +238,173 @@ void Window::setWindowIcon(const std::string& _path, int _width, int _height)
 }
 
 void Window::resetWindowIcon() { glfwSetWindowIcon(m_window, 0, nullptr); }
+
+void Window::registerCallbacks()
+{
+    glfwSetWindowUserPointer(m_window, this);
+
+    glfwSetWindowCloseCallback(m_window,
+                               [](GLFWwindow* _window)
+                               {
+                                   auto win =
+                                       static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                                   if (!win) return;
+
+                                   for (auto& callback : win->m_windowCloseCallbacks)
+                                   {
+                                       callback(_window);
+                                   }
+                               });
+
+    glfwSetWindowFocusCallback(m_window,
+                               [](GLFWwindow* _window, int _focused)
+                               {
+                                   auto win =
+                                       static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                                   if (!win) return;
+
+                                   for (auto& callback : win->m_windowFocusCallbacks)
+                                   {
+                                       callback(_window, _focused);
+                                   }
+                               });
+
+    glfwSetWindowSizeCallback(m_window,
+                              [](GLFWwindow* _window, int _width, int _height)
+                              {
+                                  auto win =
+                                      static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                                  if (!win) return;
+
+                                  win->m_properties.size = {_width, _height};
+
+                                  for (auto& callback : win->m_windowResizeCallbacks)
+                                  {
+                                      callback(_window, _width, _height);
+                                  }
+                              });
+
+    glfwSetWindowRefreshCallback(m_window,
+                                 [](GLFWwindow* _window)
+                                 {
+                                     auto win =
+                                         static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                                     if (!win) return;
+
+                                     for (auto& callback : win->m_windowRefreshCallbacks)
+                                     {
+                                         callback(_window);
+                                     }
+                                 });
+
+    glfwSetWindowIconifyCallback(m_window,
+                                 [](GLFWwindow* _window, int _iconified)
+                                 {
+                                     auto win =
+                                         static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                                     if (!win) return;
+
+                                     win->m_properties.isMinimized = _iconified;
+
+                                     for (auto& callback : win->m_windowIconifyCallbacks)
+                                     {
+                                         callback(_window, _iconified);
+                                     }
+                                 });
+
+    glfwSetWindowMaximizeCallback(m_window,
+                                  [](GLFWwindow* _window, int _maximized)
+                                  {
+                                      auto win =
+                                          static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                                      if (!win) return;
+
+                                      win->m_properties.isMaximized = _maximized;
+
+                                      for (auto& callback : win->m_windowMaximizeCallbacks)
+                                      {
+                                          callback(_window, _maximized);
+                                      }
+                                  });
+
+    glfwSetDropCallback(m_window,
+                        [](GLFWwindow* _window, int _pathsCount, const char** _paths)
+                        {
+                            auto win = static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                            if (!win) return;
+
+                            for (auto& callback : win->m_windowDropCallbacks)
+                            {
+                                callback(_window, _pathsCount, _paths);
+                            }
+                        });
+
+    glfwSetScrollCallback(m_window,
+                          [](GLFWwindow* _window, double _xoffset, double _yoffset)
+                          {
+                              auto win = static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                              if (!win) return;
+
+                              for (auto& callback : win->m_windowScrollCallbacks)
+                              {
+                                  callback(_window, _xoffset, _yoffset);
+                              }
+                          });
+
+    glfwSetWindowPosCallback(m_window,
+                             [](GLFWwindow* _window, int _xpos, int _ypos)
+                             {
+                                 auto win = static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+                                 if (!win) return;
+
+                                 win->m_properties.position = {_xpos, _ypos};
+
+                                 for (auto& callback : win->m_windowPosCallbacks)
+                                 {
+                                     callback(_window, _xpos, _ypos);
+                                 }
+                             });
+
+    glfwSetWindowContentScaleCallback(
+        m_window,
+        [](GLFWwindow* _window, float _xscale, float _yscale)
+        {
+            auto win = static_cast<Window*>(glfwGetWindowUserPointer(_window));
+
+            if (!win) return;
+
+            for (auto& callback : win->m_windowContentScaleCallbacks)
+            {
+                callback(_window, _xscale, _yscale);
+            }
+        });
+}
+
+void Window::unregisterCallbacks()
+{
+    glfwSetWindowUserPointer(m_window, nullptr);
+    glfwSetWindowCloseCallback(m_window, nullptr);
+    glfwSetWindowFocusCallback(m_window, nullptr);
+    glfwSetWindowSizeCallback(m_window, nullptr);
+    glfwSetWindowRefreshCallback(m_window, nullptr);
+    glfwSetWindowIconifyCallback(m_window, nullptr);
+    glfwSetWindowMaximizeCallback(m_window, nullptr);
+    glfwSetDropCallback(m_window, nullptr);
+    glfwSetScrollCallback(m_window, nullptr);
+    glfwSetWindowPosCallback(m_window, nullptr);
+    glfwSetWindowContentScaleCallback(m_window, nullptr);
+
+    glfwSetWindowUserPointer(m_window, nullptr);
+}
 
 } // namespace graphics
 } // namespace mosaic

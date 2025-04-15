@@ -1,4 +1,6 @@
 #include <iostream>
+#include <memory>
+
 #include <mosaic/core/application.hpp>
 #include <mosaic/core/logger.hpp>
 #include <mosaic/graphics/window.hpp>
@@ -12,7 +14,7 @@ using namespace mosaic;
 class TestbedApplication : public mosaic::core::Application
 {
    private:
-    mosaic::graphics::Window m_window{"Testbed", {1280, 720}};
+    std::unique_ptr<mosaic::graphics::Window> m_window;
 
    public:
     TestbedApplication() : Application("Testbed") {}
@@ -20,9 +22,11 @@ class TestbedApplication : public mosaic::core::Application
    private:
     void onInitialize() override
     {
+        m_window = std::make_unique<mosaic::graphics::Window>("Testbed", glm::vec2(1280, 720));
+
         input::InputSystem& inputSystem = input::InputSystem::getGlobalInputSystem();
 
-        auto inputContext = inputSystem.registerWindow(m_window);
+        auto inputContext = inputSystem.registerWindow(m_window.get());
 
         inputContext->updateVirtualKeyboardKeys({
             {"closeApp", input::KeyboardKey::key_escape},
@@ -123,9 +127,9 @@ class TestbedApplication : public mosaic::core::Application
         graphics::Renderer& renderer = graphics::Renderer::getGlobalRendererAPI();
 
         renderer.setAPI(graphics::RendererAPIType::vulkan);
-        renderer.initialize(&m_window);
+        renderer.initialize(m_window.get());
 
-        m_window.setResizeable(true);
+        m_window->setResizeable(true);
 
         MOSAIC_INFO("Testbed initialized.");
     }
@@ -142,34 +146,15 @@ class TestbedApplication : public mosaic::core::Application
 
         inputSystem.updateContexts();
 
-        input::InputContext* inputContext = inputSystem.getContext(m_window);
+        input::InputContext* inputContext = inputSystem.getContext(m_window.get());
 
-        if (inputContext->isActionTriggered("moveLeft"))
-        {
-            MOSAIC_INFO("Moving left.");
-        }
+        if (inputContext->isActionTriggered("moveLeft")) MOSAIC_INFO("Moving left.");
+        if (inputContext->isActionTriggered("moveRight")) MOSAIC_INFO("Moving right.");
+        if (inputContext->isActionTriggered("moveUp")) MOSAIC_INFO("Moving up.");
+        if (inputContext->isActionTriggered("moveDown")) MOSAIC_INFO("Moving down.");
+        if (inputContext->isActionTriggered("resetCamera")) MOSAIC_INFO("Resetting camera.");
 
-        if (inputContext->isActionTriggered("moveRight"))
-        {
-            MOSAIC_INFO("Moving right.");
-        }
-
-        if (inputContext->isActionTriggered("moveUp"))
-        {
-            MOSAIC_INFO("Moving up.");
-        }
-
-        if (inputContext->isActionTriggered("moveDown"))
-        {
-            MOSAIC_INFO("Moving down.");
-        }
-
-        if (inputContext->isActionTriggered("resetCamera"))
-        {
-            MOSAIC_INFO("Resetting camera.");
-        }
-
-        if (m_window.shouldClose() || inputContext->isActionTriggered("closeApp"))
+        if (m_window->shouldClose() || inputContext->isActionTriggered("closeApp"))
         {
             return shutdown();
         }
@@ -187,7 +172,7 @@ class TestbedApplication : public mosaic::core::Application
 
         auto& inputManager = input::InputSystem::getGlobalInputSystem();
 
-        inputManager.unregisterWindow(m_window);
+        inputManager.unregisterWindow(m_window.get());
 
         MOSAIC_INFO("Testbed shutdown.");
     }

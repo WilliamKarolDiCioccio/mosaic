@@ -65,7 +65,11 @@ struct CursorProperties
     bool isClipped;
 
     CursorProperties()
-        : currentType(CursorType::arrow), srcPaths(), isVisible(true), isClipped(false) {};
+        : currentType(CursorType::arrow),
+          currentMode(CursorMode::normal),
+          srcPaths(),
+          isVisible(true),
+          isClipped(false) {};
 };
 
 /**
@@ -78,6 +82,7 @@ struct WindowProperties
 {
     std::string title;
     glm::ivec2 size;
+    glm::ivec2 position;
     bool isFullscreen;
     bool isMinimized;
     bool isMaximized;
@@ -88,6 +93,7 @@ struct WindowProperties
     WindowProperties()
         : title("Game Window"),
           size({1280, 720}),
+          position({100, 100}),
           isFullscreen(false),
           isMinimized(false),
           isMaximized(false),
@@ -108,11 +114,24 @@ struct WindowProperties
 class MOSAIC_API Window
 {
    private:
+    using WindowCloseCallback = std::function<void(GLFWwindow*)>;
+    using WindowFocusCallback = std::function<void(GLFWwindow*, int)>;
+    using WindowResizeCallback = std::function<void(GLFWwindow*, int, int)>;
+    using WindowRefreshCallback = std::function<void(GLFWwindow*)>;
+    using WindowIconifyCallback = std::function<void(GLFWwindow*, int)>;
+    using WindowMaximizeCallback = std::function<void(GLFWwindow*, int)>;
+    using WindowDropCallback = std::function<void(GLFWwindow*, int, const char**)>;
+    using WindowScrollCallback = std::function<void(GLFWwindow*, double, double)>;
+    using WindowCursorEnterCallback = std::function<void(GLFWwindow*, int)>;
+    using WindowPosCallback = std::function<void(GLFWwindow*, int, int)>;
+    using WindowContentScaleCallback = std::function<void(GLFWwindow*, float, float)>;
+
+   private:
     GLFWwindow* m_window;
     WindowProperties m_properties;
 
    public:
-    Window(const std::string& _title, glm::vec2 _size);
+    Window(const std::string& _title, glm::ivec2 _size);
     ~Window();
 
     /**
@@ -144,13 +163,21 @@ class MOSAIC_API Window
     void setWindowIcon(const std::string& _path, int _width = 0, int _height = 0);
     void resetWindowIcon();
 
+    // Clipboard
+    inline void setClipboardString(const std::string& _string)
+    {
+        glfwSetClipboardString(nullptr, _string.c_str());
+    }
+
+    inline std::string getClipboardString() const { return glfwGetClipboardString(nullptr); }
+
     inline GLFWwindow* getGLFWHandle() const { return m_window; }
 
-    inline glm::vec2 getFramebufferSize() const
+    inline glm::ivec2 getFramebufferSize() const
     {
         int width, height;
         glfwGetFramebufferSize(m_window, &width, &height);
-        return glm::vec2(width, height);
+        return glm::ivec2(width, height);
     }
 
     inline const WindowProperties& getWindowProperties() const { return m_properties; }
@@ -159,6 +186,79 @@ class MOSAIC_API Window
     {
         return m_properties.cursorProperties;
     }
+
+    // Public callback registration
+
+    inline void registerWindowCloseCallback(WindowCloseCallback _callback)
+    {
+        m_windowCloseCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowFocusCallback(WindowFocusCallback _callback)
+    {
+        m_windowFocusCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowResizeCallback(WindowResizeCallback _callback)
+    {
+        m_windowResizeCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowRefreshCallback(WindowRefreshCallback _callback)
+    {
+        m_windowRefreshCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowIconifyCallback(WindowIconifyCallback _callback)
+    {
+        m_windowIconifyCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowMaximizeCallback(WindowMaximizeCallback _callback)
+    {
+        m_windowMaximizeCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowDropCallback(WindowDropCallback _callback)
+    {
+        m_windowDropCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowScrollCallback(WindowScrollCallback _callback)
+    {
+        m_windowScrollCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowCursorEnterCallback(WindowCursorEnterCallback _callback)
+    {
+        m_windowCursorEnterCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowPosCallback(WindowPosCallback _callback)
+    {
+        m_windowPosCallbacks.push_back(_callback);
+    }
+
+    inline void registerWindowContentScaleCallback(WindowContentScaleCallback _callback)
+    {
+        m_windowContentScaleCallbacks.push_back(_callback);
+    }
+
+   private:
+    std::vector<WindowCloseCallback> m_windowCloseCallbacks;
+    std::vector<WindowFocusCallback> m_windowFocusCallbacks;
+    std::vector<WindowResizeCallback> m_windowResizeCallbacks;
+    std::vector<WindowRefreshCallback> m_windowRefreshCallbacks;
+    std::vector<WindowIconifyCallback> m_windowIconifyCallbacks;
+    std::vector<WindowMaximizeCallback> m_windowMaximizeCallbacks;
+    std::vector<WindowDropCallback> m_windowDropCallbacks;
+    std::vector<WindowScrollCallback> m_windowScrollCallbacks;
+    std::vector<WindowCursorEnterCallback> m_windowCursorEnterCallbacks;
+    std::vector<WindowPosCallback> m_windowPosCallbacks;
+    std::vector<WindowContentScaleCallback> m_windowContentScaleCallbacks;
+
+    void registerCallbacks();
+    void unregisterCallbacks();
 };
 
 } // namespace graphics

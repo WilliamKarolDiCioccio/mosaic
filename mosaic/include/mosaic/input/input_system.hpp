@@ -7,8 +7,6 @@
 #include <functional>
 #include <nlohmann/json.hpp>
 
-#include "mosaic/graphics/window.hpp"
-
 #include "input_context.hpp"
 
 namespace mosaic
@@ -51,8 +49,8 @@ class MOSAIC_API InputSystem
     InputSystem& operator=(const InputSystem&) = delete;
 
    public:
-    InputContext* registerWindow(const graphics::Window& _window);
-    void unregisterWindow(const graphics::Window& _window);
+    InputContext* registerWindow(const graphics::Window* _window);
+    void unregisterWindow(const graphics::Window* _window);
 
     inline void unregisterAllWindows() { m_contexts.clear(); }
 
@@ -73,9 +71,9 @@ class MOSAIC_API InputSystem
         }
     }
 
-    inline InputContext* getContext(const graphics::Window& _window) const
+    inline InputContext* getContext(const graphics::Window* _window) const
     {
-        const auto& glfwWindow = _window.getGLFWHandle();
+        const auto glfwWindow = _window->getGLFWHandle();
 
         if (m_contexts.find(glfwWindow) == m_contexts.end())
         {

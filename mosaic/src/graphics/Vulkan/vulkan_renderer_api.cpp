@@ -21,6 +21,9 @@ void VulkanRendererAPI::initialize(const Window* _window)
     createCommandPool(m_commandPool, m_device, m_surface);
 
     createFrames();
+
+    const_cast<Window*>(m_window)->registerWindowResizeCallback(
+        [this](GLFWwindow* _window, int _width, int _height) { m_framebufferResized = true; });
 }
 
 void VulkanRendererAPI::shutdown()
@@ -41,9 +44,12 @@ void VulkanRendererAPI::shutdown()
 
 void VulkanRendererAPI::recreateSwapchain()
 {
-    while (glm::length(m_window->getFramebufferSize()) == 0)
+    auto framebufferSize = m_window->getFramebufferSize();
+
+    while (framebufferSize.x == 0 || framebufferSize.y == 0)
     {
         glfwWaitEvents();
+        framebufferSize = m_window->getFramebufferSize();
     }
 
     vkDeviceWaitIdle(m_device.device);
@@ -57,6 +63,8 @@ void VulkanRendererAPI::recreateSwapchain()
     createRenderPass(m_renderPass, m_device, m_swapchain);
     createGraphicsPipeline(m_pipeline, m_device, m_swapchain, m_renderPass);
     createSwapchainFramebuffers(m_swapchain, m_device, m_renderPass);
+
+    m_framebufferResized = false;
 }
 
 void VulkanRendererAPI::beginFrame()
@@ -72,8 +80,7 @@ void VulkanRendererAPI::beginFrame()
 
     if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        recreateSwapchain();
-        return;
+        return recreateSwapchain();
     }
     else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
     {
@@ -151,7 +158,8 @@ void VulkanRendererAPI::beginFrame()
 
     VkResult presentResult = vkQueuePresentKHR(m_device.presentQueue, &presentInfo);
 
-    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR ||
+        m_framebufferResized)
     {
         recreateSwapchain();
     }
