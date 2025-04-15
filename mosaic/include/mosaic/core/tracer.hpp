@@ -62,5 +62,10 @@ class TracerManager final
 } // namespace core
 } // namespace mosaic
 
+#ifdef _DEBUG
 #define MOSAIC_BEGIN_TRACE(name, category) mosaic::core::TracerManager::beginTrace(name, category)
 #define MOSAIC_END_TRACE() mosaic::core::TracerManager::endTrace()
+#else
+#define MOSAIC_BEGIN_TRACE(name, category) ((void)0)
+#define MOSAIC_END_TRACE() ((void)0)
+#endif

@@ -30,8 +30,14 @@ class LoggerManager final
 } // namespace core
 } // namespace mosaic
 
+#ifdef _DEBUG
 #define MOSAIC_TRACE(...) mosaic::core::LoggerManager::get()->trace(__VA_ARGS__)
 #define MOSAIC_DEBUG(...) mosaic::core::LoggerManager::get()->debug(__VA_ARGS__)
+#else
+#define MOSAIC_TRACE(...) ((void)0)
+#define MOSAIC_DEBUG(...) ((void)0)
+#endif
+
 #define MOSAIC_INFO(...) mosaic::core::LoggerManager::get()->info(__VA_ARGS__)
 #define MOSAIC_WARN(...) mosaic::core::LoggerManager::get()->warn(__VA_ARGS__)
 #define MOSAIC_ERROR(...) mosaic::core::LoggerManager::get()->error(__VA_ARGS__)
