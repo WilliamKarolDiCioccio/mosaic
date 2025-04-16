@@ -6,9 +6,9 @@
 
 // Platform detection
 #if defined(__EMSCRIPTEN__)
+#define MOSAIC_PLATFORM_WASM
+#define MOSCAIC_PLATFORM_NAME "WASM"
 #include <emscripten.h>
-#define MOSAIC_PLATFORM_EMSCRIPTEN
-#define MOSCAIC_PLATFORM_NAME "Emscripten"
 #elif defined(_WIN32) || defined(_WIN64)
 #define MOSAIC_PLATFORM_WINDOWS
 #define MOSCAIC_PLATFORM_NAME "Windows"
@@ -22,14 +22,31 @@
 #error "Unknown platform!"
 #endif
 
+// Compiler detection
+#if defined(__EMSCRIPTEN__)
+#define MOSAIC_COMPILER_EMSCRIPTEN
+#define MOSAIC_COMPILER_NAME "Emscripten"
+#elif defined(_MSC_VER)
+#define MOSAIC_COMPILER_MSVC
+#define MOSAIC_COMPILER_NAME "MSVC"
+#elif defined(__clang__)
+#define MOSAIC_COMPILER_CLANG
+#define MOSAIC_COMPILER_NAME "Clang"
+#elif defined(__GNUC__) || defined(__GNUG__)
+#define MOSAIC_COMPILER_GCC
+#define MOSAIC_COMPILER_NAME "GCC"
+#else
+#error "Unknown compiler!"
+#endif
+
 // Import/Export macros
-#if defined(MOSAIC_PLATFORM_WINDOWS)
+#if defined(MOSAIC_COMPILER_MSVC)
 #if defined(_MOSAIC_BUILD_DLL)
 #define MOSAIC_API __declspec(dllexport)
 #else
 #define MOSAIC_API __declspec(dllimport)
 #endif
-#elif defined(MOSAIC_PLATFORM_MACOS) || defined(_MOSAIC_PLATFORM_LINUX)
+#elif defined(MOSAIC_COMPILER_GCC) || defined(MOSAIC_COMPILER_CLANG)
 #if defined(_MOSAIC_BUILD_DLL)
 #define MOSAIC_API __attribute__((visibility("default")))
 #else
@@ -37,6 +54,41 @@
 #endif
 #else
 #define MOSAIC_API
+#endif
+
+// Debug break macros
+#ifdef _DEBUG
+#if defined(MOSAIC_COMPILER_MSVC)
+#define MOSAIC_DEBUGBREAK __debugbreak()
+#elif defined(MOSAIC_COMPILER_GCC) || defined(MOSAIC_COMPILER_CLANG)
+#define MOSAIC_DEBUGBREAK raise(SIGTRAP)
+#endif
+#else
+#define MOSAIC_DEBUGBREAK ((void)0)
+#endif
+
+// Assert macros
+#ifdef _DEBUG
+#define MOSAIC_ASSERT_IMPL(cond, file, func, line, msg) \
+    do                                                  \
+    {                                                   \
+        if (!(cond))                                    \
+        {                                               \
+            const char* _assert_condition = #cond;      \
+            const char* _assert_file = file;            \
+            const char* _assert_func = func;            \
+            int _assert_line = line;                    \
+            const char* _assert_msg = msg;              \
+            /* Optional: Call a logger or breakpoint */ \
+            DEBUG_BREAK();                              \
+            std::abort();                               \
+        }                                               \
+    } while (false)
+#define MOSAIC_ASSERT(x) MOSAIC_ASSERT_IMPL(x, __FILE__, __FUNCTION__, __LINE__, nullptr)
+#define MOSAIC_ASSERT_MSG(x, msg) MOSAIC_ASSERT_IMPL(x, __FILE__, __FUNCTION__, __LINE__, msg)
+#else
+#define MOSAIC_ASSERT(x) ((void)0)
+#define MOSAIC_ASSERT_MSG(x, msg) ((void)0)
 #endif
 
 // Warning suppression macros
