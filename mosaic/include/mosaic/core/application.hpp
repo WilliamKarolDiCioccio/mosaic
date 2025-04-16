@@ -2,38 +2,46 @@
 
 #include <memory>
 #include <string>
+#include <vector>
+#include <atomic>
 
 #include "mosaic/defines.hpp"
+#include "mosaic/version.hpp"
+
+#include "logger.hpp"
+#include "tracer.hpp"
 
 namespace mosaic
 {
 namespace core
 {
 
-struct ApplicationState
-{
-    bool isInitialized;
-    bool isPaused;
-
-    ApplicationState() : isInitialized(false), isPaused(false) {}
-};
-
-struct ApplicationData
+struct ApplicationProperties
 {
     std::string appName;
+    std::string appVersion;
+    std::string engineVersion;
     std::string logFilePath;
-    std::string traceFilePath;
+    std::string tracesFilePath;
+    std::string workingDirectory;
+    std::atomic<bool> isInitialized;
+    std::atomic<bool> isPaused;
 
-    ApplicationData(const std::string& _appName, const std::string& _logFilePath,
-                    const std::string& _traceFilePath)
-        : appName(_appName), logFilePath(_logFilePath), traceFilePath(_traceFilePath) {};
+    ApplicationProperties()
+        : appName(""),
+          appVersion(""),
+          engineVersion(_MOSAIC_VERSION),
+          logFilePath("./logs"),
+          tracesFilePath("./traces"),
+          workingDirectory("./"),
+          isInitialized(false),
+          isPaused(false) {};
 };
 
 class MOSAIC_API Application
 {
    public:
-    Application(const std::string& _appName, const std::string& _logFilePath = "./logs",
-                const std::string& _traceFilePath = "./traces");
+    Application(const std::string& _appName);
     ~Application();
 
     void initialize();
@@ -42,7 +50,7 @@ class MOSAIC_API Application
     void resume();
     void shutdown();
 
-    const bool isInitialized() const { return m_state.isInitialized; }
+    inline const ApplicationProperties& getProperties() const { return m_properties; }
 
    protected:
     virtual void onInitialize() = 0;
@@ -53,9 +61,10 @@ class MOSAIC_API Application
 
    private:
     void realUpdate();
+    void initializePlatform();
+    void shutdownPlatform();
 
-    ApplicationData m_data;
-    ApplicationState m_state;
+    ApplicationProperties m_properties;
 };
 
 } // namespace core
