@@ -36,10 +36,10 @@ class MOSAIC_API Renderer
     void shutdown();
     void render();
 
-    inline static Renderer& getGlobalRendererAPI()
+    inline static Renderer& get()
     {
-        static std::unique_ptr<Renderer> instance = std::make_unique<Renderer>();
-        return *instance;
+        static Renderer instance;
+        return instance;
     }
 };
 

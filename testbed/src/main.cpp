@@ -24,7 +24,7 @@ class TestbedApplication : public mosaic::core::Application
     {
         m_window = std::make_unique<mosaic::core::Window>("Testbed", glm::vec2(1280, 720));
 
-        input::InputSystem& inputSystem = input::InputSystem::getGlobalInputSystem();
+        input::InputSystem& inputSystem = input::InputSystem::get();
 
         auto inputContext = inputSystem.registerWindow(m_window.get());
 
@@ -124,7 +124,7 @@ class TestbedApplication : public mosaic::core::Application
             },
         });
 
-        graphics::Renderer& renderer = graphics::Renderer::getGlobalRendererAPI();
+        graphics::Renderer& renderer = graphics::Renderer::get();
 
         renderer.setAPI(graphics::RendererAPIType::vulkan);
         renderer.initialize(m_window.get());
@@ -138,11 +138,11 @@ class TestbedApplication : public mosaic::core::Application
     {
         core::Timer::tick();
 
-        graphics::Renderer& renderer = graphics::Renderer::getGlobalRendererAPI();
+        graphics::Renderer& renderer = graphics::Renderer::get();
 
         renderer.render();
 
-        input::InputSystem& inputSystem = input::InputSystem::getGlobalInputSystem();
+        input::InputSystem& inputSystem = input::InputSystem::get();
 
         inputSystem.updateContexts();
 
@@ -166,11 +166,11 @@ class TestbedApplication : public mosaic::core::Application
 
     void onShutdown() override
     {
-        auto& renderer = graphics::Renderer::getGlobalRendererAPI();
+        auto& renderer = graphics::Renderer::get();
 
         renderer.shutdown();
 
-        auto& inputManager = input::InputSystem::getGlobalInputSystem();
+        auto& inputManager = input::InputSystem::get();
 
         inputManager.unregisterWindow(m_window.get());
 

@@ -84,10 +84,10 @@ class MOSAIC_API InputSystem
         return m_contexts.at(glfwWindow).get();
     }
 
-    inline static InputSystem& getGlobalInputSystem()
+    inline static InputSystem& get()
     {
-        static std::unique_ptr<InputSystem> instance = std::make_unique<InputSystem>();
-        return *instance;
+        static InputSystem instance;
+        return instance;
     }
 };
 
