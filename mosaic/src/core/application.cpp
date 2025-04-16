@@ -4,54 +4,45 @@
 
 #include <iostream>
 
-#include "mosaic/core/logger.hpp"
-#include "mosaic/core/tracer.hpp"
-#include "mosaic/version.hpp"
-
 namespace mosaic
 {
 namespace core
 {
 
-Application::Application(const std::string& _appName, const std::string& _logFilePath,
-                         const std::string& _traceFilePath)
-    : m_data(_appName, _logFilePath, _traceFilePath)
+Application::Application(const std::string& _appName)
 {
-    LoggerManager::initialize(_appName, _logFilePath);
-    TracerManager::initialize(_traceFilePath);
+    m_properties.appName = _appName;
+    m_properties.appVersion = _MOSAIC_VERSION;
+    m_properties.logFilePath = "./logs/" + _appName + ".log";
+    m_properties.tracesFilePath = "./traces/" + _appName + ".trace";
+    m_properties.workingDirectory = "./";
+
+    LoggerManager::initialize(m_properties.appName, m_properties.logFilePath);
+    TracerManager::initialize(m_properties.tracesFilePath);
 }
 
 Application::~Application()
 {
-    if (m_state.isInitialized) shutdown();
-
     LoggerManager::shutdown();
     TracerManager::shutdown();
 }
 
 void Application::initialize()
 {
-    MOSAIC_BEGIN_TRACE("Application::initialize", TraceCategory::function);
-    MOSAIC_INFO("Initializing Mosaic {0} application", _MOSAIC_VERSION);
+    assert(!m_properties.isInitialized && "Application is already initialized!");
 
-    if (m_state.isInitialized) return;
+    MOSAIC_DEBUG("Initializing Mosaic {0} application", _MOSAIC_VERSION);
 
-    if (!glfwInit())
-    {
-        throw std::runtime_error("Failed to initialize GLFW.");
-    }
+    initializePlatform();
 
     onInitialize();
 
-    m_state.isInitialized = true;
-
-    MOSAIC_END_TRACE();
+    m_properties.isInitialized = true;
 }
 
 void Application::realUpdate()
 {
-    if (!m_state.isInitialized) return;
-    if (m_state.isPaused) return;
+    if (m_properties.isPaused) return;
 
     onUpdate();
 }
@@ -68,7 +59,7 @@ void Application::update()
 
     emscripten_set_main_loop_arg(callback, &app, 0, true);
 #else
-    while (m_state.isInitialized && !m_state.isPaused)
+    while (m_properties.isInitialized && !m_properties.isPaused)
     {
         realUpdate();
     }
@@ -77,43 +68,58 @@ void Application::update()
 
 void Application::pause()
 {
-    MOSAIC_INFO("Application paused");
+    assert(m_properties.isInitialized && "Application is not initialized!");
 
-    if (!m_state.isInitialized)
+    MOSAIC_DEBUG("Application paused");
+
+    if (m_properties.isPaused)
+    {
         return;
-    else if (m_state.isPaused)
-        return;
+    }
 
     onPause();
 
-    m_state.isPaused = true;
+    m_properties.isPaused = true;
 }
 
 void Application::resume()
 {
-    MOSAIC_INFO("Application resumed");
+    assert(m_properties.isInitialized && "Application is not initialized!");
 
-    if (!m_state.isInitialized)
+    MOSAIC_DEBUG("Application resumed");
+
+    if (!m_properties.isPaused)
+    {
         return;
-    else if (!m_state.isPaused)
-        return;
+    }
 
     onResume();
 
-    m_state.isPaused = false;
+    m_properties.isPaused = false;
 }
 
 void Application::shutdown()
 {
-    if (!m_state.isInitialized) return;
+    assert(m_properties.isInitialized && "Application is not initialized!");
 
     onShutdown();
 
-    glfwTerminate();
+    shutdownPlatform();
 
-    MOSAIC_INFO("Shutting down application");
-    m_state.isInitialized = false;
+    MOSAIC_DEBUG("Shutting down application");
+
+    m_properties.isInitialized = false;
 }
+
+void Application::initializePlatform()
+{
+    if (!glfwInit())
+    {
+        throw std::runtime_error("Failed to initialize GLFW.");
+    }
+}
+
+void Application::shutdownPlatform() { glfwTerminate(); }
 
 } // namespace core
 } // namespace mosaic
