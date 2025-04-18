@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "test_result.hpp"
 #include "test_tsafe_map.hpp"
 #include "test_tsafe_queue.hpp"
 

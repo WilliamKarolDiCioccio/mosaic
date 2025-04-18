@@ -27,7 +27,7 @@ Application::~Application()
     TracerManager::shutdown();
 }
 
-void Application::initialize()
+pieces::RefResult<Application, std::string> Application::initialize()
 {
     assert(!m_properties.isInitialized && "Application is already initialized!");
 
@@ -35,20 +35,15 @@ void Application::initialize()
 
     initializePlatform();
 
+    m_properties.isInitialized = true;
+
+    return pieces::OkRef<Application, std::string>(*this);
+}
+
+pieces::RefResult<Application, std::string> Application::run()
+{
     onInitialize();
 
-    m_properties.isInitialized = true;
-}
-
-void Application::realUpdate()
-{
-    if (m_properties.isPaused) return;
-
-    onUpdate();
-}
-
-void Application::update()
-{
 #ifdef __EMSCRIPTEN__
     auto callback = [](void* arg)
     {
@@ -61,9 +56,20 @@ void Application::update()
 #else
     while (m_properties.isInitialized && !m_properties.isPaused)
     {
-        realUpdate();
+        realRun();
     }
 #endif
+
+    onShutdown();
+
+    return pieces::OkRef<Application, std::string>(*this);
+}
+
+void Application::realRun()
+{
+    if (m_properties.isPaused) return;
+
+    onUpdate();
 }
 
 void Application::pause()
@@ -101,8 +107,6 @@ void Application::resume()
 void Application::shutdown()
 {
     assert(m_properties.isInitialized && "Application is not initialized!");
-
-    onShutdown();
 
     shutdownPlatform();
 

@@ -185,8 +185,14 @@ int main()
 #endif
 
     TestbedApplication app;
-    app.initialize();
-    app.update();
+
+    auto result = app.initialize().andThen(std::mem_fn(&TestbedApplication::run));
+
+    if (result.isErr())
+    {
+        MOSAIC_ERROR("Failed to initialize the application: {0}", result.error());
+        return 1;
+    }
 
     return 0;
 }

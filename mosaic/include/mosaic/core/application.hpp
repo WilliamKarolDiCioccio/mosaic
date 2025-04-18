@@ -5,6 +5,8 @@
 #include <vector>
 #include <atomic>
 
+#include <pieces/result.hpp>
+
 #include "mosaic/defines.hpp"
 #include "mosaic/version.hpp"
 
@@ -44,8 +46,8 @@ class MOSAIC_API Application
     Application(const std::string& _appName);
     ~Application();
 
-    void initialize();
-    void update();
+    pieces::RefResult<Application, std::string> initialize();
+    pieces::RefResult<Application, std::string> run();
     void pause();
     void resume();
     void shutdown();
@@ -60,7 +62,7 @@ class MOSAIC_API Application
     virtual void onShutdown() = 0;
 
    private:
-    void realUpdate();
+    void realRun();
     void initializePlatform();
     void shutdownPlatform();
 
