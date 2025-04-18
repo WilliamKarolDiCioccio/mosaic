@@ -5,11 +5,13 @@
 #include <optional>
 #include <shared_mutex>
 
-#include "mosaic/utils/tsafe/map.hpp"
+#include "pieces/tsafe/map.hpp"
+
+using namespace pieces::tsafe;
 
 TEST(ThreadSafeMapTest, InsertAndGet)
 {
-    mosaic::utils::tsafe::ThreadSafeMap<int, std::string> map;
+    ThreadSafeMap<int, std::string> map;
     map.insert(1, "one");
 
     auto result = map.get(1);
@@ -19,7 +21,7 @@ TEST(ThreadSafeMapTest, InsertAndGet)
 
 TEST(ThreadSafeMapTest, OverwriteAndErase)
 {
-    mosaic::utils::tsafe::ThreadSafeMap<int, std::string> map;
+    ThreadSafeMap<int, std::string> map;
     map.insert(1, "one");
     map.insert(1, "uno");
 
@@ -31,7 +33,7 @@ TEST(ThreadSafeMapTest, OverwriteAndErase)
 
 TEST(ThreadSafeMapTest, InsertIfAbsent)
 {
-    mosaic::utils::tsafe::ThreadSafeMap<int, std::string> map;
+    ThreadSafeMap<int, std::string> map;
     map.insertIfAbsent(1, "one");
     map.insertIfAbsent(1, "uno"); // Should not overwrite
 
@@ -40,7 +42,7 @@ TEST(ThreadSafeMapTest, InsertIfAbsent)
 
 TEST(ThreadSafeMapTest, TransformRollbackOnException)
 {
-    mosaic::utils::tsafe::ThreadSafeMap<int, int> map;
+    ThreadSafeMap<int, int> map;
     map.insert(1, 10);
 
     try
@@ -61,7 +63,7 @@ TEST(ThreadSafeMapTest, TransformRollbackOnException)
 
 TEST(ThreadSafeMapTest, ThreadedInsert)
 {
-    mosaic::utils::tsafe::ThreadSafeMap<int, int> map;
+    ThreadSafeMap<int, int> map;
 
     auto thread_fn = [&map](int start)
     {

@@ -136,6 +136,7 @@ target_precompile_headers(mosaic PRIVATE
 
 target_link_libraries(mosaic
   PUBLIC
+    pieces
     glm::glm-header-only
     glfw
     spdlog::spdlog

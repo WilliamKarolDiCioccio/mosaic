@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <mosaic/core/application.hpp>
+#include "test_tsafe_map.hpp"
+#include "test_tsafe_queue.hpp"
 
 int main(int argc, char **argv)
 {

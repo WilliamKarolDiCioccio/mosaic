@@ -3,11 +3,13 @@
 #include <gtest/gtest.h>
 #include <thread>
 
-#include "mosaic/utils/tsafe/queue.hpp"
+#include "pieces/tsafe/queue.hpp"
+
+using namespace pieces::tsafe;
 
 TEST(ThreadSafeQueueTest, PushAndTryPop)
 {
-    mosaic::utils::tsafe::ThreadSafeQueue<int> queue;
+    ThreadSafeQueue<int> queue;
     queue.push(42);
 
     auto value = queue.try_pop();
@@ -17,13 +19,13 @@ TEST(ThreadSafeQueueTest, PushAndTryPop)
 
 TEST(ThreadSafeQueueTest, TryPopEmptyReturnsNullopt)
 {
-    mosaic::utils::tsafe::ThreadSafeQueue<int> queue;
+    ThreadSafeQueue<int> queue;
     EXPECT_FALSE(queue.try_pop().has_value());
 }
 
 TEST(ThreadSafeQueueTest, WaitAndPopBlocksUntilAvailable)
 {
-    mosaic::utils::tsafe::ThreadSafeQueue<int> queue;
+    ThreadSafeQueue<int> queue;
     int poppedValue = 0;
 
     std::thread producer(
@@ -43,7 +45,7 @@ TEST(ThreadSafeQueueTest, WaitAndPopBlocksUntilAvailable)
 
 TEST(ThreadSafeQueueTest, MultiplePushAndPop)
 {
-    mosaic::utils::tsafe::ThreadSafeQueue<int> queue;
+    ThreadSafeQueue<int> queue;
 
     for (int i = 0; i < 10; ++i)
     {
@@ -62,7 +64,7 @@ TEST(ThreadSafeQueueTest, MultiplePushAndPop)
 
 TEST(ThreadSafeQueueTest, ThreadedProducerConsumer)
 {
-    mosaic::utils::tsafe::ThreadSafeQueue<int> queue;
+    ThreadSafeQueue<int> queue;
 
     std::thread producer(
         [&]()

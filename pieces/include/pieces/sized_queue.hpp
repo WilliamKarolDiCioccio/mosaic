@@ -4,9 +4,7 @@
 #include <optional>
 #include <stdexcept>
 
-namespace mosaic
-{
-namespace utils
+namespace pieces
 {
 
 /**
@@ -186,4 +184,3 @@ class SizedQueue
 };
 
 } // namespace utils
-} // namespace mosaic

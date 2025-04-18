@@ -1,7 +1,5 @@
 add_executable(mosaic_tests "src/test_mosaic.cpp")
 
-target_include_directories(mosaic_tests PRIVATE "${CMAKE_SOURCE_DIR}/mosaic/include")
-
 target_link_libraries(mosaic_tests PRIVATE mosaic GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
 
 add_test(NAME mosaic_tests COMMAND test_engine)

@@ -4,9 +4,7 @@
 #include <optional>
 #include <shared_mutex>
 
-namespace mosaic
-{
-namespace utils
+namespace pieces
 {
 namespace tsafe
 {
@@ -188,4 +186,3 @@ class ThreadSafeMap
 
 } // namespace tsafe
 } // namespace utils
-} // namespace mosaic

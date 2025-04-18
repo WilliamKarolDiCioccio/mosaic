@@ -6,9 +6,7 @@
 #include <memory>
 #include <optional>
 
-namespace mosaic
-{
-namespace utils
+namespace pieces
 {
 namespace tsafe
 {
@@ -107,5 +105,4 @@ class ThreadSafeQueue
 };
 
 } // namespace tsafe
-} // namespace utils
-} // namespace mosaic
+} // namespace pieces

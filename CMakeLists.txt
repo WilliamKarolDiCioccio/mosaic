@@ -75,13 +75,15 @@ add_subdirectory("vendor/glfw3webgpu")
 # ---------------------------
 # Project Modules
 # ---------------------------
+add_subdirectory("pieces")
 add_subdirectory("mosaic")
-add_subdirectory("mosaic/tests")
 
 # ---------------------------
 # Applications & Tests
 # ---------------------------
 add_subdirectory("testbed")
+add_subdirectory("mosaic/tests")
+add_subdirectory("pieces/tests")
 add_subdirectory("tests/integration")
 
 # ---------------------------

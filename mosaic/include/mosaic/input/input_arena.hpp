@@ -3,9 +3,10 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include <pieces/sized_queue.hpp>
+
 #include "mosaic/core/timer.hpp"
 #include "mosaic/utils/enum.hpp"
-#include "mosaic/utils/sized_queue.hpp"
 
 #include "events.hpp"
 #include "raw_input_handler.hpp"
@@ -97,8 +98,8 @@ class InputArena
     MouseCursorPosEvent m_cursorPosEvent;
 
     // Discrete samples for mouse wheel scroll and cursor position
-    utils::SizedQueue<MouseWheelScrollSample> m_mouseScrollWheelSamples;
-    utils::SizedQueue<MouseCursorPosSample> m_cursorPosSamples;
+    pieces::SizedQueue<MouseWheelScrollSample> m_mouseScrollWheelSamples;
+    pieces::SizedQueue<MouseCursorPosSample> m_cursorPosSamples;
 
    public:
     InputArena(const core::Window* _window);

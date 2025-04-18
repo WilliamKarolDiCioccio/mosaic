@@ -5,7 +5,6 @@
 #include <glm/geometric.hpp>
 
 #include "mosaic/utils/enum.hpp"
-#include "mosaic/utils/sized_queue.hpp"
 
 namespace mosaic
 {
