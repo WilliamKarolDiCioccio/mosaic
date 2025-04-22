@@ -41,10 +41,11 @@ class MOSAIC_API InputSystem
    public:
     std::unordered_map<GLFWwindow*, std::unique_ptr<InputContext>> m_contexts;
 
-   public:
+   private:
     InputSystem() = default;
-    ~InputSystem() = default;
 
+   public:
+    ~InputSystem() = default;
     InputSystem(const InputSystem&) = delete;
     InputSystem& operator=(const InputSystem&) = delete;
 
@@ -61,7 +62,7 @@ class MOSAIC_API InputSystem
      * any other input handling functions to ensure fresh input data is available and minimize
      * latency.
      */
-    inline void updateContexts() const
+    inline void poll() const
     {
         glfwPollEvents();
 

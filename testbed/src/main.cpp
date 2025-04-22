@@ -144,7 +144,7 @@ class TestbedApplication : public mosaic::core::Application
 
         input::InputSystem& inputSystem = input::InputSystem::get();
 
-        inputSystem.updateContexts();
+        inputSystem.poll();
 
         input::InputContext* inputContext = inputSystem.getContext(m_window.get());
 
