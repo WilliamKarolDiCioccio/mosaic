@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <pieces/result.hpp>
+
 #include "mosaic/defines.hpp"
 #include "renderer_context.hpp"
 
@@ -34,7 +36,7 @@ class MOSAIC_API RenderSystem
     RenderSystem& operator=(const RenderSystem&) = delete;
 
    public:
-    RenderContext* createContext(const core::Window* _window);
+    pieces::Result<RenderContext*, std::string> createContext(const core::Window* _window);
     void destroyContext(const core::Window* _window);
 
     inline void destroyAllContexts() { m_contexts.clear(); }

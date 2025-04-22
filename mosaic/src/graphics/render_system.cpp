@@ -8,11 +8,12 @@ namespace mosaic
 namespace graphics
 {
 
-RenderContext* RenderSystem::createContext(const core::Window* _window)
+pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const core::Window* _window)
 {
     if (m_contexts.find(_window->getGLFWHandle()) != m_contexts.end())
     {
-        return m_contexts[_window->getGLFWHandle()].get();
+        MOSAIC_WARN("RenderSystem: Context already exists for this window");
+        return pieces::Ok<RenderContext*, std::string>(m_contexts[_window->getGLFWHandle()].get());
     }
 
     std::unique_ptr<RenderContext> context;
@@ -28,12 +29,12 @@ RenderContext* RenderSystem::createContext(const core::Window* _window)
                                                                     RenderContextSettings{true, 2});
             break;
         default:
-            return nullptr;
+            return pieces::Err<RenderContext*, std::string>("RenderSystem: Unsupported API type");
     }
 
     m_contexts[_window->getGLFWHandle()] = std::move(context);
 
-    return m_contexts[_window->getGLFWHandle()].get();
+    return pieces::Ok<RenderContext*, std::string>(m_contexts[_window->getGLFWHandle()].get());
 }
 
 void RenderSystem::destroyContext(const core::Window* _window)

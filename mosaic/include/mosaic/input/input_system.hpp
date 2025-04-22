@@ -7,6 +7,8 @@
 #include <functional>
 #include <nlohmann/json.hpp>
 
+#include <pieces/result.hpp>
+
 #include "input_context.hpp"
 
 namespace mosaic
@@ -50,7 +52,7 @@ class MOSAIC_API InputSystem
     InputSystem& operator=(const InputSystem&) = delete;
 
    public:
-    InputContext* registerWindow(const core::Window* _window);
+    pieces::Result<InputContext*, std::string> registerWindow(const core::Window* _window);
     void unregisterWindow(const core::Window* _window);
 
     inline void unregisterAllWindows() { m_contexts.clear(); }

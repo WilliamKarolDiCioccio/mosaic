@@ -5,19 +5,19 @@ namespace mosaic
 namespace input
 {
 
-InputContext* InputSystem::registerWindow(const core::Window* _window)
+pieces::Result<InputContext*, std::string> InputSystem::registerWindow(const core::Window* _window)
 {
     auto glfwWindow = _window->getGLFWHandle();
 
     if (m_contexts.find(glfwWindow) != m_contexts.end())
     {
-        MOSAIC_ERROR("InputSystem: Window already registered");
-        return m_contexts[glfwWindow].get();
+        MOSAIC_WARN("InputSystem: Window already registered");
+        return pieces::Ok<InputContext*, std::string>(m_contexts[glfwWindow].get());
     }
 
     m_contexts[glfwWindow] = std::make_unique<InputContext>(_window);
 
-    return m_contexts[glfwWindow].get();
+    return pieces::Ok<InputContext*, std::string>(m_contexts[glfwWindow].get());
 }
 
 void InputSystem::unregisterWindow(const core::Window* _window)

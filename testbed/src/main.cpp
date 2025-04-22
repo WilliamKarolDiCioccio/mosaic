@@ -27,7 +27,16 @@ class TestbedApplication : public mosaic::core::Application
 
         auto& inputSystem = input::InputSystem::get();
 
-        auto inputContext = inputSystem.registerWindow(m_window.get());
+        auto registrationResult = inputSystem.registerWindow(m_window.get());
+
+        if (registrationResult.isErr())
+        {
+            MOSAIC_ERROR("Failed to register window in input system: {0}",
+                         registrationResult.error());
+            return shutdown();
+        }
+
+        auto inputContext = registrationResult.unwrap();
 
         inputContext->updateVirtualKeyboardKeys({
             {"closeApp", input::KeyboardKey::key_escape},
@@ -129,7 +138,13 @@ class TestbedApplication : public mosaic::core::Application
 
         renderer.setAPI(graphics::RendererAPIType::vulkan);
 
-        renderer.createContext(m_window.get());
+        auto creationResult = renderer.createContext(m_window.get());
+
+        if (creationResult.isErr())
+        {
+            MOSAIC_ERROR("Failed to create render context: {0}", creationResult.error());
+            return shutdown();
+        }
 
         MOSAIC_INFO("Testbed initialized.");
     }
