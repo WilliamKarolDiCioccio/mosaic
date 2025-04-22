@@ -114,17 +114,17 @@ struct WindowProperties
 class MOSAIC_API Window
 {
    private:
-    using WindowCloseCallback = std::function<void(GLFWwindow*)>;
-    using WindowFocusCallback = std::function<void(GLFWwindow*, int)>;
-    using WindowResizeCallback = std::function<void(GLFWwindow*, int, int)>;
+    using WindowCloseCallback = std::function<void()>;
+    using WindowFocusCallback = std::function<void(int)>;
+    using WindowResizeCallback = std::function<void(int, int)>;
     using WindowRefreshCallback = std::function<void(GLFWwindow*)>;
-    using WindowIconifyCallback = std::function<void(GLFWwindow*, int)>;
-    using WindowMaximizeCallback = std::function<void(GLFWwindow*, int)>;
-    using WindowDropCallback = std::function<void(GLFWwindow*, int, const char**)>;
-    using WindowScrollCallback = std::function<void(GLFWwindow*, double, double)>;
-    using WindowCursorEnterCallback = std::function<void(GLFWwindow*, int)>;
-    using WindowPosCallback = std::function<void(GLFWwindow*, int, int)>;
-    using WindowContentScaleCallback = std::function<void(GLFWwindow*, float, float)>;
+    using WindowIconifyCallback = std::function<void(int)>;
+    using WindowMaximizeCallback = std::function<void(int)>;
+    using WindowDropCallback = std::function<void(int, const char**)>;
+    using WindowScrollCallback = std::function<void(double, double)>;
+    using WindowCursorEnterCallback = std::function<void(int)>;
+    using WindowPosCallback = std::function<void(int, int)>;
+    using WindowContentScaleCallback = std::function<void(float, float)>;
 
    private:
     GLFWwindow* m_window;

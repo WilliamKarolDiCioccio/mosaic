@@ -10,7 +10,7 @@ RawInputHandler::RawInputHandler(const core::Window* _window)
       m_isActive(glfwGetWindowAttrib(m_glfwWindow, GLFW_FOCUSED))
 {
     const_cast<core::Window*>(_window)->registerWindowScrollCallback(
-        [this](GLFWwindow* _window, double _xoffset, double _yoffset)
+        [this](double _xoffset, double _yoffset)
         {
             if (!this)
             {
@@ -22,7 +22,7 @@ RawInputHandler::RawInputHandler(const core::Window* _window)
         });
 
     const_cast<core::Window*>(_window)->registerWindowFocusCallback(
-        [this](GLFWwindow* _window, int _focused)
+        [this](int _focused)
         {
             if (!this)
             {

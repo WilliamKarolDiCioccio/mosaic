@@ -253,7 +253,7 @@ void Window::registerCallbacks()
 
                                    for (auto& callback : win->m_windowCloseCallbacks)
                                    {
-                                       callback(_window);
+                                       callback();
                                    }
                                });
 
@@ -267,7 +267,7 @@ void Window::registerCallbacks()
 
                                    for (auto& callback : win->m_windowFocusCallbacks)
                                    {
-                                       callback(_window, _focused);
+                                       callback(_focused);
                                    }
                                });
 
@@ -283,7 +283,7 @@ void Window::registerCallbacks()
 
                                   for (auto& callback : win->m_windowResizeCallbacks)
                                   {
-                                      callback(_window, _width, _height);
+                                      callback(_width, _height);
                                   }
                               });
 
@@ -313,7 +313,7 @@ void Window::registerCallbacks()
 
                                      for (auto& callback : win->m_windowIconifyCallbacks)
                                      {
-                                         callback(_window, _iconified);
+                                         callback(_iconified);
                                      }
                                  });
 
@@ -329,7 +329,7 @@ void Window::registerCallbacks()
 
                                       for (auto& callback : win->m_windowMaximizeCallbacks)
                                       {
-                                          callback(_window, _maximized);
+                                          callback(_maximized);
                                       }
                                   });
 
@@ -342,7 +342,7 @@ void Window::registerCallbacks()
 
                             for (auto& callback : win->m_windowDropCallbacks)
                             {
-                                callback(_window, _pathsCount, _paths);
+                                callback(_pathsCount, _paths);
                             }
                         });
 
@@ -355,7 +355,7 @@ void Window::registerCallbacks()
 
                               for (auto& callback : win->m_windowScrollCallbacks)
                               {
-                                  callback(_window, _xoffset, _yoffset);
+                                  callback(_xoffset, _yoffset);
                               }
                           });
 
@@ -370,7 +370,7 @@ void Window::registerCallbacks()
 
                                  for (auto& callback : win->m_windowPosCallbacks)
                                  {
-                                     callback(_window, _xpos, _ypos);
+                                     callback(_xpos, _ypos);
                                  }
                              });
 
@@ -384,7 +384,7 @@ void Window::registerCallbacks()
 
             for (auto& callback : win->m_windowContentScaleCallbacks)
             {
-                callback(_window, _xscale, _yscale);
+                callback(_xscale, _yscale);
             }
         });
 }
