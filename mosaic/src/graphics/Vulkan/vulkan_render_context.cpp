@@ -1,4 +1,4 @@
-#include "vulkan_renderer_api.hpp"
+#include "vulkan_render_context.hpp"
 
 namespace mosaic
 {
@@ -7,14 +7,19 @@ namespace graphics
 namespace vulkan
 {
 
-void VulkanRendererAPI::initialize(const core::Window* _window)
+VulkanRenderContext::VulkanRenderContext(const core::Window* _window,
+                                         const RenderContextSettings& _settings)
+    : RenderContext(_window, _settings)
 {
-    m_window = _window;
+    m_frameData.resize(_settings.backbufferCount);
 
     createInstance(m_instance);
-    createSurface(m_surface, m_instance, _window->getGLFWHandle());
+    createSurface(m_surface, m_instance, m_window->getGLFWHandle());
     createDevice(m_device, m_instance, m_surface);
-    createSwapchain(m_swapchain, m_device, m_surface, _window);
+
+    createSwapchain(m_swapchain, m_device, m_surface, m_window->getGLFWHandle(),
+                    m_window->getFramebufferSize(), m_window->getWindowProperties().isFullscreen);
+
     createRenderPass(m_renderPass, m_device, m_swapchain);
     createGraphicsPipeline(m_pipeline, m_device, m_swapchain, m_renderPass);
     createSwapchainFramebuffers(m_swapchain, m_device, m_renderPass);
@@ -23,10 +28,10 @@ void VulkanRendererAPI::initialize(const core::Window* _window)
     createFrames();
 
     const_cast<core::Window*>(m_window)->registerWindowResizeCallback(
-        [this](GLFWwindow* _window, int _width, int _height) { m_framebufferResized = true; });
+        [this](int height, int width) { m_framebufferResized = true; });
 }
 
-void VulkanRendererAPI::shutdown()
+VulkanRenderContext::~VulkanRenderContext()
 {
     vkDeviceWaitIdle(m_device.device);
 
@@ -42,11 +47,11 @@ void VulkanRendererAPI::shutdown()
     destroyInstance(m_instance);
 }
 
-void VulkanRendererAPI::recreateSwapchain()
+void VulkanRenderContext::resizeFramebuffer()
 {
     auto framebufferSize = m_window->getFramebufferSize();
 
-    while (framebufferSize.x == 0 || framebufferSize.y == 0)
+    while (framebufferSize.x * framebufferSize.y == 0)
     {
         glfwWaitEvents();
         framebufferSize = m_window->getFramebufferSize();
@@ -59,7 +64,9 @@ void VulkanRendererAPI::recreateSwapchain()
     destroyRenderPass(m_renderPass, m_device);
     destroySwapchain(m_swapchain);
 
-    createSwapchain(m_swapchain, m_device, m_surface, m_window);
+    createSwapchain(m_swapchain, m_device, m_surface, m_window->getGLFWHandle(), framebufferSize,
+                    m_window->getWindowProperties().isFullscreen);
+
     createRenderPass(m_renderPass, m_device, m_swapchain);
     createGraphicsPipeline(m_pipeline, m_device, m_swapchain, m_renderPass);
     createSwapchainFramebuffers(m_swapchain, m_device, m_renderPass);
@@ -67,7 +74,7 @@ void VulkanRendererAPI::recreateSwapchain()
     m_framebufferResized = false;
 }
 
-void VulkanRendererAPI::beginFrame()
+void VulkanRenderContext::beginFrame()
 {
     auto& frame = m_frameData[m_currentFrame];
 
@@ -80,7 +87,7 @@ void VulkanRendererAPI::beginFrame()
 
     if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        return recreateSwapchain();
+        return resizeFramebuffer();
     }
     else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
     {
@@ -161,23 +168,23 @@ void VulkanRendererAPI::beginFrame()
     if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR ||
         m_framebufferResized)
     {
-        recreateSwapchain();
+        resizeFramebuffer();
     }
     else if (presentResult != VK_SUCCESS)
     {
         throw std::runtime_error("failed to present swap chain image!");
     }
 
-    m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    m_currentFrame = (m_currentFrame + 1) % m_settings.backbufferCount;
 }
 
-void VulkanRendererAPI::updateResources() {}
+void VulkanRenderContext::updateResources() {}
 
-void VulkanRendererAPI::drawScene() {}
+void VulkanRenderContext::drawScene() {}
 
-void VulkanRendererAPI::endFrame() {}
+void VulkanRenderContext::endFrame() {}
 
-void VulkanRendererAPI::createFrames()
+void VulkanRenderContext::createFrames()
 {
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -201,7 +208,7 @@ void VulkanRendererAPI::createFrames()
     }
 }
 
-void VulkanRendererAPI::destroyFrames()
+void VulkanRenderContext::destroyFrames()
 {
     for (auto& frame : m_frameData)
     {

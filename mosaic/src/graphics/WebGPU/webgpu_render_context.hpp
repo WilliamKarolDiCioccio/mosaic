@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mosaic/graphics/renderer_api.hpp"
+#include "mosaic/graphics/renderer_context.hpp"
 #include "webgpu_common.hpp"
 
 namespace mosaic
@@ -10,15 +10,13 @@ namespace graphics
 namespace webgpu
 {
 
-class WebGPURendererAPI : public RendererAPI
+class WebGPURenderContext : public RenderContext
 {
    public:
-    WebGPURendererAPI() = default;
-    ~WebGPURendererAPI() override = default;
+    WebGPURenderContext(const core::Window* _window, const RenderContextSettings& _settings);
+    ~WebGPURenderContext();
 
-    void initialize(const core::Window* _window) override;
-    void shutdown() override;
-    void recreateSwapchain() override;
+    void resizeFramebuffer() override;
     void beginFrame() override;
     void updateResources() override;
     void drawScene() override;

@@ -6,7 +6,7 @@
 #include <mosaic/core/window.hpp>
 #include <mosaic/core/timer.hpp>
 #include <mosaic/input/input_system.hpp>
-#include <mosaic/graphics/renderer.hpp>
+#include <mosaic/graphics/render_system.hpp>
 #include <mosaic/utils/memory_leak.hpp>
 
 using namespace mosaic;
@@ -23,8 +23,9 @@ class TestbedApplication : public mosaic::core::Application
     void onInitialize() override
     {
         m_window = std::make_unique<mosaic::core::Window>("Testbed", glm::vec2(1280, 720));
+        m_window->setResizeable(true);
 
-        input::InputSystem& inputSystem = input::InputSystem::get();
+        auto& inputSystem = input::InputSystem::get();
 
         auto inputContext = inputSystem.registerWindow(m_window.get());
 
@@ -124,12 +125,11 @@ class TestbedApplication : public mosaic::core::Application
             },
         });
 
-        graphics::Renderer& renderer = graphics::Renderer::get();
+        auto& renderer = graphics::RenderSystem::get();
 
         renderer.setAPI(graphics::RendererAPIType::vulkan);
-        renderer.initialize(m_window.get());
 
-        m_window->setResizeable(true);
+        renderer.createContext(m_window.get());
 
         MOSAIC_INFO("Testbed initialized.");
     }
@@ -138,7 +138,7 @@ class TestbedApplication : public mosaic::core::Application
     {
         core::Timer::tick();
 
-        graphics::Renderer& renderer = graphics::Renderer::get();
+        graphics::RenderSystem& renderer = graphics::RenderSystem::get();
 
         renderer.render();
 
@@ -166,9 +166,9 @@ class TestbedApplication : public mosaic::core::Application
 
     void onShutdown() override
     {
-        auto& renderer = graphics::Renderer::get();
+        auto& renderer = graphics::RenderSystem::get();
 
-        renderer.shutdown();
+        renderer.destroyAllContexts();
 
         auto& inputManager = input::InputSystem::get();
 

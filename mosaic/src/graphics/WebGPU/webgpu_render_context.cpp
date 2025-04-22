@@ -1,4 +1,4 @@
-#include "webgpu_renderer_api.hpp"
+#include "webgpu_render_context.hpp"
 
 #include <vector>
 
@@ -14,11 +14,13 @@ namespace graphics
 namespace webgpu
 {
 
-void WebGPURendererAPI::initialize(const core::Window* _window)
+WebGPURenderContext::WebGPURenderContext(const core::Window* _window,
+                                         const RenderContextSettings& _settings)
+    : RenderContext(_window, _settings)
 {
     m_instance = createInstance();
 
-    m_surface = glfwCreateWindowWGPUSurface(m_instance, _window->getGLFWHandle());
+    m_surface = glfwCreateWindowWGPUSurface(m_instance, m_window->getGLFWHandle());
 
     m_adapter = requestAdapter(m_instance, m_surface);
 
@@ -66,12 +68,13 @@ void WebGPURendererAPI::initialize(const core::Window* _window)
 
     wgpuQueueOnSubmittedWorkDone(m_presentQueue, workDoneCallbackInfo);
 
-    configureSwapchain(m_adapter, m_device, m_surface, _window);
+    configureSwapchain(m_adapter, m_device, m_surface, m_window->getGLFWHandle(),
+                       m_window->getFramebufferSize());
 
     wgpuAdapterRelease(m_adapter);
 }
 
-void WebGPURendererAPI::shutdown()
+WebGPURenderContext::~WebGPURenderContext()
 {
     wgpuQueueRelease(m_presentQueue);
     wgpuDeviceRelease(m_device);
@@ -80,9 +83,9 @@ void WebGPURendererAPI::shutdown()
     wgpuInstanceRelease(m_instance);
 }
 
-void WebGPURendererAPI::recreateSwapchain() {}
+void WebGPURenderContext::resizeFramebuffer() {}
 
-std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURendererAPI::getNextSurfaceViewData()
+std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURenderContext::getNextSurfaceViewData()
 {
     WGPUSurfaceTexture surfaceTexture;
 
@@ -114,7 +117,7 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURendererAPI::getNextSurface
     return std::pair<WGPUSurfaceTexture, WGPUTextureView>(surfaceTexture, targetView);
 }
 
-void WebGPURendererAPI::pollDevice(int _times)
+void WebGPURenderContext::pollDevice(int _times)
 {
     for (int i = 0; i < _times; ++i)
     {
@@ -126,7 +129,7 @@ void WebGPURendererAPI::pollDevice(int _times)
     }
 }
 
-void WebGPURendererAPI::beginFrame()
+void WebGPURenderContext::beginFrame()
 {
     auto [surfaceTexture, targetView] = getNextSurfaceViewData();
 
@@ -170,11 +173,11 @@ void WebGPURendererAPI::beginFrame()
 #endif
 }
 
-void WebGPURendererAPI::updateResources() {}
+void WebGPURenderContext::updateResources() {}
 
-void WebGPURendererAPI::drawScene() {}
+void WebGPURenderContext::drawScene() {}
 
-void WebGPURendererAPI::endFrame() {}
+void WebGPURenderContext::endFrame() {}
 
 } // namespace webgpu
 } // namespace graphics

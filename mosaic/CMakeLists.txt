@@ -17,18 +17,18 @@ set(FRAMEWORK_SRC
   "src/input/input_context.cpp"
 
   # Graphics
-  "src/graphics/renderer.cpp"
+  "src/graphics/render_system.cpp"
 
   # WebGPU Backend
   "src/graphics/WebGPU/webgpu_instance.cpp"
   "src/graphics/WebGPU/webgpu_device.cpp"
-  "src/graphics/WebGPU/webgpu_renderer_api.cpp"
+  "src/graphics/WebGPU/webgpu_render_context.cpp"
   "src/graphics/WebGPU/webgpu_commands.cpp"
   "src/graphics/WebGPU/webgpu_swapchain.cpp"
   "src/graphics/WebGPU/webgpu_pipeline.cpp"
 
   # Vulkan Backend
-  "src/graphics/vulkan/vulkan_renderer_api.cpp"
+  "src/graphics/vulkan/vulkan_render_context.cpp"
   "src/graphics/vulkan/context/vulkan_instance.cpp"
   "src/graphics/vulkan/context/vulkan_device.cpp"
   "src/graphics/vulkan/context/vulkan_surface.cpp"
@@ -40,6 +40,9 @@ set(FRAMEWORK_SRC
   "src/graphics/vulkan/vulkan_allocator.cpp"
   "src/graphics/vulkan/vulkan_framebuffers.cpp"
   "src/graphics/vulkan/vulkan_swapchain.cpp"
+
+  # Execution
+  "src/exec/thread_pool.cpp"
 
   # External headers that need compilation
   "src/stb.cpp"

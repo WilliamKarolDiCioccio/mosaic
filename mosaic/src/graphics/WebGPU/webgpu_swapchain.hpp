@@ -10,7 +10,7 @@ namespace webgpu
 {
 
 void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _surface,
-                        const core::Window* _window);
+                        GLFWwindow* _glfwHandle, glm::uvec2 _framebufferExtent);
 
 } // namespace webgpu
 } // namespace graphics

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mosaic/graphics/renderer_api.hpp"
+#include "mosaic/graphics/renderer_context.hpp"
 
 #include "vulkan_common.hpp"
 
@@ -21,9 +21,7 @@ namespace graphics
 namespace vulkan
 {
 
-constexpr auto MAX_FRAMES_IN_FLIGHT = 2;
-
-class VulkanRendererAPI : public RendererAPI
+class VulkanRenderContext : public RenderContext
 {
    private:
     struct FrameData
@@ -41,12 +39,10 @@ class VulkanRendererAPI : public RendererAPI
     };
 
    public:
-    VulkanRendererAPI() = default;
-    ~VulkanRendererAPI() override = default;
+    VulkanRenderContext(const core::Window* _window, const RenderContextSettings& _settings);
+    ~VulkanRenderContext();
 
-    void initialize(const core::Window* _window) override;
-    void shutdown() override;
-    void recreateSwapchain() override;
+    void resizeFramebuffer() override;
     void beginFrame() override;
     void updateResources() override;
     void drawScene() override;
@@ -55,8 +51,6 @@ class VulkanRendererAPI : public RendererAPI
    private:
     void createFrames();
     void destroyFrames();
-
-    const core::Window* m_window;
 
     Instance m_instance;
     Device m_device;
@@ -67,7 +61,7 @@ class VulkanRendererAPI : public RendererAPI
     CommandPool m_commandPool;
 
     uint32_t m_currentFrame = 0;
-    std::array<FrameData, MAX_FRAMES_IN_FLIGHT> m_frameData;
+    std::vector<FrameData> m_frameData;
 
     bool m_framebufferResized = false;
 };

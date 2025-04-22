@@ -125,7 +125,8 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities,
 }
 
 void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface& _surface,
-                     const core::Window* _window)
+                     GLFWwindow* _glfwHandle, glm::uvec2 _framebufferExtent,
+                     bool _exclusiveFullscreenRequestable)
 {
     _swapchain.device = _device.device;
 
@@ -134,8 +135,7 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
 
     _swapchain.surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     _swapchain.presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    _swapchain.extent =
-        chooseSwapExtent(swapChainSupport.capabilities, _window->getFramebufferSize());
+    _swapchain.extent = chooseSwapExtent(swapChainSupport.capabilities, _framebufferExtent);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
@@ -160,8 +160,7 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
         VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT;
 
 #ifdef MOSAIC_PLATFORM_WINDOWS
-    GLFWwindow* glfwHandle = _window->getGLFWHandle();
-    HWND win32Handle = glfwGetWin32Window(glfwHandle);
+    HWND win32Handle = glfwGetWin32Window(_glfwHandle);
     HMONITOR monitor = MonitorFromWindow(win32Handle, MONITOR_DEFAULTTONEAREST);
 
     VkSurfaceFullScreenExclusiveWin32InfoEXT win32FullScreenExclusiveInfo = {
@@ -173,7 +172,7 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
     fullScreenExclusiveInfo.pNext = &win32FullScreenExclusiveInfo;
 #endif
 
-    if (_window->getWindowProperties().isFullscreen && _swapchain.exclusiveFullscreenAvailable)
+    if (_exclusiveFullscreenRequestable && _swapchain.exclusiveFullscreenAvailable)
     {
         headExtPtr = (void*)&fullScreenExclusiveInfo;
     }

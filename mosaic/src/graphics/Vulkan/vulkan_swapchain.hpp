@@ -36,7 +36,8 @@ struct Swapchain
 };
 
 void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface& _surface,
-                     const core::Window* _window);
+                     GLFWwindow* _glfwHandle, glm::uvec2 _framebufferExtent,
+                     bool _exclusiveFullscreenRequestable);
 
 void destroySwapchain(Swapchain& _swapchain);
 

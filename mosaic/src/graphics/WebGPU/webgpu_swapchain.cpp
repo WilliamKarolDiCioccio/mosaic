@@ -8,7 +8,7 @@ namespace webgpu
 {
 
 void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _surface,
-                        const core::Window* _window)
+                        GLFWwindow* _glfwHandle, glm::uvec2 _framebufferExtent)
 {
     WGPUSurfaceCapabilities surfaceCapabilities;
 
@@ -32,12 +32,10 @@ void configureSwapchain(WGPUAdapter _adapter, WGPUDevice _device, WGPUSurface _s
         return;
     }
 
-    const glm::ivec2 framebufferSize = _window->getFramebufferSize();
-
     WGPUSurfaceConfiguration surfaceConfig = {};
     surfaceConfig.nextInChain = nullptr;
-    surfaceConfig.width = framebufferSize.x;
-    surfaceConfig.height = framebufferSize.y;
+    surfaceConfig.width = _framebufferExtent.x;
+    surfaceConfig.height = _framebufferExtent.y;
     surfaceConfig.format = WGPUTextureFormat_RGBA8UnormSrgb;
     surfaceConfig.usage = WGPUTextureUsage_RenderAttachment | WGPUTextureUsage_TextureBinding;
     surfaceConfig.device = _device;
