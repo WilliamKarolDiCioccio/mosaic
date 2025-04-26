@@ -89,6 +89,7 @@ class InputArena
     };
 
     core::Timer m_timer;
+    uint64_t m_pollCount = 0;
     std::unique_ptr<RawInputHandler> m_rawInputHandler;
 
     // Events

@@ -28,6 +28,8 @@ void InputArena::update()
 
     auto currentTime = std::chrono::high_resolution_clock::now();
 
+    ++m_pollCount;
+
     for (const auto& key : c_keyboardKeys)
     {
         if (!m_rawInputHandler->isActive()) break;
@@ -52,14 +54,14 @@ void InputArena::update()
                     KeyButtonState::release,
                     KeyButtonState::release,
                     currentTime,
+                    m_pollCount,
                 };
             }
             else
             {
                 keyEvent = KeyboardKeyEvent{
-                    KeyButtonState::none,
-                    keyEvent.lastSignificantState,
-                    keyEvent.metadata.timestamp,
+                    KeyButtonState::none,        keyEvent.lastSignificantState,
+                    keyEvent.metadata.timestamp, m_pollCount,
                     keyEvent.metadata.duration,
                 };
             }
@@ -71,9 +73,10 @@ void InputArena::update()
                 actionDuration < DOUBLE_CLICK_MAX_INTERVAL)
             {
                 keyEvent = KeyboardKeyEvent{
-                    KeyButtonState::double_press,
-                    KeyButtonState::double_press,
+                    KeyButtonState::press | KeyButtonState::double_press,
+                    KeyButtonState::press | KeyButtonState::double_press,
                     currentTime,
+                    m_pollCount,
                     actionDuration,
                 };
             }
@@ -83,6 +86,7 @@ void InputArena::update()
                     KeyButtonState::hold,
                     KeyButtonState::hold,
                     currentTime,
+                    m_pollCount,
                     keyEvent.metadata.duration + currentTime - keyEvent.metadata.timestamp,
                 };
             }
@@ -92,6 +96,7 @@ void InputArena::update()
                     KeyButtonState::press,
                     KeyButtonState::press,
                     currentTime,
+                    m_pollCount,
                 };
             }
         }
@@ -140,8 +145,8 @@ void InputArena::update()
                 actionDuration < DOUBLE_CLICK_MAX_INTERVAL)
             {
                 buttonEvent = MouseButtonEvent{
-                    KeyButtonState::double_press,
-                    KeyButtonState::double_press,
+                    KeyButtonState::press | KeyButtonState::double_press,
+                    KeyButtonState::press | KeyButtonState::double_press,
                     currentTime,
                     actionDuration,
                 };
@@ -186,6 +191,7 @@ void InputArena::update()
             cursorPosInput,
             m_cursorPosEvent.rawPos,
             currentTime,
+            m_pollCount,
         };
 
         const auto& lastSample = m_cursorPosSamples.back();

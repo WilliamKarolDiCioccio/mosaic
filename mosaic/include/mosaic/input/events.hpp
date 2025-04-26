@@ -36,10 +36,11 @@ struct InputEventMetadata
 {
     std::chrono::time_point<std::chrono::high_resolution_clock> timestamp;
     std::chrono::duration<double> duration;
+    uint64_t pollCount = 0;
 
     InputEventMetadata(std::chrono::time_point<std::chrono::high_resolution_clock> _now,
-                       std::chrono::duration<double> _duration)
-        : timestamp(_now), duration(_duration) {};
+                       std::chrono::duration<double> _duration, uint64_t _pollCount = 0)
+        : timestamp(_now), duration(_duration), pollCount(_pollCount) {};
 };
 
 struct KeyboardKeyEvent
@@ -51,12 +52,14 @@ struct KeyboardKeyEvent
     KeyboardKeyEvent()
         : state(KeyButtonState::none),
           lastSignificantState(KeyButtonState::none),
-          metadata(std::chrono::high_resolution_clock::now(), 0ms) {};
+          metadata(std::chrono::high_resolution_clock::now(), 0ms, 0) {};
 
     KeyboardKeyEvent(KeyButtonState _state, KeyButtonState _lastSignificantState,
                      std::chrono::time_point<std::chrono::high_resolution_clock> _now,
-                     std::chrono::duration<double> _duration = 0ms)
-        : state(_state), lastSignificantState(_lastSignificantState), metadata(_now, _duration) {};
+                     uint64_t _pollCount, std::chrono::duration<double> _duration = 0ms)
+        : state(_state),
+          lastSignificantState(_lastSignificantState),
+          metadata(_now, _duration, _pollCount) {};
 };
 
 struct MouseButtonEvent
@@ -68,7 +71,7 @@ struct MouseButtonEvent
     MouseButtonEvent()
         : state(KeyButtonState::none),
           lastSignificantState(KeyButtonState::none),
-          metadata(std::chrono::high_resolution_clock::now(), 0ms) {};
+          metadata(std::chrono::high_resolution_clock::now(), 0ms, 0) {};
 
     MouseButtonEvent(KeyButtonState _state, KeyButtonState _lastSignificantState,
                      std::chrono::time_point<std::chrono::high_resolution_clock> _now,
@@ -85,12 +88,12 @@ struct MouseCursorPosEvent
     MouseCursorPosEvent()
         : rawPos(0.0f),
           lastRawPos(0.0f),
-          metadata(std::chrono::high_resolution_clock::now(), 0ms) {};
+          metadata(std::chrono::high_resolution_clock::now(), 0ms, 0) {};
 
     MouseCursorPosEvent(glm::vec2 _rawPos, glm::vec2 _lastRawPos,
                         std::chrono::time_point<std::chrono::high_resolution_clock> _now,
-                        std::chrono::duration<double> _duration = 0ms)
-        : rawPos(_rawPos), lastRawPos(_lastRawPos), metadata(_now, _duration) {};
+                        uint64_t _pollCount, std::chrono::duration<double> _duration = 0ms)
+        : rawPos(_rawPos), lastRawPos(_lastRawPos), metadata(_now, _duration, _pollCount) {};
 };
 
 struct MouseWheelScrollEvent
@@ -99,12 +102,12 @@ struct MouseWheelScrollEvent
     glm::vec2 rawScrollOffset;
 
     MouseWheelScrollEvent()
-        : rawScrollOffset(0.0f), metadata(std::chrono::high_resolution_clock::now(), 0ms) {};
+        : rawScrollOffset(0.0f), metadata(std::chrono::high_resolution_clock::now(), 0ms, 0) {};
 
     MouseWheelScrollEvent(glm::vec2 _rawScrollOffset,
                           std::chrono::time_point<std::chrono::high_resolution_clock> _now,
-                          std::chrono::duration<double> _duration = 0ms)
-        : rawScrollOffset(_rawScrollOffset), metadata(_now, _duration) {};
+                          uint64_t _pollCount, std::chrono::duration<double> _duration = 0ms)
+        : rawScrollOffset(_rawScrollOffset), metadata(_now, _duration, _pollCount) {};
 };
 
 } // namespace input
