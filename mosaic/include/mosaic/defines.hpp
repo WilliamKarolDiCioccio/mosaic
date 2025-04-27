@@ -108,6 +108,15 @@
 #define MOSAIC_DISABLE_WARNING(warning) _Pragma(MOSAIC_STRINGIFY(GCC diagnostic ignored warning))
 #endif
 
+// Function signature
+#if defined(MOSAIC_COMPILER_MSVC)
+#define MOSAIC_FUNC_SIGNATURE __FUNCSIG__
+#elif defined(MOSAIC_COMPILER_GCC) || defined(MOSAIC_COMPILER_CLANG)
+#define MOSAIC_FUNC_SIGNATURE __PRETTY_FUNCTION__
+#else
+#define MOSAIC_FUNC_SIGNATURE __func__
+#endif
+
 // Helper macro for string conversion
 #define MOSAIC_STRINGIFY_HELPER(x) #x
 #define MOSAIC_STRINGIFY(x) MOSAIC_STRINGIFY_HELPER(x)
