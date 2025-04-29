@@ -21,7 +21,7 @@ template <typename T>
 class Task
 {
    public:
-    struct PromiseType
+    struct promise_type
     {
         std::optional<T> m_value;
         std::exception_ptr m_exception;
@@ -29,16 +29,16 @@ class Task
 
         Task get_return_object() noexcept
         {
-            return Task{std::coroutine_handle<PromiseType>::from_promise(*this)};
+            return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
         }
 
         std::suspend_always initial_suspend() noexcept { return {}; }
 
-        struct FinalAwaiter
+        struct final_awaiter
         {
             bool await_ready() const noexcept { return false; }
 
-            void await_suspend(std::coroutine_handle<PromiseType> _handle) noexcept
+            void await_suspend(std::coroutine_handle<promise_type> _handle) noexcept
             {
                 if (_handle.promise().m_continuation)
                 {
@@ -49,7 +49,7 @@ class Task
             void await_resume() noexcept {}
         };
 
-        auto final_suspend() noexcept { return FinalAwaiter{}; }
+        auto final_suspend() noexcept { return final_awaiter{}; }
 
         void unhandled_exception() noexcept { m_exception = std::current_exception(); }
 
@@ -60,7 +60,7 @@ class Task
         }
     };
 
-    using HandleType = std::coroutine_handle<PromiseType>;
+    using HandleType = std::coroutine_handle<promise_type>;
 
     explicit Task(HandleType _handle) noexcept : m_coro(_handle) {}
 
@@ -127,23 +127,23 @@ template <>
 class Task<void>
 {
    public:
-    struct PromiseType
+    struct promise_type
     {
         std::exception_ptr m_exception;
         std::coroutine_handle<> m_continuation;
 
         Task get_return_object() noexcept
         {
-            return Task{std::coroutine_handle<PromiseType>::from_promise(*this)};
+            return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
         }
 
         std::suspend_always initial_suspend() noexcept { return {}; }
 
-        struct FinalAwaiter
+        struct final_awaiter
         {
             bool await_ready() const noexcept { return false; }
 
-            void await_suspend(std::coroutine_handle<PromiseType> _handle) noexcept
+            void await_suspend(std::coroutine_handle<promise_type> _handle) noexcept
             {
                 if (_handle.promise().m_continuation) _handle.promise().m_continuation.resume();
             }
@@ -151,14 +151,14 @@ class Task<void>
             void await_resume() noexcept {}
         };
 
-        auto final_suspend() noexcept { return FinalAwaiter{}; }
+        auto final_suspend() noexcept { return final_awaiter{}; }
 
         void unhandled_exception() noexcept { m_exception = std::current_exception(); }
 
         void return_void() noexcept {}
     };
 
-    using HandleType = std::coroutine_handle<PromiseType>;
+    using HandleType = std::coroutine_handle<promise_type>;
 
     explicit Task(HandleType _handle) noexcept : m_coro(_handle) {}
 
