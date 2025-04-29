@@ -4,6 +4,7 @@
 #include "test_tsafe_map.hpp"
 #include "test_tsafe_queue.hpp"
 #include "test_work_stealing_queue.hpp"
+#include "test_coroutines.hpp"
 
 int main(int argc, char **argv)
 {
