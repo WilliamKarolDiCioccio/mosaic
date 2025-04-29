@@ -7,12 +7,16 @@
 
 using namespace pieces::tsafe;
 
+/////////////////////////////////////////////////////////////////////////////
+//                          Single-threaded tests
+/////////////////////////////////////////////////////////////////////////////
+
 TEST(ThreadSafeQueueTest, PushAndTryPop)
 {
     ThreadSafeQueue<int> queue;
     queue.push(42);
 
-    auto value = queue.try_pop();
+    auto value = queue.tryPop();
     ASSERT_TRUE(value.has_value());
     EXPECT_EQ(value.value(), 42);
 }
@@ -20,27 +24,9 @@ TEST(ThreadSafeQueueTest, PushAndTryPop)
 TEST(ThreadSafeQueueTest, TryPopEmptyReturnsNullopt)
 {
     ThreadSafeQueue<int> queue;
-    EXPECT_FALSE(queue.try_pop().has_value());
-}
 
-TEST(ThreadSafeQueueTest, WaitAndPopBlocksUntilAvailable)
-{
-    ThreadSafeQueue<int> queue;
-    int poppedValue = 0;
-
-    std::thread producer(
-        [&]()
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            queue.push(1337);
-        });
-
-    std::thread consumer([&]() { queue.wait_and_pop(poppedValue); });
-
-    producer.join();
-    consumer.join();
-
-    EXPECT_EQ(poppedValue, 1337);
+    // Popping when empty should fail
+    EXPECT_FALSE(queue.tryPop().has_value());
 }
 
 TEST(ThreadSafeQueueTest, MultiplePushAndPop)
@@ -54,12 +40,36 @@ TEST(ThreadSafeQueueTest, MultiplePushAndPop)
 
     for (int i = 0; i < 10; ++i)
     {
-        auto val = queue.try_pop();
+        auto val = queue.tryPop();
         ASSERT_TRUE(val.has_value());
         EXPECT_EQ(val.value(), i);
     }
 
     EXPECT_TRUE(queue.empty());
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//                          Multi-threaded tests
+/////////////////////////////////////////////////////////////////////////////
+
+TEST(ThreadSafeQueueTest, WaitAndPopBlocksUntilAvailable)
+{
+    ThreadSafeQueue<int> queue;
+    int poppedValue = 0;
+
+    std::thread producer(
+        [&]()
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            queue.push(1337);
+        });
+
+    std::thread consumer([&]() { queue.waitAndPop(poppedValue); });
+
+    producer.join();
+    consumer.join();
+
+    EXPECT_EQ(poppedValue, 1337);
 }
 
 TEST(ThreadSafeQueueTest, ThreadedProducerConsumer)
@@ -81,11 +91,11 @@ TEST(ThreadSafeQueueTest, ThreadedProducerConsumer)
         {
             for (int i = 0; i < 100; ++i)
             {
-                auto val = queue.try_pop();
+                auto val = queue.tryPop();
                 while (!val.has_value())
                 {
                     std::this_thread::sleep_for(std::chrono::microseconds(10));
-                    val = queue.try_pop();
+                    val = queue.tryPop();
                 }
                 consumed.push_back(val.value());
             }

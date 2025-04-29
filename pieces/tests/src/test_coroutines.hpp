@@ -22,35 +22,35 @@ Task<int> throw_error()
 // Helper for testing LambdaAwaitable directly
 TEST(LambdaAwaitableTest, ReadySuspendResume)
 {
-    bool ready_called = false;
-    bool suspend_called = false;
-    bool resume_called = false;
+    bool readyCalled = false;
+    bool suspendCalled = false;
+    bool resumeCalled = false;
     auto awaitable = makeAwaitable(
         [&]()
         {
-            ready_called = true;
+            readyCalled = true;
             return true;
         },
-        [&](std::coroutine_handle<>) { suspend_called = true; },
+        [&](std::coroutine_handle<>) { suspendCalled = true; },
         [&]()
         {
-            resume_called = true;
+            resumeCalled = true;
             return 42;
         });
 
     // await_ready should call the ready lambda and return its value
     EXPECT_TRUE(awaitable.await_ready());
-    EXPECT_TRUE(ready_called);
+    EXPECT_TRUE(readyCalled);
 
     // await_suspend should call the suspend lambda
     std::coroutine_handle<> dummy;
     awaitable.await_suspend(dummy);
-    EXPECT_TRUE(suspend_called);
+    EXPECT_TRUE(suspendCalled);
 
     // await_resume should call the resume lambda and return its result
     int value = awaitable.await_resume();
     EXPECT_EQ(value, 42);
-    EXPECT_TRUE(resume_called);
+    EXPECT_TRUE(resumeCalled);
 }
 
 // Test makeAwaitable exception propagation in resume
@@ -77,10 +77,8 @@ TEST(PromiseTypeInt, InitialFinalSuspendNoexcept)
     EXPECT_FALSE(fin.await_ready());
 }
 
-// Test that a simple coroutine returns the correct value when run to completion
-
-// We use a manual runner coroutine for testing
-
+// Test that a simple coroutine returns the correct value when run to completion. We use a manual
+// runner coroutine for testing
 struct ManualRunner
 {
     struct promise_type
@@ -132,7 +130,6 @@ struct ManualRunner
     }
 
     // Static run helper that drives a Task<int> to completion
-
     static int run(pieces::Task<int> task)
     {
         // Inner coroutine that awaits the task and returns its value
@@ -162,8 +159,8 @@ TEST(TaskTest, ReturnValue)
 {
     Task<int> t = return_five();
     ManualRunner runner = [&]() -> ManualRunner { co_return 0; }();
-    // run return_five via the runner
     int result = runner.run(return_five());
+
     EXPECT_EQ(result, 5);
 }
 
@@ -171,5 +168,6 @@ TEST(TaskTest, ExceptionPropagates)
 {
     Task<int> t = throw_error();
     ManualRunner runner = [&]() -> ManualRunner { co_return 0; }();
+
     EXPECT_THROW(runner.run(throw_error()), std::runtime_error);
 }

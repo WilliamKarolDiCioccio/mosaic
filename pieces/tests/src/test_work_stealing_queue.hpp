@@ -10,7 +10,10 @@
 
 using namespace pieces::tsafe;
 
-// Single-threaded tests
+/////////////////////////////////////////////////////////////////////////////
+//                          Single-threaded tests
+/////////////////////////////////////////////////////////////////////////////
+
 TEST(WorkStealingQueueTest, PushPopSingleThread)
 {
     WorkStealingQueue<int> queue;
@@ -63,10 +66,15 @@ TEST(WorkStealingQueueTest, TryStealSingleThread)
     EXPECT_EQ(value, 30);
 
     EXPECT_TRUE(queue.empty());
+
+    // Stealing when empty should fail
     EXPECT_FALSE(queue.trySteal(value));
 }
 
-// Concurrency test: multiple threads stealing from a filled queue
+/////////////////////////////////////////////////////////////////////////////
+//                          Multi-threaded tests
+/////////////////////////////////////////////////////////////////////////////
+
 TEST(WorkStealingQueueTest, ConcurrentSteal)
 {
     constexpr int kNumItems = 1000;
@@ -78,6 +86,7 @@ TEST(WorkStealingQueueTest, ConcurrentSteal)
     {
         queue.push(i);
     }
+
     EXPECT_EQ(queue.size(), static_cast<size_t>(kNumItems));
 
     std::vector<int> stolen;

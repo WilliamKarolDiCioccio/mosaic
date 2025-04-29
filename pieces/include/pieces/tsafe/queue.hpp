@@ -66,7 +66,7 @@ class ThreadSafeQueue
      *
      * @param _value The reference to store the popped value.
      */
-    void wait_and_pop(T& _value)
+    void waitAndPop(T& _value)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         m_condVar.wait(lock, [this] { return !m_queue.empty(); });
@@ -79,7 +79,7 @@ class ThreadSafeQueue
      *
      * @return std::optional<T> The popped value, or std::nullopt if the queue is empty.
      */
-    std::optional<T> try_pop()
+    std::optional<T> tryPop()
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         if (m_queue.empty())
