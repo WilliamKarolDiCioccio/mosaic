@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pieces/result.hpp>
+
 #include "mosaic/core/window.hpp"
 
 namespace mosaic
@@ -16,6 +18,8 @@ struct RenderContextSettings
         : enableDebugLayers(_enableDebugLayers), backbufferCount(_backbufferCount) {};
 };
 
+class RenderSystem;
+
 class RenderContext
 {
    protected:
@@ -25,9 +29,19 @@ class RenderContext
    public:
     RenderContext(const core::Window* _window, const RenderContextSettings& _settings)
         : m_window(_window), m_settings(_settings) {};
-
     virtual ~RenderContext() = default;
 
+   public:
+    virtual pieces::RefResult<RenderContext, std::string> initialize(
+        RenderSystem* _renderSystem) = 0;
+    virtual void shutdown() = 0;
+
+    void render();
+
+    // setScene()
+    // setCamera()
+
+   protected:
     virtual void resizeFramebuffer() = 0;
     virtual void beginFrame() = 0;
     virtual void updateResources() = 0;

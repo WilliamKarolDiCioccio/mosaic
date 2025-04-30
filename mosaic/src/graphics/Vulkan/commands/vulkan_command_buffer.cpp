@@ -12,7 +12,7 @@ void createCommandBuffer(CommandBuffer& _commandBuffer, const Device& _device,
 {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = _commandPool;
+    allocInfo.commandPool = _commandPool.commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = 1;
 
@@ -25,7 +25,7 @@ void createCommandBuffer(CommandBuffer& _commandBuffer, const Device& _device,
 void destroyCommandBuffer(CommandBuffer& _commandBuffer, const Device& _device,
                           const CommandPool& _commandPool)
 {
-    vkFreeCommandBuffers(_device.device, _commandPool, 1, &_commandBuffer);
+    vkFreeCommandBuffers(_device.device, _commandPool.commandPool, 1, &_commandBuffer);
 }
 
 void beingCommandBuffer(CommandBuffer& _commandBuffer, const Device& _device,

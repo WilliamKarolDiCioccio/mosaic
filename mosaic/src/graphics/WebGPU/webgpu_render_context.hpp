@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mosaic/graphics/renderer_context.hpp"
+#include "mosaic/graphics/render_context.hpp"
 #include "webgpu_common.hpp"
 
 namespace mosaic
@@ -12,10 +12,35 @@ namespace webgpu
 
 class WebGPURenderContext : public RenderContext
 {
-   public:
-    WebGPURenderContext(const core::Window* _window, const RenderContextSettings& _settings);
-    ~WebGPURenderContext();
+   private:
+    struct FrameData
+    {
+        WGPUSurfaceTexture surfaceTexture;
+        WGPUTextureView targetView;
+        WGPURenderPassEncoder renderPass;
+        WGPUCommandEncoder commandEncoder;
+    } m_frameData;
 
+    WGPUInstance m_instance;
+    WGPUSurface m_surface;
+    WGPUAdapter m_adapter;
+    WGPUDevice m_device;
+    WGPUQueue m_presentQueue;
+
+   public:
+    WebGPURenderContext(const core::Window* _window, const RenderContextSettings& _settings)
+        : m_instance(nullptr),
+          m_surface(nullptr),
+          m_adapter(nullptr),
+          m_device(nullptr),
+          m_presentQueue(nullptr),
+          RenderContext(_window, _settings) {};
+
+   public:
+    pieces::RefResult<RenderContext, std::string> initialize(RenderSystem* _renderSystem) override;
+    void shutdown() override;
+
+   private:
     void resizeFramebuffer() override;
     void beginFrame() override;
     void updateResources() override;
@@ -23,14 +48,8 @@ class WebGPURenderContext : public RenderContext
     void endFrame() override;
 
    private:
-    std::pair<WGPUSurfaceTexture, WGPUTextureView> getNextSurfaceViewData();
+    void getNextSurfaceViewData();
     void pollDevice(int _times = 5);
-
-    WGPUInstance m_instance = nullptr;
-    WGPUSurface m_surface = nullptr;
-    WGPUAdapter m_adapter = nullptr;
-    WGPUDevice m_device = nullptr;
-    WGPUQueue m_presentQueue = nullptr;
 };
 
 } // namespace webgpu

@@ -16,6 +16,8 @@ struct RenderPass
 {
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
+
+    RenderPass() : renderPass(nullptr), pipelineLayout(nullptr) {};
 };
 
 void createRenderPass(RenderPass& _renderPass, const Device& _device, const Swapchain& _swapchain);

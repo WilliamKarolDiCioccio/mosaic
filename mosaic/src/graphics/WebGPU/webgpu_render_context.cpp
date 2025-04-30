@@ -14,9 +14,8 @@ namespace graphics
 namespace webgpu
 {
 
-WebGPURenderContext::WebGPURenderContext(const core::Window* _window,
-                                         const RenderContextSettings& _settings)
-    : RenderContext(_window, _settings)
+pieces::RefResult<RenderContext, std::string> WebGPURenderContext::initialize(
+    RenderSystem* _renderSystem)
 {
     m_instance = createInstance();
 
@@ -26,8 +25,8 @@ WebGPURenderContext::WebGPURenderContext(const core::Window* _window,
 
     if (!isAdapterSuitable(m_adapter))
     {
-        MOSAIC_ERROR("WebGPU adapter is not suitable!");
-        return;
+        auto msg = std::string("WebGPU adapter is not suitable!");
+        return pieces::ErrRef<RenderContext, std::string>(msg);
     }
 
     m_device = createDevice(m_adapter);
@@ -72,9 +71,11 @@ WebGPURenderContext::WebGPURenderContext(const core::Window* _window,
                        m_window->getFramebufferSize());
 
     wgpuAdapterRelease(m_adapter);
+
+    return pieces::OkRef<RenderContext, std::string>(*this);
 }
 
-WebGPURenderContext::~WebGPURenderContext()
+void WebGPURenderContext::shutdown()
 {
     wgpuQueueRelease(m_presentQueue);
     wgpuDeviceRelease(m_device);
@@ -85,7 +86,7 @@ WebGPURenderContext::~WebGPURenderContext()
 
 void WebGPURenderContext::resizeFramebuffer() {}
 
-std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURenderContext::getNextSurfaceViewData()
+void WebGPURenderContext::getNextSurfaceViewData()
 {
     WGPUSurfaceTexture surfaceTexture;
 
@@ -93,7 +94,8 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURenderContext::getNextSurfa
 
     if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal)
     {
-        return std::pair<WGPUSurfaceTexture, WGPUTextureView>(nullptr, nullptr);
+        m_frameData.targetView = nullptr;
+        m_frameData.surfaceTexture = {};
     }
 
     WGPUTextureViewDescriptor viewDescriptor;
@@ -114,7 +116,8 @@ std::pair<WGPUSurfaceTexture, WGPUTextureView> WebGPURenderContext::getNextSurfa
     wgpuTextureRelease(surfaceTexture.texture);
 #endif
 
-    return std::pair<WGPUSurfaceTexture, WGPUTextureView>(surfaceTexture, targetView);
+    m_frameData.surfaceTexture = surfaceTexture;
+    m_frameData.targetView = targetView;
 }
 
 void WebGPURenderContext::pollDevice(int _times)
@@ -131,53 +134,61 @@ void WebGPURenderContext::pollDevice(int _times)
 
 void WebGPURenderContext::beginFrame()
 {
-    auto [surfaceTexture, targetView] = getNextSurfaceViewData();
-
-    if (!targetView)
+    if (!m_frameData.targetView)
     {
         MOSAIC_ERROR("Could not get WebGPU target view!");
         return;
     }
 
+    m_frameData.commandEncoder = createCommandEncoder(m_device, "Clear Screen Encoder");
+
+    m_frameData.renderPass = beginRenderPass(m_frameData.commandEncoder, m_frameData.targetView,
+                                             {
+                                                 0.25f,
+                                                 0.1f,
+                                                 0.5f,
+                                                 1.0f,
+                                             });
+}
+
+void WebGPURenderContext::updateResources()
+{
+    // Placeholder for resource updates (uniforms, buffer data, etc.)
+}
+
+void WebGPURenderContext::drawScene()
+{
+    // This is where draw calls would go
+    // e.g., wgpuRenderPassEncoderDraw(...);
+
+    endRenderPass(m_frameData.renderPass);
+}
+
+void WebGPURenderContext::endFrame()
+{
     std::vector<WGPUCommandBuffer> commands;
-
-    WGPUCommandEncoder encoder = createCommandEncoder(m_device, "Clear Screen Encoder");
-
-    WGPURenderPassEncoder renderPass =
-        beginRenderPass(encoder, targetView, {0.25f, 0.1f, 0.5f, 1.0f});
-
-    // Draw calls go here...
-
-    endRenderPass(renderPass);
 
     WGPUCommandBufferDescriptor cmdBufferDescriptor = {};
     cmdBufferDescriptor.nextInChain = nullptr;
     cmdBufferDescriptor.label = WGPUStringView("Command buffer", 15);
 
-    WGPUCommandBuffer command = createCommandBuffer(encoder, cmdBufferDescriptor);
-
+    WGPUCommandBuffer command =
+        createCommandBuffer(m_frameData.commandEncoder, cmdBufferDescriptor);
     commands.push_back(command);
 
     submitCommands(m_presentQueue, commands);
-
     pollDevice();
 
-    wgpuTextureViewRelease(targetView);
+    wgpuTextureViewRelease(m_frameData.targetView);
 
 #ifndef __EMSCRIPTEN__
     wgpuSurfacePresent(m_surface);
 #endif
 
 #ifdef WEBGPU_BACKEND_WGPU
-    wgpuTextureRelease(surfaceTexture.texture);
+    wgpuTextureRelease(m_frameData.surfaceTexture.texture);
 #endif
 }
-
-void WebGPURenderContext::updateResources() {}
-
-void WebGPURenderContext::drawScene() {}
-
-void WebGPURenderContext::endFrame() {}
 
 } // namespace webgpu
 } // namespace graphics

@@ -17,6 +17,8 @@ struct Pipeline
     VkDevice device;
     VkPipeline pipeline;
     VkPipelineLayout pipelineLayout;
+
+    Pipeline() : device(VK_NULL_HANDLE), pipeline(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {}
 };
 
 void createGraphicsPipeline(Pipeline& _pipeline, const Device& _device, const Swapchain& _swapchain,

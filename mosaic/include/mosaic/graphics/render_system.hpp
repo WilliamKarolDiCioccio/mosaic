@@ -1,11 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include <pieces/result.hpp>
 
 #include "mosaic/defines.hpp"
-#include "renderer_context.hpp"
+#include "render_context.hpp"
 
 namespace mosaic
 {
@@ -21,45 +22,57 @@ enum class RendererAPIType
 
 class MOSAIC_API RenderSystem
 {
-    friend class RenderContext;
-
    private:
+    bool m_initialized = false;
     RendererAPIType m_apiType;
     std::unordered_map<GLFWwindow*, std::unique_ptr<RenderContext>> m_contexts;
 
-   private:
-    RenderSystem() : m_apiType(RendererAPIType::none) { destroyAllContexts(); }
-
    public:
-    ~RenderSystem() = default;
+    RenderSystem(RendererAPIType _apiType) : m_apiType(_apiType) {};
+    ~RenderSystem() { destroyAllContexts(); }
+
     RenderSystem(const RenderSystem&) = delete;
     RenderSystem& operator=(const RenderSystem&) = delete;
 
+    RenderSystem(RenderSystem&&) = default;
+    RenderSystem& operator=(RenderSystem&&) = default;
+
+    static std::unique_ptr<RenderSystem> create(RendererAPIType _apiType);
+
    public:
+    virtual pieces::RefResult<RenderSystem, std::string> initialize(
+        const core::Window* _window) = 0;
+    virtual void shutdown() = 0;
+
     pieces::Result<RenderContext*, std::string> createContext(const core::Window* _window);
     void destroyContext(const core::Window* _window);
+
+    // createMaterial()
+    // createShader()
+    // createTexture()
+    // createMesh()
+    // createRenderPass()
 
     inline void destroyAllContexts() { m_contexts.clear(); }
 
     inline void render()
     {
-        for (auto& context : m_contexts)
+        for (auto& [window, context] : m_contexts)
         {
-            context.second->beginFrame();
-            context.second->updateResources();
-            context.second->drawScene();
-            context.second->endFrame();
+            context->render();
         }
     }
 
-    inline RenderContext* getRenderContext(const core::Window* _window) { return nullptr; }
-
-    inline void setAPI(RendererAPIType _apiType) { m_apiType = _apiType; }
-
-    inline static RenderSystem& get()
+    inline RenderContext* getContext(const core::Window* _window) const
     {
-        static RenderSystem instance;
-        return instance;
+        const auto glfwWindow = _window->getGLFWHandle();
+
+        if (m_contexts.find(glfwWindow) != m_contexts.end())
+        {
+            return m_contexts.at(glfwWindow).get();
+        }
+
+        return nullptr;
     }
 };
 

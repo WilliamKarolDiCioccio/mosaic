@@ -15,6 +15,8 @@ class TestbedApplication : public mosaic::core::Application
 {
    private:
     std::unique_ptr<mosaic::core::Window> m_window;
+    std::unique_ptr<mosaic::input::InputSystem> m_inputSystem;
+    std::unique_ptr<mosaic::graphics::RenderSystem> m_renderSystem;
 
    public:
     TestbedApplication() : Application("Testbed") {}
@@ -25,14 +27,12 @@ class TestbedApplication : public mosaic::core::Application
         m_window = std::make_unique<mosaic::core::Window>("Testbed", glm::vec2(1280, 720));
         m_window->setResizeable(true);
 
-        auto& inputSystem = input::InputSystem::get();
+        m_inputSystem = std::make_unique<mosaic::input::InputSystem>();
 
-        auto registrationResult = inputSystem.registerWindow(m_window.get());
+        auto registrationResult = m_inputSystem->registerWindow(m_window.get());
 
         if (registrationResult.isErr())
         {
-            MOSAIC_ERROR("Failed to register window in input system: {0}",
-                         registrationResult.error());
             return shutdown();
         }
 
@@ -134,15 +134,12 @@ class TestbedApplication : public mosaic::core::Application
             },
         });
 
-        auto& renderer = graphics::RenderSystem::get();
+        m_renderSystem = graphics::RenderSystem::create(graphics::RendererAPIType::vulkan);
 
-        renderer.setAPI(graphics::RendererAPIType::vulkan);
-
-        auto creationResult = renderer.createContext(m_window.get());
+        auto creationResult = m_renderSystem->createContext(m_window.get());
 
         if (creationResult.isErr())
         {
-            MOSAIC_ERROR("Failed to create render context: {0}", creationResult.error());
             return shutdown();
         }
 
@@ -153,15 +150,11 @@ class TestbedApplication : public mosaic::core::Application
     {
         core::Timer::tick();
 
-        graphics::RenderSystem& renderer = graphics::RenderSystem::get();
+        m_renderSystem->render();
 
-        renderer.render();
+        m_inputSystem->poll();
 
-        input::InputSystem& inputSystem = input::InputSystem::get();
-
-        inputSystem.poll();
-
-        input::InputContext* inputContext = inputSystem.getContext(m_window.get());
+        auto inputContext = m_inputSystem->getContext(m_window.get());
 
         if (inputContext->isActionTriggered("moveLeft")) MOSAIC_INFO("Moving left.");
         if (inputContext->isActionTriggered("moveRight")) MOSAIC_INFO("Moving right.");
@@ -181,13 +174,8 @@ class TestbedApplication : public mosaic::core::Application
 
     void onShutdown() override
     {
-        auto& renderer = graphics::RenderSystem::get();
-
-        renderer.destroyAllContexts();
-
-        auto& inputManager = input::InputSystem::get();
-
-        inputManager.unregisterWindow(m_window.get());
+        m_renderSystem->destroyAllContexts();
+        m_inputSystem->unregisterAllWindows();
 
         MOSAIC_INFO("Testbed shutdown.");
     }

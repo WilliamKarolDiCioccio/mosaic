@@ -1,8 +1,6 @@
 #pragma once
 
-#include "mosaic/graphics/renderer_context.hpp"
-
-#include "vulkan_common.hpp"
+#include "mosaic/graphics/render_context.hpp"
 
 #include "context/vulkan_instance.hpp"
 #include "context/vulkan_device.hpp"
@@ -30,40 +28,51 @@ class VulkanRenderContext : public RenderContext
         VkSemaphore renderFinishedSemaphore;
         VkFence inFlightFence;
         CommandBuffer commandBuffer;
+        uint32_t imageIndex;
 
         FrameData()
             : imageAvailableSemaphore(nullptr),
               renderFinishedSemaphore(nullptr),
               inFlightFence(nullptr),
-              commandBuffer(nullptr) {};
+              commandBuffer(nullptr),
+              imageIndex(0) {};
     };
 
-   public:
-    VulkanRenderContext(const core::Window* _window, const RenderContextSettings& _settings);
-    ~VulkanRenderContext();
+    const Instance* m_instance;
+    const Device* m_device;
 
-    void resizeFramebuffer() override;
-    void beginFrame() override;
-    void updateResources() override;
-    void drawScene() override;
-    void endFrame() override;
-
-   private:
-    void createFrames();
-    void destroyFrames();
-
-    Instance m_instance;
-    Device m_device;
     Surface m_surface;
     Swapchain m_swapchain;
     RenderPass m_renderPass;
     Pipeline m_pipeline;
     CommandPool m_commandPool;
 
-    uint32_t m_currentFrame = 0;
+    uint32_t m_currentFrame;
     std::vector<FrameData> m_frameData;
 
-    bool m_framebufferResized = false;
+    bool m_framebufferResized;
+
+   public:
+    VulkanRenderContext(const core::Window* _window, const RenderContextSettings& _settings)
+        : m_currentFrame(0),
+          m_framebufferResized(false),
+          m_instance(nullptr),
+          m_device(nullptr),
+          RenderContext(_window, _settings) {};
+
+   public:
+    pieces::RefResult<RenderContext, std::string> initialize(RenderSystem* _renderSystem) override;
+    void shutdown() override;
+
+   private:
+    void resizeFramebuffer() override;
+    void beginFrame() override;
+    void updateResources() override;
+    void drawScene() override;
+    void endFrame() override;
+
+    void createFrames();
+    void destroyFrames();
 };
 
 } // namespace vulkan

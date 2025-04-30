@@ -17,7 +17,8 @@ void createCommandPool(CommandPool& _commandPool, const Device& _device, const S
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-    if (vkCreateCommandPool(_device.device, &poolInfo, nullptr, &_commandPool) != VK_SUCCESS)
+    if (vkCreateCommandPool(_device.device, &poolInfo, nullptr, &_commandPool.commandPool) !=
+        VK_SUCCESS)
     {
         throw std::runtime_error("failed to create command pool!");
     }
@@ -25,7 +26,7 @@ void createCommandPool(CommandPool& _commandPool, const Device& _device, const S
 
 void destroyCommandPool(CommandPool& _commandPool, const Device& _device)
 {
-    vkDestroyCommandPool(_device.device, _commandPool, nullptr);
+    vkDestroyCommandPool(_device.device, _commandPool.commandPool, nullptr);
 }
 
 } // namespace vulkan

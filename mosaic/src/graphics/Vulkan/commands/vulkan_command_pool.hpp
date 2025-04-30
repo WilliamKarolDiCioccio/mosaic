@@ -9,7 +9,12 @@ namespace graphics
 namespace vulkan
 {
 
-using CommandPool = VkCommandPool;
+struct CommandPool
+{
+    VkCommandPool commandPool;
+
+    CommandPool() : commandPool(VK_NULL_HANDLE) {};
+};
 
 void createCommandPool(CommandPool& _commandPool, const Device& _device, const Surface& _surface);
 

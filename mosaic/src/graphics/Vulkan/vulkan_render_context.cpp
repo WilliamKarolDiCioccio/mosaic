@@ -1,5 +1,7 @@
 #include "vulkan_render_context.hpp"
 
+#include "vulkan_render_system.hpp"
+
 namespace mosaic
 {
 namespace graphics
@@ -7,44 +9,44 @@ namespace graphics
 namespace vulkan
 {
 
-VulkanRenderContext::VulkanRenderContext(const core::Window* _window,
-                                         const RenderContextSettings& _settings)
-    : RenderContext(_window, _settings)
+pieces::RefResult<RenderContext, std::string> VulkanRenderContext::initialize(
+    RenderSystem* _renderSystem)
 {
-    m_frameData.resize(_settings.backbufferCount);
+    m_instance = static_cast<VulkanRenderSystem*>(_renderSystem)->getInstance();
+    m_device = static_cast<VulkanRenderSystem*>(_renderSystem)->getDevice();
 
-    createInstance(m_instance);
-    createSurface(m_surface, m_instance, m_window->getGLFWHandle());
-    createDevice(m_device, m_instance, m_surface);
+    m_frameData.resize(m_settings.backbufferCount);
 
-    createSwapchain(m_swapchain, m_device, m_surface, m_window->getGLFWHandle(),
+    createSurface(m_surface, *m_instance, m_window->getGLFWHandle());
+
+    createSwapchain(m_swapchain, *m_device, m_surface, m_window->getGLFWHandle(),
                     m_window->getFramebufferSize(), m_window->getWindowProperties().isFullscreen);
 
-    createRenderPass(m_renderPass, m_device, m_swapchain);
-    createGraphicsPipeline(m_pipeline, m_device, m_swapchain, m_renderPass);
-    createSwapchainFramebuffers(m_swapchain, m_device, m_renderPass);
-    createCommandPool(m_commandPool, m_device, m_surface);
+    createRenderPass(m_renderPass, *m_device, m_swapchain);
+    createGraphicsPipeline(m_pipeline, *m_device, m_swapchain, m_renderPass);
+    createSwapchainFramebuffers(m_swapchain, *m_device, m_renderPass);
+    createCommandPool(m_commandPool, *m_device, m_surface);
 
     createFrames();
 
     const_cast<core::Window*>(m_window)->registerWindowResizeCallback(
         [this](int height, int width) { m_framebufferResized = true; });
+
+    return pieces::OkRef<RenderContext, std::string>(*this);
 }
 
-VulkanRenderContext::~VulkanRenderContext()
+void VulkanRenderContext::shutdown()
 {
-    vkDeviceWaitIdle(m_device.device);
+    vkDeviceWaitIdle(m_device->device);
 
     destroyFrames();
 
-    destroyCommandPool(m_commandPool, m_device);
-    destroySwapchainFramebuffers(m_swapchain, m_device);
-    destroyGraphicsPipeline(m_pipeline, m_device);
-    destroyRenderPass(m_renderPass, m_device);
+    destroyCommandPool(m_commandPool, *m_device);
+    destroySwapchainFramebuffers(m_swapchain, *m_device);
+    destroyGraphicsPipeline(m_pipeline, *m_device);
+    destroyRenderPass(m_renderPass, *m_device);
     destroySwapchain(m_swapchain);
-    destroyDevice(m_device);
-    destroySurface(m_surface, m_instance);
-    destroyInstance(m_instance);
+    destroySurface(m_surface, *m_instance);
 }
 
 void VulkanRenderContext::resizeFramebuffer()
@@ -57,19 +59,19 @@ void VulkanRenderContext::resizeFramebuffer()
         framebufferSize = m_window->getFramebufferSize();
     }
 
-    vkDeviceWaitIdle(m_device.device);
+    vkDeviceWaitIdle(m_device->device);
 
-    destroySwapchainFramebuffers(m_swapchain, m_device);
-    destroyGraphicsPipeline(m_pipeline, m_device);
-    destroyRenderPass(m_renderPass, m_device);
+    destroySwapchainFramebuffers(m_swapchain, *m_device);
+    destroyGraphicsPipeline(m_pipeline, *m_device);
+    destroyRenderPass(m_renderPass, *m_device);
     destroySwapchain(m_swapchain);
 
-    createSwapchain(m_swapchain, m_device, m_surface, m_window->getGLFWHandle(), framebufferSize,
+    createSwapchain(m_swapchain, *m_device, m_surface, m_window->getGLFWHandle(), framebufferSize,
                     m_window->getWindowProperties().isFullscreen);
 
-    createRenderPass(m_renderPass, m_device, m_swapchain);
-    createGraphicsPipeline(m_pipeline, m_device, m_swapchain, m_renderPass);
-    createSwapchainFramebuffers(m_swapchain, m_device, m_renderPass);
+    createRenderPass(m_renderPass, *m_device, m_swapchain);
+    createGraphicsPipeline(m_pipeline, *m_device, m_swapchain, m_renderPass);
+    createSwapchainFramebuffers(m_swapchain, *m_device, m_renderPass);
 
     m_framebufferResized = false;
 }
@@ -78,32 +80,45 @@ void VulkanRenderContext::beginFrame()
 {
     auto& frame = m_frameData[m_currentFrame];
 
-    vkWaitForFences(m_device.device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
+    // Wait for previous frame to finish
+    vkWaitForFences(m_device->device, 1, &frame.inFlightFence, VK_TRUE, UINT64_MAX);
 
-    uint32_t imageIndex;
+    // Acquire next image
     VkResult acquireResult =
-        vkAcquireNextImageKHR(m_device.device, m_swapchain.swapchain, UINT64_MAX,
-                              frame.imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+        vkAcquireNextImageKHR(m_device->device, m_swapchain.swapchain, UINT64_MAX,
+                              frame.imageAvailableSemaphore, VK_NULL_HANDLE, &frame.imageIndex);
 
     if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
     {
-        return resizeFramebuffer();
+        resizeFramebuffer();
+        return;
     }
     else if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
     {
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 
-    vkResetFences(m_device.device, 1, &frame.inFlightFence);
-
+    // Prepare for new frame
+    vkResetFences(m_device->device, 1, &frame.inFlightFence);
     vkResetCommandBuffer(frame.commandBuffer, 0);
+}
 
-    // Begin command buffer recording
+void VulkanRenderContext::updateResources()
+{
+    // For future per-frame resource updates (uniforms, descriptor sets, etc.)
+    // Currently empty
+}
 
-    beingCommandBuffer(frame.commandBuffer, m_device, m_surface);
+void VulkanRenderContext::drawScene()
+{
+    auto& frame = m_frameData[m_currentFrame];
 
-    bindGraphicsPipeline(m_pipeline, m_device, frame.commandBuffer);
+    // Begin recording commands
+    beingCommandBuffer(frame.commandBuffer, *m_device, m_surface);
 
+    bindGraphicsPipeline(m_pipeline, *m_device, frame.commandBuffer);
+
+    // Setup viewport
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -111,25 +126,28 @@ void VulkanRenderContext::beginFrame()
     viewport.height = static_cast<float>(m_swapchain.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-
     vkCmdSetViewport(frame.commandBuffer, 0, 1, &viewport);
 
+    // Setup scissor
     VkRect2D scissor{};
     scissor.offset = {0, 0};
     scissor.extent = m_swapchain.extent;
-
     vkCmdSetScissor(frame.commandBuffer, 0, 1, &scissor);
 
-    beginRenderPass(m_renderPass, m_device, m_swapchain, frame.commandBuffer, imageIndex);
-
+    // Render pass and drawing
+    beginRenderPass(m_renderPass, *m_device, m_swapchain, frame.commandBuffer, frame.imageIndex);
     vkCmdDraw(frame.commandBuffer, 3, 1, 0, 0);
+    endRenderPass(m_renderPass, *m_device, frame.commandBuffer);
 
-    endRenderPass(m_renderPass, m_device, frame.commandBuffer);
+    // End recording
+    endCommandBuffer(frame.commandBuffer, *m_device);
+}
 
-    endCommandBuffer(frame.commandBuffer, m_device);
+void VulkanRenderContext::endFrame()
+{
+    auto& frame = m_frameData[m_currentFrame];
 
-    // End command buffer recording
-
+    // Submit draw command
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -146,25 +164,23 @@ void VulkanRenderContext::beginFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(m_device.graphicsQueue, 1, &submitInfo, frame.inFlightFence) != VK_SUCCESS)
+    if (vkQueueSubmit(m_device->graphicsQueue, 1, &submitInfo, frame.inFlightFence) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
+    // Present the rendered image
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
     VkSwapchainKHR swapChains[] = {m_swapchain.swapchain};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &frame.imageIndex;
 
-    presentInfo.pImageIndices = &imageIndex;
-
-    VkResult presentResult = vkQueuePresentKHR(m_device.presentQueue, &presentInfo);
-
+    VkResult presentResult = vkQueuePresentKHR(m_device->presentQueue, &presentInfo);
     if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR ||
         m_framebufferResized)
     {
@@ -175,14 +191,9 @@ void VulkanRenderContext::beginFrame()
         throw std::runtime_error("failed to present swap chain image!");
     }
 
+    // Advance frame
     m_currentFrame = (m_currentFrame + 1) % m_settings.backbufferCount;
 }
-
-void VulkanRenderContext::updateResources() {}
-
-void VulkanRenderContext::drawScene() {}
-
-void VulkanRenderContext::endFrame() {}
 
 void VulkanRenderContext::createFrames()
 {
@@ -195,13 +206,14 @@ void VulkanRenderContext::createFrames()
 
     for (auto& frame : m_frameData)
     {
-        createCommandBuffer(frame.commandBuffer, m_device, m_commandPool);
+        createCommandBuffer(frame.commandBuffer, *m_device, m_commandPool);
 
-        if (vkCreateSemaphore(m_device.device, &semaphoreInfo, nullptr,
+        if (vkCreateSemaphore(m_device->device, &semaphoreInfo, nullptr,
                               &frame.imageAvailableSemaphore) != VK_SUCCESS ||
-            vkCreateSemaphore(m_device.device, &semaphoreInfo, nullptr,
+            vkCreateSemaphore(m_device->device, &semaphoreInfo, nullptr,
                               &frame.renderFinishedSemaphore) != VK_SUCCESS ||
-            vkCreateFence(m_device.device, &fenceInfo, nullptr, &frame.inFlightFence) != VK_SUCCESS)
+            vkCreateFence(m_device->device, &fenceInfo, nullptr, &frame.inFlightFence) !=
+                VK_SUCCESS)
         {
             throw std::runtime_error("failed to create synchronization objects for a frame!");
         }
@@ -212,11 +224,11 @@ void VulkanRenderContext::destroyFrames()
 {
     for (auto& frame : m_frameData)
     {
-        vkDestroySemaphore(m_device.device, frame.imageAvailableSemaphore, nullptr);
-        vkDestroySemaphore(m_device.device, frame.renderFinishedSemaphore, nullptr);
-        vkDestroyFence(m_device.device, frame.inFlightFence, nullptr);
+        vkDestroySemaphore(m_device->device, frame.imageAvailableSemaphore, nullptr);
+        vkDestroySemaphore(m_device->device, frame.renderFinishedSemaphore, nullptr);
+        vkDestroyFence(m_device->device, frame.inFlightFence, nullptr);
 
-        destroyCommandBuffer(frame.commandBuffer, m_device, m_commandPool);
+        destroyCommandBuffer(frame.commandBuffer, *m_device, m_commandPool);
     }
 }
 

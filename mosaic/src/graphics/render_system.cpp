@@ -2,6 +2,8 @@
 
 #include "WebGPU/webgpu_render_context.hpp"
 #include "Vulkan/vulkan_render_context.hpp"
+#include "WebGPU/webgpu_render_system.hpp"
+#include "Vulkan/vulkan_render_system.hpp"
 
 namespace mosaic
 {
@@ -16,25 +18,51 @@ pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const co
         return pieces::Ok<RenderContext*, std::string>(m_contexts[_window->getGLFWHandle()].get());
     }
 
-    std::unique_ptr<RenderContext> context;
+    if (!m_initialized)
+    {
+        auto result = initialize(_window);
+
+        if (result.isErr())
+        {
+            return pieces::Err<RenderContext*, std::string>("RenderSystem: Failed to initialize");
+        }
+
+        m_initialized = true;
+    }
+
+    auto glfwWindow = _window->getGLFWHandle();
 
     switch (m_apiType)
     {
         case RendererAPIType::web_gpu:
-            context = std::make_unique<webgpu::WebGPURenderContext>(_window,
-                                                                    RenderContextSettings{true, 2});
+        {
+            if (m_contexts.size() > 1)
+            {
+                return pieces::Err<RenderContext*, std::string>(
+                    "WebGPU backend only supports one context at a time");
+            }
+
+            m_contexts[glfwWindow] = std::make_unique<webgpu::WebGPURenderContext>(
+                _window, RenderContextSettings(true, 2));
+
             break;
+        }
         case RendererAPIType::vulkan:
-            context = std::make_unique<vulkan::VulkanRenderContext>(_window,
-                                                                    RenderContextSettings{true, 2});
+        {
+            m_contexts[glfwWindow] = std::make_unique<vulkan::VulkanRenderContext>(
+                _window, RenderContextSettings(true, 2));
+
             break;
+        }
         default:
+        {
             return pieces::Err<RenderContext*, std::string>("RenderSystem: Unsupported API type");
+        }
     }
 
-    m_contexts[_window->getGLFWHandle()] = std::move(context);
+    m_contexts.at(glfwWindow)->initialize(this);
 
-    return pieces::Ok<RenderContext*, std::string>(m_contexts[_window->getGLFWHandle()].get());
+    return pieces::Ok<RenderContext*, std::string>(m_contexts.at(glfwWindow).get());
 }
 
 void RenderSystem::destroyContext(const core::Window* _window)
@@ -43,7 +71,22 @@ void RenderSystem::destroyContext(const core::Window* _window)
 
     if (it != m_contexts.end())
     {
+        it->second->shutdown();
+
         m_contexts.erase(it);
+    }
+}
+
+std::unique_ptr<RenderSystem> RenderSystem::create(RendererAPIType _apiType)
+{
+    switch (_apiType)
+    {
+        case RendererAPIType::web_gpu:
+            return std::make_unique<webgpu::WebGPURenderSystem>();
+        case RendererAPIType::vulkan:
+            return std::make_unique<vulkan::VulkanRenderSystem>();
+        default:
+            return nullptr;
     }
 }
 
