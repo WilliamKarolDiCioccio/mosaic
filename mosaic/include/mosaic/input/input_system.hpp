@@ -43,13 +43,15 @@ class MOSAIC_API InputSystem
    public:
     std::unordered_map<GLFWwindow*, std::unique_ptr<InputContext>> m_contexts;
 
-   private:
-    InputSystem() = default;
-
    public:
-    ~InputSystem() = default;
+    InputSystem() = default;
+    ~InputSystem() { unregisterAllWindows(); }
+
     InputSystem(const InputSystem&) = delete;
     InputSystem& operator=(const InputSystem&) = delete;
+
+    InputSystem(InputSystem&&) = default;
+    InputSystem& operator=(InputSystem&&) = default;
 
    public:
     pieces::Result<InputContext*, std::string> registerWindow(const core::Window* _window);
@@ -68,9 +70,9 @@ class MOSAIC_API InputSystem
     {
         glfwPollEvents();
 
-        for (auto& context : m_contexts)
+        for (auto& [window, context] : m_contexts)
         {
-            context.second->update();
+            context->update();
         }
     }
 
@@ -78,19 +80,12 @@ class MOSAIC_API InputSystem
     {
         const auto glfwWindow = _window->getGLFWHandle();
 
-        if (m_contexts.find(glfwWindow) == m_contexts.end())
+        if (m_contexts.find(glfwWindow) != m_contexts.end())
         {
-            MOSAIC_ERROR("Input context not found for the given window.");
-            return nullptr;
+            return m_contexts.at(glfwWindow).get();
         }
 
-        return m_contexts.at(glfwWindow).get();
-    }
-
-    inline static InputSystem& get()
-    {
-        static InputSystem instance;
-        return instance;
+        return nullptr;
     }
 };
 
