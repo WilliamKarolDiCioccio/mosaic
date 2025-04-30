@@ -8,11 +8,11 @@
     "gtest",
     "nlohmann-json",
     "spdlog",
-    "vulkan",
-    "vulkan-utility-libraries",
-    "volk",
-    "vulkan-memory-allocator",
+    "stb",
     "stduuid",
-    "stb"
+    "volk",
+    "vulkan",
+    "vulkan-memory-allocator",
+    "vulkan-utility-libraries"
   ]
 }

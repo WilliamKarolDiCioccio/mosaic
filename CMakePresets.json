@@ -1,105 +1,107 @@
 ﻿{
-    "version": 3,
-    "configurePresets": [
-        {
-            "name": "windows-multi",
-            "displayName": "Windows (VS2022 Multi‑Config)",
-            "generator": "Visual Studio 17 2022",
-            "binaryDir": "${sourceDir}/out/build/windows-multi",
-            "installDir": "${sourceDir}/out/install/windows-multi",
-            "cacheVariables": {
-                "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "GLFW_BUILD_WIN32": true,
-                "WEBGPU_BACKEND": "WGPU"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            }
-        },
-        {
-            "name": "linux-base",
-            "displayName": "Linux (Ninja)",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/out/build/linux",
-            "installDir": "${sourceDir}/out/install/linux",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "gcc",
-                "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "GLFW_BUILD_X11": true,
-                "WEBGPU_BACKEND": "WGPU"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
-            }
-        },
-        {
-            "name": "emscripten-base",
-            "displayName": "Emscripten",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/out/build/emscripten",
-            "installDir": "${sourceDir}/out/install/emscripten",
-            "cacheVariables": {
-                "EMSCRIPTEN": true,
-                "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
-                "VCPKG_TARGET_TRIPLET": "wasm32-emscripten",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-                "WEBGPU_BACKEND": "EMSCRIPTEN",
-                "BUILD_SHARED_LIBS": false,
-                "VCPKG_LIBRARY_LINKAGE": "static",
-                "WEBGPU_LINK_TYPE": "STATIC",
-                "CMAKE_CXX_FLAGS": "-fwasm-exceptions"
-            },
-            "environment": {
-                "EMSCRIPTEN_ROOT": "$env{EMSDK}/upstream/emscripten"
-            }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "vs2022-debug",
-            "displayName": "VS2022 Debug",
-            "configurePreset": "windows-multi",
-            "configuration": "Debug",
-            "environment": {
-                "CFLAGS": "/fsanitize=address",
-                "CXXFLAGS": "/fsanitize=address"
-            }
-        },
-        {
-            "name": "vs2022-release",
-            "displayName": "VS2022 Release",
-            "configurePreset": "windows-multi",
-            "configuration": "Release"
-        },
-        {
-            "name": "linux-debug",
-            "displayName": "Linux Debug",
-            "configurePreset": "linux-base",
-            "configuration": "Debug"
-        },
-        {
-            "name": "linux-release",
-            "displayName": "Linux Release",
-            "configurePreset": "linux-base",
-            "configuration": "Release"
-        },
-        {
-            "name": "emscripten-debug",
-            "displayName": "Emscripten Debug",
-            "configurePreset": "emscripten-base",
-            "configuration": "Debug"
-        },
-        {
-            "name": "emscripten-release",
-            "displayName": "Emscripten Release",
-            "configurePreset": "emscripten-base",
-            "configuration": "Release"
-        }
-    ]
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "windows-multi",
+      "displayName": "Windows (VS2022 Multi‑Config)",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/out/build/windows-multi",
+      "installDir": "${sourceDir}/out/install/windows-multi",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "GLFW_BUILD_WIN32": true,
+        "WEBGPU_BACKEND": "WGPU",
+        "VCPKG_MANIFEST_MODE": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "linux-base",
+      "displayName": "Linux (Ninja)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/linux",
+      "installDir": "${sourceDir}/out/install/linux",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "GLFW_BUILD_X11": true,
+        "WEBGPU_BACKEND": "WGPU",
+        "VCPKG_MANIFEST_MODE": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      }
+    },
+    {
+      "name": "emscripten-base",
+      "displayName": "Emscripten",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/emscripten",
+      "installDir": "${sourceDir}/out/install/emscripten",
+      "cacheVariables": {
+        "EMSCRIPTEN": true,
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "VCPKG_TARGET_TRIPLET": "wasm32-emscripten",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "WEBGPU_BACKEND": "EMSCRIPTEN",
+        "BUILD_SHARED_LIBS": false,
+        "VCPKG_LIBRARY_LINKAGE": "static",
+        "WEBGPU_LINK_TYPE": "STATIC",
+        "CMAKE_CXX_FLAGS": "-fwasm-exceptions",
+        "VCPKG_MANIFEST_MODE": "ON"
+      },
+      "environment": {
+        "EMSCRIPTEN_ROOT": "$env{EMSDK}/upstream/emscripten"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "vs2022-debug",
+      "displayName": "VS2022 Debug",
+      "configurePreset": "windows-multi",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs2022-release",
+      "displayName": "VS2022 Release",
+      "configurePreset": "windows-multi",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "configurePreset": "linux-base",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "configurePreset": "linux-base",
+      "configuration": "Release"
+    },
+    {
+      "name": "emscripten-debug",
+      "displayName": "Emscripten Debug",
+      "configurePreset": "emscripten-base",
+      "configuration": "Debug"
+    },
+    {
+      "name": "emscripten-release",
+      "displayName": "Emscripten Release",
+      "configurePreset": "emscripten-base",
+      "configuration": "Release"
+    }
+  ]
 }

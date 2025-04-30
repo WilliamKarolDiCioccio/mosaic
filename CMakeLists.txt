@@ -26,15 +26,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ---------------------------
-# Toolchain: VCPKG
-# ---------------------------
-if(DEFINED ENV{VCPKG_ROOT})
-  set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
-  set(VCPKG_MANIFEST_MODE ON CACHE BOOL "Use vcpkg manifest mode")
-endif()
-
-# ---------------------------
 # MSVC-Specific Config
 # ---------------------------
 if(MSVC)
