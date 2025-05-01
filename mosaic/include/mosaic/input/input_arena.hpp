@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <algorithm>
 
-#include <pieces/sized_queue.hpp>
+#include <pieces/circular_buffer.hpp>
 
 #include "mosaic/core/timer.hpp"
 #include "mosaic/utils/enum.hpp"
@@ -99,8 +99,8 @@ class InputArena
     MouseCursorPosEvent m_cursorPosEvent;
 
     // Discrete samples for mouse wheel scroll and cursor position
-    pieces::SizedQueue<MouseWheelScrollSample> m_mouseScrollWheelSamples;
-    pieces::SizedQueue<MouseCursorPosSample> m_cursorPosSamples;
+    pieces::CircularBuffer<MouseWheelScrollSample> m_mouseScrollWheelSamples;
+    pieces::CircularBuffer<MouseCursorPosSample> m_cursorPosSamples;
 
    public:
     InputArena(const core::Window* _window);

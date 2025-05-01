@@ -19,8 +19,8 @@ TEST(ThreadSafeMapTest, InsertAndGet)
     map.insert(1, "one");
 
     auto result = map.get(1);
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result.value(), "one");
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), "one");
 }
 
 TEST(ThreadSafeMapTest, OverwriteAndErase)
@@ -29,10 +29,10 @@ TEST(ThreadSafeMapTest, OverwriteAndErase)
     map.insert(1, "one");
     map.insert(1, "uno");
 
-    EXPECT_EQ(map.get(1).value(), "uno");
+    EXPECT_EQ(map.get(1).unwrap(), "uno");
 
     EXPECT_TRUE(map.erase(1));
-    EXPECT_FALSE(map.get(1).has_value());
+    EXPECT_FALSE(map.get(1).isOk());
 }
 
 TEST(ThreadSafeMapTest, InsertIfAbsent)
@@ -41,7 +41,7 @@ TEST(ThreadSafeMapTest, InsertIfAbsent)
     map.insertIfAbsent(1, "one");
     map.insertIfAbsent(1, "uno"); // Should not overwrite
 
-    EXPECT_EQ(map.get(1).value(), "one");
+    EXPECT_EQ(map.get(1).unwrap(), "one");
 }
 
 TEST(ThreadSafeMapTest, TransformRollbackOnException)
@@ -62,7 +62,7 @@ TEST(ThreadSafeMapTest, TransformRollbackOnException)
     {
     }
 
-    EXPECT_EQ(map.get(1).value(), 10); // should rollback
+    EXPECT_EQ(map.get(1).unwrap(), 10); // should rollback
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -27,25 +27,28 @@ TEST(WorkStealingQueueTest, PushPopSingleThread)
     EXPECT_FALSE(queue.empty());
     EXPECT_EQ(queue.size(), 3u);
 
-    int value;
     // LIFO order: last in, first out
-    EXPECT_TRUE(queue.tryPop(value));
-    EXPECT_EQ(value, 3);
+    auto result = queue.tryPop();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), 3);
     EXPECT_EQ(queue.size(), 2u);
 
-    EXPECT_TRUE(queue.tryPop(value));
-    EXPECT_EQ(value, 2);
-    EXPECT_TRUE(queue.tryPop(value));
-    EXPECT_EQ(value, 1);
+    result = queue.tryPop();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), 2);
+
+    result = queue.tryPop();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), 1);
 
     EXPECT_TRUE(queue.empty());
     EXPECT_EQ(queue.size(), 0u);
 
     // Popping when empty should fail
-    EXPECT_FALSE(queue.tryPop(value));
+    EXPECT_FALSE(queue.tryPop().isOk());
 }
 
-TEST(WorkStealingQueueTest, TryStealSingleThread)
+TEST(WorkStealingQueueTest, SingleThreadSteal)
 {
     WorkStealingQueue<int> queue;
     EXPECT_TRUE(queue.empty());
@@ -54,21 +57,24 @@ TEST(WorkStealingQueueTest, TryStealSingleThread)
     queue.push(20);
     queue.push(30);
 
-    int value;
     // FIFO order: first in, first out
-    EXPECT_TRUE(queue.trySteal(value));
-    EXPECT_EQ(value, 10);
+    auto result = queue.trySteal();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), 10);
     EXPECT_EQ(queue.size(), 2u);
 
-    EXPECT_TRUE(queue.trySteal(value));
-    EXPECT_EQ(value, 20);
-    EXPECT_TRUE(queue.trySteal(value));
-    EXPECT_EQ(value, 30);
+    result = queue.trySteal();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), 20);
+
+    result = queue.trySteal();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), 30);
 
     EXPECT_TRUE(queue.empty());
 
     // Stealing when empty should fail
-    EXPECT_FALSE(queue.trySteal(value));
+    EXPECT_FALSE(queue.trySteal().isOk());
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -100,11 +106,14 @@ TEST(WorkStealingQueueTest, ConcurrentSteal)
         threads.emplace_back(
             [&]()
             {
-                int value;
-                while (queue.trySteal(value))
+                while (true)
                 {
+                    auto result = queue.trySteal();
+
+                    if (result.isErr()) break;
+
                     std::lock_guard<std::mutex> lock(stolen_mutex);
-                    stolen.push_back(value);
+                    stolen.push_back(result.unwrap());
                 }
             });
     }
@@ -127,15 +136,4 @@ TEST(WorkStealingQueueTest, ConcurrentSteal)
     {
         EXPECT_EQ(stolen[i], i);
     }
-}
-
-// Empty queue tests
-TEST(WorkStealingQueueTest, EmptyQueue)
-{
-    WorkStealingQueue<std::string> queue;
-    std::string result;
-    EXPECT_FALSE(queue.tryPop(result));
-    EXPECT_FALSE(queue.trySteal(result));
-    EXPECT_TRUE(queue.empty());
-    EXPECT_EQ(queue.size(), 0u);
 }

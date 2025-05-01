@@ -173,7 +173,7 @@ void InputArena::update()
 
     if (!m_rawInputHandler->isActive())
     {
-        const auto& lastSample = m_cursorPosSamples.back();
+        const auto& lastSample = m_cursorPosSamples.back().unwrap();
 
         MouseCursorPosSample fakeSample{
             glm::vec2(0.f),
@@ -194,7 +194,7 @@ void InputArena::update()
             m_pollCount,
         };
 
-        const auto& lastSample = m_cursorPosSamples.back();
+        const auto& lastSample = m_cursorPosSamples.back().unwrap();
 
         if (currentTime - lastSample.timestamp > 16ms)
         {
@@ -228,7 +228,7 @@ void InputArena::update()
             m_mouseScrollEvent.metadata.timestamp = currentTime;
             m_mouseScrollEvent.rawScrollOffset = mouseScrollInput;
 
-            const auto& lastSample = m_mouseScrollWheelSamples.back();
+            const auto& lastSample = m_mouseScrollWheelSamples.back().unwrap();
 
             if (currentTime - lastSample.timestamp > 16ms)
             {
@@ -268,8 +268,8 @@ const glm::vec2 InputArena::getWheelSpeed() const
 {
     if (m_mouseScrollWheelSamples.empty()) return {0.0, 0.0};
 
-    auto oldestTime = m_mouseScrollWheelSamples.front().timestamp;
-    auto newestTime = m_mouseScrollWheelSamples.back().timestamp;
+    auto oldestTime = m_mouseScrollWheelSamples.front().unwrap().timestamp;
+    auto newestTime = m_mouseScrollWheelSamples.back().unwrap().timestamp;
     auto timeSpan = std::chrono::duration<float>(newestTime - oldestTime).count();
 
     if (timeSpan == 0) return {0.0, 0.0};
@@ -281,8 +281,8 @@ const glm::vec2 InputArena::getWheelAccelleration() const
 {
     if (m_mouseScrollWheelSamples.empty()) return glm::vec2(0.f);
 
-    auto oldestTime = m_mouseScrollWheelSamples.front().timestamp;
-    auto newestTime = m_mouseScrollWheelSamples.back().timestamp;
+    auto oldestTime = m_mouseScrollWheelSamples.front().unwrap().timestamp;
+    auto newestTime = m_mouseScrollWheelSamples.back().unwrap().timestamp;
     auto timeSpan = std::chrono::duration<float>(newestTime - oldestTime).count();
 
     if (timeSpan == 0) return glm::vec2(0.f);
@@ -317,8 +317,8 @@ const glm::vec2 InputArena::getCursorSpeed() const
 {
     if (m_cursorPosSamples.empty()) return glm::vec2(0.f);
 
-    auto oldestTime = m_cursorPosSamples.front().timestamp;
-    auto newestTime = m_cursorPosSamples.back().timestamp;
+    auto oldestTime = m_cursorPosSamples.front().unwrap().timestamp;
+    auto newestTime = m_cursorPosSamples.back().unwrap().timestamp;
     auto timeSpan = std::chrono::duration<float>(newestTime - oldestTime).count();
 
     if (timeSpan == 0) return glm::vec2(0.f);
@@ -332,8 +332,8 @@ const glm::vec2 InputArena::getCursorAccelleration() const
 {
     if (m_cursorPosSamples.empty()) return glm::vec2(0.f);
 
-    auto oldestTime = m_cursorPosSamples.front().timestamp;
-    auto newestTime = m_cursorPosSamples.back().timestamp;
+    auto oldestTime = m_cursorPosSamples.front().unwrap().timestamp;
+    auto newestTime = m_cursorPosSamples.back().unwrap().timestamp;
     auto timeSpan = std::chrono::duration<float>(newestTime - oldestTime).count();
 
     if (timeSpan == 0) return glm::vec2(0.f);

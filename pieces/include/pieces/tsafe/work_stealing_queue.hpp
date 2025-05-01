@@ -4,6 +4,9 @@
 #include <mutex>
 #include <optional>
 
+#include "pieces/internal/error_codes.hpp"
+#include "pieces/result.hpp"
+
 namespace pieces
 {
 namespace tsafe
@@ -45,54 +48,50 @@ class WorkStealingQueue
      *
      * @param _value The rvalue reference to be pushed into the queue.
      */
-    void push(T&& _value)
+    void emplace(T&& _value)
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_deque.push_back(std::move(_value));
+        m_deque.emplace_back(std::forward<T>(_value));
     }
 
     /**
      * @brief Try to pop an element from the back of the queue (LIFO).
      *
-     * @param _result The reference to store the popped value.
-     * @return true if an item was popped successfully.
-     * @return false if the queue was empty.
+     * @return Result containing the popped value or an error code.
+     *
+     * @see ErrorCode for possible error codes.
      */
-    bool tryPop(T& _result)
+    Result<T, ErrorCode> tryPop()
     {
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        if (m_deque.empty())
-        {
-            return false;
-        }
+        if (m_deque.empty()) return Err<T, ErrorCode>(ErrorCode::container_empty);
 
-        _result = std::move(m_deque.back());
+        auto result = std::move(m_deque.back());
+
         m_deque.pop_back();
 
-        return true;
+        return Ok<T, ErrorCode>(std::move(result));
     }
 
     /**
      * @brief Try to pop an element from the front of the queue (FIFO).
      *
-     * @param _result The reference to store the popped value.
-     * @return true if an item was popped successfully.
-     * @return false if the queue was empty.
+     * @return Result containing the stolen value or an error code.
+     *
+     * @see ErrorCode for possible error codes.
      */
-    bool trySteal(T& _result)
+    Result<T, ErrorCode> trySteal()
     {
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        if (m_deque.empty())
-        {
-            return false;
-        }
+        if (m_deque.empty()) return Err<T, ErrorCode>(ErrorCode::container_empty);
 
-        _result = std::move(m_deque.front());
+        auto result = std::move(m_deque.front());
+
         m_deque.pop_front();
 
-        return true;
+        return Ok<T, ErrorCode>(std::move(result));
     }
 
     bool empty() const

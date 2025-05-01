@@ -4,13 +4,16 @@
 #include <optional>
 #include <stdexcept>
 
+#include "pieces/internal/error_codes.hpp"
+#include "pieces/result.hpp"
+
 namespace pieces
 {
 
 /**
- * @brief A queue with a fixed size that discards the oldest element when full.
+ * @brief A vector with a fixed size that discards the oldest element when full.
  *
- * This class implements a queue that has a fixed size. When the queue is full and a new element is
+ * This class implements a vector that has a fixed size. When the queue is full and a new element is
  * added, the oldest element is removed to make space for the new one. This is useful for scenarios
  * where you want to keep only the most recent elements in memory. This is also known as a
  * circular buffer.
@@ -21,7 +24,7 @@ namespace pieces
  * @tparam T The type of the elements in the queue.
  */
 template <typename T>
-class SizedQueue
+class CircularBuffer
 {
    private:
     std::vector<T> m_data;
@@ -29,14 +32,14 @@ class SizedQueue
 
    public:
     /**
-     * @brief Constructs a SizedQueue with the specified capacity.
+     * @brief Constructs a CircularBuffer with the specified capacity.
      *
      * You won't be able to change capacity after the queue is created.
      *
      * @param _capacity The maximum number of elements the queue can hold.
      * @throws std::invalid_argument if _capacity is 0.
      */
-    explicit SizedQueue(std::size_t _capacity) : m_capacity(_capacity)
+    explicit CircularBuffer(std::size_t _capacity) : m_capacity(_capacity)
     {
         if (_capacity == 0)
         {
@@ -104,48 +107,47 @@ class SizedQueue
     /**
      * @brief Removes the oldest element from the queue and returns it.
      *
-     * @param _out The variable to store the removed element.
-     * @return true if an element was removed, false if the queue was empty.
+     * @return Result containing the popped value or an error code.
+     *
+     * @see ErrorCode for possible error codes.
      */
-    std::optional<T> pop()
+    Result<T, ErrorCode> pop()
     {
-        if (empty())
-        {
-            return std::nullopt;
-        }
+        if (empty()) return Err<T, ErrorCode>(ErrorCode::container_empty);
+
         auto out = std::move(m_data.front());
+
         m_data.erase(m_data.begin());
-        return out;
+
+        return Ok<T, ErrorCode>(std::move(out));
     }
 
     /**
      * @brief Removes the oldest element from the queue.
      *
      * @return true if an element was removed, false if the queue was empty.
-     * @throws std::out_of_range if the queue is empty.
+     *
+     * @see ErrorCode for possible error codes.
      */
-    const T& front() const
+    Result<T, ErrorCode> front() const
     {
-        if (empty())
-        {
-            throw std::out_of_range("Queue is empty");
-        }
-        return m_data.front();
+        if (empty()) return Err<T, ErrorCode>(ErrorCode::container_empty);
+
+        return Ok<T, ErrorCode>(T(m_data.front()));
     }
 
     /**
      * @brief Returns the last element in the queue.
      *
      * @return The last element in the queue.
-     * @throws std::out_of_range if the queue is empty.
+     *
+     * @see ErrorCode for possible error codes.
      */
-    const T& back() const
+    Result<T, ErrorCode> back() const
     {
-        if (empty())
-        {
-            throw std::out_of_range("Queue is empty");
-        }
-        return m_data.back();
+        if (empty()) return Err<T, ErrorCode>(ErrorCode::container_empty);
+
+        return Ok<T, ErrorCode>(T(m_data.back()));
     }
 
     bool empty() const { return m_data.empty(); }
@@ -183,4 +185,4 @@ class SizedQueue
     }
 };
 
-} // namespace utils
+} // namespace pieces

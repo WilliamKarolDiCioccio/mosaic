@@ -16,9 +16,9 @@ TEST(ThreadSafeQueueTest, PushAndTryPop)
     ThreadSafeQueue<int> queue;
     queue.push(42);
 
-    auto value = queue.tryPop();
-    ASSERT_TRUE(value.has_value());
-    EXPECT_EQ(value.value(), 42);
+    auto result = queue.tryPop();
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), 42);
 }
 
 TEST(ThreadSafeQueueTest, TryPopEmptyReturnsNullopt)
@@ -26,7 +26,7 @@ TEST(ThreadSafeQueueTest, TryPopEmptyReturnsNullopt)
     ThreadSafeQueue<int> queue;
 
     // Popping when empty should fail
-    EXPECT_FALSE(queue.tryPop().has_value());
+    EXPECT_FALSE(queue.tryPop().isOk());
 }
 
 TEST(ThreadSafeQueueTest, MultiplePushAndPop)
@@ -40,9 +40,9 @@ TEST(ThreadSafeQueueTest, MultiplePushAndPop)
 
     for (int i = 0; i < 10; ++i)
     {
-        auto val = queue.tryPop();
-        ASSERT_TRUE(val.has_value());
-        EXPECT_EQ(val.value(), i);
+        auto result = queue.tryPop();
+        EXPECT_TRUE(result.isOk());
+        EXPECT_EQ(result.unwrap(), i);
     }
 
     EXPECT_TRUE(queue.empty());
@@ -64,7 +64,7 @@ TEST(ThreadSafeQueueTest, WaitAndPopBlocksUntilAvailable)
             queue.push(1337);
         });
 
-    std::thread consumer([&]() { queue.waitAndPop(poppedValue); });
+    std::thread consumer([&]() { poppedValue = queue.waitAndPop(); });
 
     producer.join();
     consumer.join();
@@ -91,13 +91,18 @@ TEST(ThreadSafeQueueTest, ThreadedProducerConsumer)
         {
             for (int i = 0; i < 100; ++i)
             {
-                auto val = queue.tryPop();
-                while (!val.has_value())
+                while (true)
                 {
+                    auto result = queue.tryPop();
+
+                    if (result.isOk())
+                    {
+                        consumed.push_back(result.unwrap());
+                        break;
+                    }
+
                     std::this_thread::sleep_for(std::chrono::microseconds(10));
-                    val = queue.tryPop();
                 }
-                consumed.push_back(val.value());
             }
         });
 

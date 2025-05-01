@@ -4,6 +4,9 @@
 #include <optional>
 #include <shared_mutex>
 
+#include "pieces/internal/error_codes.hpp"
+#include "pieces/result.hpp"
+
 namespace pieces
 {
 namespace tsafe
@@ -50,7 +53,7 @@ class ThreadSafeMap
      * @param _key The key to insert.
      * @param _value The rvalue reference to insert.
      */
-    void insert(const K& _key, V&& _value)
+    void emplace(const K& _key, V&& _value)
     {
         std::unique_lock<std::shared_mutex> lock(m_mutex);
         m_map[_key] = std::move(_value);
@@ -128,15 +131,21 @@ class ThreadSafeMap
      * @brief Get the value associated with a key.
      *
      * @param _key The key to look up.
-     * @return std::optional<T> The value associated with the key, or std::nullopt if the key is not
-     * found.
+     * @return Result<V, ErrorCode> The value associated with the key, or an error code if the key
+     * is not found.
      */
-    std::optional<V> get(const K& _key) const
+    Result<V, ErrorCode> get(const K& _key) const
     {
         std::shared_lock<std::shared_mutex> lock(m_mutex);
+
         auto it = m_map.find(_key);
-        if (it != m_map.end()) return it->second;
-        return std::nullopt;
+
+        if (it != m_map.end())
+        {
+            return Ok<V, ErrorCode>(V(it->second));
+        }
+
+        return Err<V, ErrorCode>(ErrorCode::key_not_found);
     }
 
     /**
@@ -185,4 +194,4 @@ class ThreadSafeMap
 };
 
 } // namespace tsafe
-} // namespace utils
+} // namespace pieces

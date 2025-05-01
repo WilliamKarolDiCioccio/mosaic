@@ -6,6 +6,9 @@
 #include <memory>
 #include <optional>
 
+#include "pieces/internal/error_codes.hpp"
+#include "pieces/result.hpp"
+
 namespace pieces
 {
 namespace tsafe
@@ -52,43 +55,52 @@ class ThreadSafeQueue
      *
      * @param _value The rvalue reference to be pushed into the queue.
      */
-    void push(T&& _value)
+    void emplace(T&& _value)
     {
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_queue.push(std::move(_value));
         }
+
         m_condVar.notify_one();
     }
 
     /**
      * @brief Wait for an element to be available and pop it from the queue.
      *
-     * @param _value The reference to store the popped value.
+     * @return T The popped value.
      */
-    void waitAndPop(T& _value)
+    T waitAndPop()
     {
         std::unique_lock<std::mutex> lock(m_mutex);
+
         m_condVar.wait(lock, [this] { return !m_queue.empty(); });
-        _value = std::move(m_queue.front());
+
+        auto result = std::move(m_queue.front());
+
         m_queue.pop();
+
+        return result;
     }
 
     /**
      * @brief Try to pop an element from the queue without blocking.
      *
-     * @return std::optional<T> The popped value, or std::nullopt if the queue is empty.
+     * @return Result containing the popped value or an error code.
+     *
+     * @see ErrorCode for possible error codes.
      */
-    std::optional<T> tryPop()
+    Result<T, ErrorCode> tryPop()
     {
         std::lock_guard<std::mutex> lock(m_mutex);
-        if (m_queue.empty())
-        {
-            return std::nullopt;
-        }
-        T value = std::move(m_queue.front());
+
+        if (m_queue.empty()) return Err<T, ErrorCode>(ErrorCode::container_empty);
+
+        auto value = std::move(m_queue.front());
+
         m_queue.pop();
-        return value;
+
+        return Ok<T, ErrorCode>(std::move(value));
     }
 
     bool empty() const
