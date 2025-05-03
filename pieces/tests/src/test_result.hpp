@@ -137,19 +137,6 @@ TEST(RefResultTest, OkRefContainsReference)
     EXPECT_EQ(value, 99);
 }
 
-TEST(RefResultTest, ErrRefNotContainsErrorReference)
-{
-    std::string errMsg = "orig";
-    auto refRes = ErrRef<int, std::string>(errMsg);
-
-    EXPECT_TRUE(refRes.isErr());
-
-    auto& rw = refRes.error();
-    rw = "changed";
-
-    EXPECT_EQ(errMsg, "orig");
-}
-
 // Test chaining operations
 TEST(ChainingTest, MultipleAndThenChaining)
 {

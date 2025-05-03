@@ -209,9 +209,9 @@ RefResult<U, E> OkRef(U& _u)
 
 /** A RefResult constructor for error values */
 template <typename U, typename E>
-RefResult<U, E> ErrRef(E& _e)
+RefResult<U, E> ErrRef(E&& _e)
 {
-    return RefResult<U, E>::Err(std::ref(_e));
+    return RefResult<U, E>::Err(_e);
 }
 
 } // namespace pieces
