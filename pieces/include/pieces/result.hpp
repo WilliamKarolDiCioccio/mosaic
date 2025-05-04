@@ -3,6 +3,7 @@
 #include <variant>
 #include <functional>
 #include <type_traits>
+#include <stdexcept>
 
 namespace pieces
 {
