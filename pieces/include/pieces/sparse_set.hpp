@@ -33,16 +33,19 @@ template <typename K, typename T, size_t PageSize = 64, bool AggressiveReclaim =
 class SparseSet
 {
    private:
+    // Type alias for the sparse set itself to avoid long type names.
+    using SelfType = SparseSet<K, T, PageSize, AggressiveReclaim>;
+
     struct Page
     {
         std::array<size_t, PageSize> sparse{}; // maps key index to dense index
         std::bitset<PageSize> present{};       // whether key index is present
-        size_t presentCount = 0;               // faster than using a bitset to count present keys
+        size_t presentCount = 0;               // optimization to avoid popcount
 
         Page() { present.reset(); } // initialize all bits to 0
     };
 
-    std::vector<std::unique_ptr<Page>> m_pages{}; // stores pages of sparse data
+    std::vector<std::unique_ptr<Page>> m_pages{}; // stores pages of sparse keys
     std::vector<K> m_denseKeys{};                 // stores keys densely
     std::vector<T> m_data{};                      // stores values densely
 
@@ -53,60 +56,75 @@ class SparseSet
      * @brief Inserts a key-value pair into the sparse set. If the key already exists, it updates
      * the value.
      *
+     * Time complexity: O(1).
+     *
      * @param _key The key to insert.
      * @param _value The value to associate with the key.
+     *
+     * @tparam U The type of the value (must be the same as T when decayed).
      */
-    void insert(K _key, const T& _value)
+    template <typename U>
+        requires std::is_same_v<std::decay_t<U>, T>
+    void insert(K _key, U&& _value)
     {
         Page& page = ensurePageExists(_key);
+        auto offset = getPageOffset(_key);
 
-        if (!page.present.test(getPageOffset(_key)))
+        if (!page.present.test(offset))
         {
             // new key
-            page.sparse[getPageOffset(_key)] = m_denseKeys.size();
+            page.sparse[offset] = m_denseKeys.size();
             m_denseKeys.push_back(_key);
-            m_data.push_back(_value);
-            page.present.set(getPageOffset(_key));
+            m_data.emplace_back(std::forward<U>(_value));
+            page.present.set(offset);
             ++page.presentCount;
         }
         else
         {
             // overwrite existing
-            m_data[page.sparse[getPageOffset(_key)]] = _value;
+            m_data[page.sparse[offset]] = std::forward<U>(_value);
         }
     }
 
     /**
-     * @brief Inserts a key-value pair into the sparse set using move semantics. If the key already
-     * exists, it updates the value.
+     * @brief Tries to insert a key-value pair into the sparse set. If the key already exists, it
+     * does not update the value.
+     *
+     * Time complexity: O(1).
      *
      * @param _key The key to insert.
      * @param _value The value to associate with the key.
+     *
+     * @tparam U The type of the value (must be the same as T when decayed).
      */
-    void emplace(K _key, T&& _value)
+    template <typename U>
+        requires std::is_same_v<std::decay_t<U>, T>
+    bool tryInsert(K _key, U&& _value)
     {
         Page& page = ensurePageExists(_key);
+        auto offset = getPageOffset(_key);
 
-        if (!page.present.test(getPageOffset(_key)))
+        if (!page.present.test(offset))
         {
             // new key
-            page.sparse[getPageOffset(_key)] = m_denseKeys.size();
+            page.sparse[offset] = m_denseKeys.size();
             m_denseKeys.push_back(_key);
-            m_data.emplace_back(std::move(_value));
-            page.present.set(getPageOffset(_key));
+            m_data.emplace_back(std::forward<U>(_value));
+            page.present.set(offset);
             ++page.presentCount;
+            return true;
         }
-        else
-        {
-            // overwrite existing
-            m_data[page.sparse[getPageOffset(_key)]] = std::move(_value);
-        }
+
+        return false; // key already exists
     }
 
     /**
      * @brief Removes a key-value pair from the sparse set.
      *
-     * This function might trigger a deallocation if aggressive reclaim is enabled.
+     * This function might trigger a memory reclaim if the page is empty and aggressive reclaim is
+     * enabled.
+     *
+     * Time complexity: O(1).
      *
      * @param _key The key to remove.
      */
@@ -160,12 +178,12 @@ class SparseSet
     }
 
     /**
-     * @brief Checks if a key exists in the sparse set.
+     * @brief Checks if the sparse set contains a key.
      *
-     * @param key The key to check.
-     * @return true if the key exists, false otherwise.
+     * @param _key The key to check for.
+     * @return true if the key is present, false otherwise.
      */
-    bool contains(K _key) const noexcept
+    [[nodiscard]] bool contains(K _key) const noexcept
     {
         size_t pageIdx = getPageIndex(_key);
 
@@ -177,65 +195,28 @@ class SparseSet
     }
 
     /**
-     * @brief Retrieves the value associated with a key. Returns an error if the key is not found.
+     * @brief Retrieves the value associated with a key. Returns an error if the key is not found
+     * (non const version).
      *
      * @param _key The key to retrieve the value for.
      * @return RefResult<T, ErrorCode> The result containing the value or an error code.
      *
      * @see ErrorCode for possible error codes.
      */
-    RefResult<T, ErrorCode> get(K _key) noexcept
-    {
-        const size_t pageIdx = getPageIndex(_key);
-
-        if (pageIdx >= m_pages.size())
-        {
-            return ErrRef<T, ErrorCode>(ErrorCode::out_of_range);
-        }
-        else if (!m_pages[pageIdx])
-        {
-            return ErrRef<T, ErrorCode>(ErrorCode::key_not_found);
-        }
-
-        Page& page = *m_pages[pageIdx];
-
-        if (!page.present.test(getPageOffset(_key)))
-        {
-            return ErrRef<T, ErrorCode>(ErrorCode::key_not_found);
-        }
-
-        return OkRef<T, ErrorCode>(m_data[page.sparse[getPageOffset(_key)]]);
-    }
+    [[nodiscard]] RefResult<T, ErrorCode> get(K _key) noexcept { return getImpl(*this, _key); }
 
     /**
-     * @brief Retrieves the value associated with a key. Returns an error if the key is not found.
+     * @brief Retrieves the value associated with a key. Returns an error if the key is not found
+     * (const version).
      *
      * @param _key The key to retrieve the value for.
      * @return RefResult<const T, ErrorCode> The result containing the value or an error code.
      *
      * @see ErrorCode for possible error codes.
      */
-    RefResult<const T, ErrorCode> get(K _key) const noexcept
+    [[nodiscard]] RefResult<const T, ErrorCode> get(K _key) const noexcept
     {
-        const size_t pageIdx = getPageIndex(_key);
-
-        if (pageIdx >= m_pages.size())
-        {
-            return ErrRef<T, ErrorCode>(ErrorCode::out_of_range);
-        }
-        else if (!m_pages[pageIdx])
-        {
-            return ErrRef<T, ErrorCode>(ErrorCode::key_not_found);
-        }
-
-        const Page& page = *m_pages[pageIdx];
-
-        if (!page.present.test(getPageOffset(_key)))
-        {
-            return ErrRef<const T, ErrorCode>(ErrorCode::key_not_found);
-        }
-
-        return OkRef<const T, ErrorCode>(m_data[page.sparse[getPageOffset(_key)]]);
+        return getImpl(*this, _key);
     }
 
     // Returns the number of keys in the sparse set (gets the dense keys size).
@@ -250,6 +231,14 @@ class SparseSet
         m_denseKeys.clear();
         m_data.clear();
         m_pages.clear();
+    }
+
+    // Removes all keys and values from the sparse set and releases memory.
+    void shrinkToFit() noexcept
+    {
+        m_denseKeys.shrink_to_fit();
+        m_data.shrink_to_fit();
+        m_pages.shrink_to_fit();
     }
 
     /**
@@ -289,6 +278,63 @@ class SparseSet
         }
     }
 
+    /**
+     * @brief Computes the intersection of two sparse sets, returning a new sparse set containing
+     * the common keys and values.
+     *
+     * Time complexity: O(n + m), where n is the size of the current set and m is the size of the
+     * other set.
+     *
+     * @param _other The other sparse set to intersect with.
+     * @return SelfType A new sparse set containing the intersection of the two sets.
+     */
+    [[nodiscard]] SelfType intersection(const SelfType& _other)
+    {
+        SelfType intersectionSet;
+
+        if (size() < _other.size())
+        {
+            for (const auto& key : m_denseKeys)
+            {
+                if (_other.contains(key)) intersectionSet.insert(key, m_data[key]);
+            }
+        }
+        else
+        {
+            for (const auto& key : _other.m_denseKeys)
+            {
+                if (contains(key)) intersectionSet.insert(key, m_data[key]);
+            }
+        }
+
+        return intersectionSet;
+    }
+
+    /**
+     * @brief Merges two sparse sets, returning a new sparse set containing all keys and values from
+     * both sets.
+     *
+     * Time complexity: O(n + m), where n is the size of the current set and m is the size of the
+     * other set.
+     *
+     * @param _other The other sparse set to merge with.
+     * @return SelfType A new sparse set containing the merged keys and values.
+     */
+    [[nodiscard]] SelfType merge(const SelfType& _other)
+    {
+        SelfType mergeSet;
+
+        if constexpr (AggressiveReclaim)
+        {
+            mergeSet.reserve(size() + _other.size());
+        }
+
+        for (const auto& key : m_denseKeys) mergeSet.insert(key, m_data[key]);
+        for (const auto& key : _other.m_denseKeys) mergeSet.insert(key, _other.m_data[key]);
+
+        return mergeSet;
+    }
+
     const std::vector<K>& keys() const noexcept { return m_denseKeys; }
     std::vector<T>& values() noexcept { return m_data; }
     const std::vector<T>& values() const noexcept { return m_data; }
@@ -310,6 +356,38 @@ class SparseSet
         if (!m_pages[pageIdx]) m_pages[pageIdx] = std::make_unique<Page>();
 
         return *m_pages[pageIdx];
+    }
+
+    // Constness abstracted get function to avoid code duplication.
+    template <typename Self>
+    static auto getImpl(Self& _self, K _key) noexcept
+        -> RefResult<std::conditional_t<std::is_const_v<Self>, const T, T>, ErrorCode>
+    {
+        const size_t pageIdx = _self.getPageIndex(_key);
+
+        if (pageIdx >= _self.m_pages.size())
+        {
+            return ErrRef<std::conditional_t<std::is_const_v<Self>, const T, T>, ErrorCode>(
+                ErrorCode::out_of_range);
+        }
+
+        auto* pagePtr = _self.m_pages[pageIdx].get();
+        if (!pagePtr)
+        {
+            return ErrRef<std::conditional_t<std::is_const_v<Self>, const T, T>, ErrorCode>(
+                ErrorCode::key_not_found);
+        }
+
+        auto& page = *pagePtr;
+
+        if (!page.present.test(_self.getPageOffset(_key)))
+        {
+            return ErrRef<std::conditional_t<std::is_const_v<Self>, const T, T>, ErrorCode>(
+                ErrorCode::key_not_found);
+        }
+
+        return OkRef<std::conditional_t<std::is_const_v<Self>, const T, T>, ErrorCode>(
+            _self.m_data[page.sparse[_self.getPageOffset(_key)]]);
     }
 };
 
