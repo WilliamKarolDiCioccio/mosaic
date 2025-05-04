@@ -143,11 +143,58 @@ enum class RenderMode {
 };
 ```
 
-## Additional Guidelines
+## Documentation Conventions
 
-- Use comments to clarify complex logic, algorithmic decisions, or non-obvious behaviors.
-- Prefer self-documenting code, but don’t hesitate to annotate intricate or critical sections.
-- Avoid magic numbers. Use named constants or enumerations to improve clarity.
+We use **Doxygen** as the standard documentation generator for the engine. All documentation should strive to be **clear, concise, and helpful to both new and experienced contributors**.
+
+### What to Document
+
+- **All non-trivial public and internal APIs** must be documented.
+- Any function or class that has:
+
+  - **Side effects**
+  - **Performance implications**
+  - **Complex input/output behavior**
+
+- Document **subsystems**, **core abstractions**, and **data flow** at a high level when relevant.
+- Avoid redundant comments on trivial functions (e.g., `size()` on containers).
+
+### Where to Document
+
+- Use **Doxygen-style comments** directly in headers for functions, classes, and enums.
+- For **complex implementation logic**, use in-source comments in `.cpp` files to explain:
+
+  - Non-obvious control flow
+  - Performance-critical code
+  - Subtle algorithmic behavior
+
+### Style and Format
+
+- Use **full sentences** with correct punctuation.
+- Start function descriptions with a verb in **third-person singular** ("Returns", "Initializes", "Calculates").
+- Mention:
+
+  - Preconditions and postconditions
+  - Ownership and lifetime expectations
+  - Thread safety or concurrency constraints
+  - Units of measurement (e.g., milliseconds, degrees, normalized)
+
+```cpp
+/**
+ * Initializes the graphics subsystem and prepares rendering backends.
+ *
+ * Must be called before any rendering calls. This function allocates GPU memory and
+ * sets up hardware-specific pipelines.
+ *
+ * @return True if initialization succeeded, false otherwise.
+ */
+bool Rendered::init();
+```
+
+### File Organization
+
+- If an entire file or subsystem needs explanation, place a Doxygen `\file` or `\brief` comment block at the top.
+- Document major modules in standalone `.md` files under the `docs/` directory for higher-level guides.
 
 ---
 
