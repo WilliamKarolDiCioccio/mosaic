@@ -13,6 +13,7 @@
     "volk",
     "vulkan",
     "vulkan-memory-allocator",
-    "vulkan-utility-libraries"
+    "vulkan-utility-libraries",
+    "benchmark"
   ]
 }
