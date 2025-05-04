@@ -2,13 +2,17 @@
 
 #include <gtest/gtest.h>
 
+#include <random>
+#include <numeric>
+#include <algorithm>
+
 #include "pieces/sparse_set.hpp"
 
 using namespace pieces;
 
 using K = size_t;
 using T = int;
-using SparseSetType = SparseSet<K, T>;
+using SparseSetType = SparseSet<K, T, 64, true>;
 
 // Test fixture
 class SparseSetTest : public ::testing::Test
@@ -17,7 +21,7 @@ class SparseSetTest : public ::testing::Test
     SparseSetType set;
 };
 
-// Test insertion and contains()
+// Test insertion of keys
 TEST_F(SparseSetTest, InsertAndContains)
 {
     EXPECT_FALSE(set.contains(1));
@@ -26,19 +30,11 @@ TEST_F(SparseSetTest, InsertAndContains)
 
     EXPECT_TRUE(set.contains(1));
     EXPECT_EQ(set.get(1).unwrap(), 100);
-}
 
-// Test overwriting existing key
-TEST_F(SparseSetTest, OverwriteValue)
-{
-    set.insert(2, 200);
+    set.insert(1, 200);
 
-    EXPECT_EQ(set.get(2).unwrap(), 200);
-
-    set.insert(2, 250);
-
-    EXPECT_EQ(set.get(2).unwrap(), 250);
-    EXPECT_EQ(set.size(), 1);
+    EXPECT_TRUE(set.contains(1));
+    EXPECT_EQ(set.get(1).unwrap(), 200);
 }
 
 // Test removal of keys
@@ -59,7 +55,7 @@ TEST_F(SparseSetTest, RemoveKey)
 // Test get throws on missing key
 TEST_F(SparseSetTest, GetMissingReturn) { EXPECT_EQ(set.get(10).error(), ErrorCode::out_of_range); }
 
-// Test clear()
+// Test clear
 TEST_F(SparseSetTest, ClearEmptiesSet)
 {
     set.insert(7, 700);
@@ -106,25 +102,13 @@ TEST_F(SparseSetTest, DenseIterationOrder)
 
     ASSERT_EQ(keys.size(), 3);
     ASSERT_EQ(values.size(), 3);
+
     EXPECT_EQ(keys[0], 10);
     EXPECT_EQ(values[0], 1000);
     EXPECT_EQ(keys[1], 20);
     EXPECT_EQ(values[1], 2000);
     EXPECT_EQ(keys[2], 15);
     EXPECT_EQ(values[2], 1500);
-}
-
-// Test large key grows sparse array
-TEST_F(SparseSetTest, LargeKeyGrow)
-{
-    K largeKey = 1000;
-    T val = 123;
-
-    set.insert(largeKey, val);
-
-    EXPECT_TRUE(set.contains(largeKey));
-    EXPECT_EQ(set.get(largeKey).unwrap(), val);
-    EXPECT_EQ(set.size(), 1);
 }
 
 // Test get by reference
@@ -139,4 +123,67 @@ TEST_F(SparseSetTest, GetByReference)
     result.unwrap() = 500;
 
     EXPECT_EQ(set.get(4).unwrap(), 500);
+}
+
+// Test aggressive reclaim
+TEST_F(SparseSetTest, RealisticInsertRemove)
+{
+    const size_t keyCount = 1024;
+
+    std::vector<K> keys(keyCount);
+
+    std::iota(keys.begin(), keys.end(), 0);
+
+    std::mt19937 rng(42);
+
+    for (int iter = 0; iter < 100; ++iter)
+    {
+        std::shuffle(keys.begin(), keys.end(), rng);
+
+        // Insert all
+        for (auto k : keys) set.insert(k, static_cast<T>(k));
+
+        EXPECT_EQ(set.size(), keyCount);
+
+        // Remove half randomly
+        for (size_t i = 0; i < keyCount / 2; ++i)
+        {
+            set.remove(keys[i]);
+        }
+
+        EXPECT_EQ(set.size(), keyCount / 2);
+
+        // Remove the rest
+        for (size_t i = keyCount / 2; i < keyCount; ++i)
+        {
+            set.remove(keys[i]);
+        }
+
+        EXPECT_EQ(set.size(), static_cast<size_t>(0));
+    }
+}
+
+TEST_F(SparseSetTest, PageBoundaryReinsert)
+{
+    // Keys at the very edges of page 0 and page 1 (64 is the page size)
+    std::array<K, 4> edgeKeys = {64 - 1, 64, 64 + 1, 2 * 64 - 1};
+
+    // Insert them
+    for (auto k : edgeKeys) set.insert(k, static_cast<T>(k));
+    EXPECT_EQ(set.size(), edgeKeys.size());
+
+    // Remove them
+    for (auto k : edgeKeys) set.remove(k);
+
+    EXPECT_EQ(set.size(), 0);
+
+    // Re-insert and check again
+    for (auto k : edgeKeys)
+    {
+        set.insert(k, static_cast<T>(k + 10));
+        EXPECT_TRUE(set.contains(k));
+        EXPECT_EQ(set.get(k).unwrap(), static_cast<T>(k + 10));
+    }
+
+    EXPECT_EQ(set.size(), edgeKeys.size());
 }

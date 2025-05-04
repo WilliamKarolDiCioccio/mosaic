@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <bitset>
 #include <memory>
 #include <type_traits>
 
@@ -18,13 +19,16 @@ namespace pieces
  * Sparse sets offer O1 complexity for insertion, deletion, and lookup operations while paying a
  * price in memory usage. To mitigate this, the implementation uses a page-based approach to store
  * keys and values, allowing for more efficient memory management. This means that the more sparse
- * the set is the more often you'll pay a small price for the allocation of new pages.
+ * the set is the more often you'll pay a small price for the allocation of new pages. By using
+ * bitsets to implement the sparse presence mask, the implementation can efficiently track empty
+ * pages and reclaim memory.
  *
  * @tparam K The type of the keys (must be an unsigned integral type).
  * @tparam T The type of the values.
  * @tparam PageSize The size of each page (default is 64). This should be a positive integer.
+ * @tparam AggressiveReclaim Whether to reclaim memory aggressively (default is false).
  */
-template <typename K, typename T, int PageSize = 64>
+template <typename K, typename T, size_t PageSize = 64, bool AggressiveReclaim = false>
     requires(std::is_integral_v<K> && std::is_unsigned_v<K> && PageSize > 0)
 class SparseSet
 {
@@ -32,10 +36,15 @@ class SparseSet
     struct Page
     {
         std::array<size_t, PageSize> sparse{}; // maps key index to dense index
-        std::array<bool, PageSize> present{};  // whether key index is present
+        std::bitset<PageSize> present{};       // whether key index is present
+        size_t presentCount = 0;               // faster than using a bitset to count present keys
 
-        Page() { present.fill(false); } // Initialize all keys as not present
+        Page() { present.reset(); } // initialize all bits to 0
     };
+
+    std::vector<std::unique_ptr<Page>> m_pages{}; // stores pages of sparse data
+    std::vector<K> m_denseKeys{};                 // stores keys densely
+    std::vector<T> m_data{};                      // stores values densely
 
    public:
     SparseSet() = default;
@@ -49,20 +58,21 @@ class SparseSet
      */
     void insert(K _key, const T& _value)
     {
-        Page& page = ensurePageExists(_key + 1);
+        Page& page = ensurePageExists(_key);
 
-        if (!page.present[pageOffset(_key)])
+        if (!page.present.test(getPageOffset(_key)))
         {
             // new key
-            page.sparse[pageOffset(_key)] = m_denseKeys.size();
+            page.sparse[getPageOffset(_key)] = m_denseKeys.size();
             m_denseKeys.push_back(_key);
             m_data.push_back(_value);
-            page.present[pageOffset(_key)] = true;
+            page.present.set(getPageOffset(_key));
+            ++page.presentCount;
         }
         else
         {
             // overwrite existing
-            m_data[page.sparse[pageOffset(_key)]] = _value;
+            m_data[page.sparse[getPageOffset(_key)]] = _value;
         }
     }
 
@@ -75,53 +85,78 @@ class SparseSet
      */
     void emplace(K _key, T&& _value)
     {
-        Page& page = ensurePageExists(_key + 1);
+        Page& page = ensurePageExists(_key);
 
-        if (!page.present[pageOffset(_key)])
+        if (!page.present.test(getPageOffset(_key)))
         {
             // new key
-            page.sparse[pageOffset(_key)] = m_denseKeys.size();
+            page.sparse[getPageOffset(_key)] = m_denseKeys.size();
             m_denseKeys.push_back(_key);
             m_data.emplace_back(std::move(_value));
-            page.present[pageOffset(_key)] = true;
+            page.present.set(getPageOffset(_key));
+            ++page.presentCount;
         }
         else
         {
             // overwrite existing
-            m_data[page.sparse[pageOffset(_key)]] = std::move(_value);
+            m_data[page.sparse[getPageOffset(_key)]] = std::move(_value);
         }
     }
 
     /**
      * @brief Removes a key-value pair from the sparse set.
      *
+     * This function might trigger a deallocation if aggressive reclaim is enabled.
+     *
      * @param _key The key to remove.
      */
     void remove(K _key)
     {
-        size_t pageIdx = pageIndex(_key);
+        if (m_denseKeys.empty()) return;
+
+        const size_t pageIdx = getPageIndex(_key);
 
         if (pageIdx >= m_pages.size() || !m_pages[pageIdx]) return;
 
         Page& page = *m_pages[pageIdx];
 
-        size_t denseIdx = page.sparse[pageOffset(_key)];
-        size_t last = m_denseKeys.size() - 1;
+        const size_t pageOffset = getPageOffset(_key);
 
-        if (denseIdx != last)
+        if (!page.present.test(pageOffset)) return;
+
+        // Get the dense index of the key to be removed and the index to swap with
+        const size_t denseIdx = page.sparse[getPageOffset(_key)];
+        const size_t lastIdx = m_denseKeys.size() - 1;
+
+        if (denseIdx < lastIdx)
         {
-            // swap last element into this slot
-            const K swapKey = m_denseKeys[last];
+            // Get the last key
+            const K lastKey = m_denseKeys[lastIdx];
 
-            std::swap(m_denseKeys[denseIdx], m_denseKeys[last]);
-            std::swap(m_data[denseIdx], m_data[last]);
-            page.sparse[pageOffset(swapKey)] = denseIdx;
+            // Swap the last key with the one being removed
+            std::swap(m_denseKeys[denseIdx], m_denseKeys[lastIdx]);
+            std::swap(m_data[denseIdx], m_data[lastIdx]);
+
+            // Get the last key's page index and offset
+            const size_t lastKeyPageIdx = getPageIndex(lastKey);
+            const size_t lastKeyPageOffset = getPageOffset(lastKey);
+
+            // Update the sparse array for the last key
+            Page& lastKeyPage = *m_pages[lastKeyPageIdx];
+            lastKeyPage.sparse[lastKeyPageOffset] = denseIdx;
         }
 
         // remove last
         m_denseKeys.pop_back();
         m_data.pop_back();
-        page.present[pageOffset(_key)] = false;
+        page.present.reset(pageOffset);
+        --page.presentCount;
+
+        if constexpr (AggressiveReclaim)
+        {
+            // remove the page if it is empty
+            if (page.presentCount == 0) m_pages[pageIdx].reset(nullptr);
+        }
     }
 
     /**
@@ -130,15 +165,15 @@ class SparseSet
      * @param key The key to check.
      * @return true if the key exists, false otherwise.
      */
-    bool contains(K _key) const
+    bool contains(K _key) const noexcept
     {
-        size_t pageIdx = pageIndex(_key);
+        size_t pageIdx = getPageIndex(_key);
 
         if (pageIdx >= m_pages.size() || !m_pages[pageIdx]) return false;
 
         const Page& page = *m_pages[pageIdx];
 
-        return page.present[pageOffset(_key)];
+        return page.present.test(getPageOffset(_key));
     }
 
     /**
@@ -149,9 +184,9 @@ class SparseSet
      *
      * @see ErrorCode for possible error codes.
      */
-    RefResult<T, ErrorCode> get(K _key)
+    RefResult<T, ErrorCode> get(K _key) noexcept
     {
-        const size_t pageIdx = pageIndex(_key);
+        const size_t pageIdx = getPageIndex(_key);
 
         if (pageIdx >= m_pages.size())
         {
@@ -164,12 +199,12 @@ class SparseSet
 
         Page& page = *m_pages[pageIdx];
 
-        if (!page.present[pageOffset(_key)])
+        if (!page.present.test(getPageOffset(_key)))
         {
             return ErrRef<T, ErrorCode>(ErrorCode::key_not_found);
         }
 
-        return OkRef<T, ErrorCode>(m_data[page.sparse[pageOffset(_key)]]);
+        return OkRef<T, ErrorCode>(m_data[page.sparse[getPageOffset(_key)]]);
     }
 
     /**
@@ -180,9 +215,9 @@ class SparseSet
      *
      * @see ErrorCode for possible error codes.
      */
-    RefResult<const T, ErrorCode> get(K _key) const
+    RefResult<const T, ErrorCode> get(K _key) const noexcept
     {
-        const size_t pageIdx = pageIndex(_key);
+        const size_t pageIdx = getPageIndex(_key);
 
         if (pageIdx >= m_pages.size())
         {
@@ -195,18 +230,21 @@ class SparseSet
 
         const Page& page = *m_pages[pageIdx];
 
-        if (!page.present[pageOffset(_key)])
+        if (!page.present.test(getPageOffset(_key)))
         {
             return ErrRef<const T, ErrorCode>(ErrorCode::key_not_found);
         }
 
-        return OkRef<const T, ErrorCode>(m_data[page.sparse[pageOffset(_key)]]);
+        return OkRef<const T, ErrorCode>(m_data[page.sparse[getPageOffset(_key)]]);
     }
 
+    // Returns the number of keys in the sparse set (gets the dense keys size).
     size_t size() const noexcept { return m_denseKeys.size(); }
 
+    // Wether the sparse set is empty or not (cheking the dense keys size).
     bool empty() const noexcept { return m_denseKeys.empty(); }
 
+    // Removes all keys and values from the sparse set.
     void clear() noexcept
     {
         m_denseKeys.clear();
@@ -216,27 +254,39 @@ class SparseSet
 
     /**
      * @brief Pre-allocates memory for the sparse set to accommodate a maximum keys and values
-     * number (improves performance if know in advance).
+     * number.
+     *
+     * This can help reduce the number of allocations and improve performance when you know the
+     * number of keys and values in advance. If aggressive reclaim is enabled, this function
+     * is does not do anything.
      *
      * @param _maxKey The maximum key value to reserve space for.
      * @param _count The number of values to reserve space for.
      */
     void reserve(size_t _maxKey, size_t _count)
     {
-        const size_t availablePages = m_pages.size();
-        const size_t requiredPages = (_maxKey + PageSize - 1) / PageSize;
+        if constexpr (AggressiveReclaim) return;
 
-        if (availablePages < requiredPages) m_pages.reserve(requiredPages);
-
-        const size_t pagesToAllocate = requiredPages - availablePages;
-
-        for (size_t i = 0; i < pagesToAllocate; ++i)
+        if (_maxKey > m_pages.size() * PageSize)
         {
-            m_pages.emplace_back(std::make_unique<Page>());
+            const size_t availablePages = m_pages.size();
+            const size_t requiredPages = (_maxKey + PageSize - 1) / PageSize;
+
+            if (availablePages < requiredPages) m_pages.reserve(requiredPages);
+
+            const size_t pagesToAllocate = requiredPages - availablePages;
+
+            for (size_t i = 0; i < pagesToAllocate; ++i)
+            {
+                m_pages.emplace_back(std::make_unique<Page>());
+            }
         }
 
-        m_denseKeys.reserve(_count);
-        m_data.reserve(_count);
+        if (_count > m_denseKeys.capacity() || _count > m_data.capacity())
+        {
+            m_denseKeys.reserve(_count);
+            m_data.reserve(_count);
+        }
     }
 
     const std::vector<K>& keys() const noexcept { return m_denseKeys; }
@@ -245,15 +295,15 @@ class SparseSet
 
    private:
     // Get the corresponding page for the given key.
-    inline size_t pageIndex(K _key) const { return _key / PageSize; }
+    inline size_t getPageIndex(K _key) const { return _key / PageSize; }
 
     // Get the offset within the page for the given key.
-    inline size_t pageOffset(K _key) const { return _key % PageSize; }
+    inline size_t getPageOffset(K _key) const { return _key % PageSize; }
 
-    // Ensure the page corresponding to the key exists.
+    // Create or get the page for the given key.
     Page& ensurePageExists(size_t _size)
     {
-        const size_t pageIdx = pageIndex(_size);
+        const size_t pageIdx = getPageIndex(_size);
 
         if (pageIdx + 1 > m_pages.size()) m_pages.resize(pageIdx + 1);
 
@@ -261,10 +311,6 @@ class SparseSet
 
         return *m_pages[pageIdx];
     }
-
-    std::vector<std::unique_ptr<Page>> m_pages{}; // stores pages of sparse data
-    std::vector<K> m_denseKeys{};                 // stores keys densely
-    std::vector<T> m_data{};                      // stores values densely
 };
 
 } // namespace pieces
