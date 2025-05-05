@@ -351,7 +351,12 @@ class SparseSet
     {
         const size_t pageIdx = getPageIndex(_size);
 
-        if (pageIdx + 1 > m_pages.size()) m_pages.resize(pageIdx + 1);
+        if (pageIdx >= m_pages.size())
+        {
+            // grow to either exactly what we need, or double the current size—whichever is larger
+            size_t newSize = std::max(pageIdx + 1, m_pages.size() * 2);
+            m_pages.resize(newSize);
+        }
 
         if (!m_pages[pageIdx]) m_pages[pageIdx] = std::make_unique<Page>();
 
