@@ -32,6 +32,13 @@ if(DEFINED EMSCRIPTEN)
 endif()
 
 # ----------------------------------------
+# Additional settings
+# ----------------------------------------
+include ("${CMAKE_SOURCE_DIR}/cmake/SIMDConfig.cmake")
+
+enable_simd(mosaic)
+
+# ----------------------------------------
 # Shader Compilation Setup
 # ----------------------------------------
 
@@ -55,6 +62,7 @@ else()
     COMMENT "Compiling Vulkan shaders with Bash directly to target directory"
   )
 endif()
+
 # ----------------------------------------
 # Copy Runtime DLLs (for Windows)
 # ----------------------------------------

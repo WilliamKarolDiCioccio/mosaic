@@ -12,3 +12,7 @@ add_executable(pieces_tests ${TEST_SOURCES} "main.cpp")
 target_link_libraries(pieces_tests PRIVATE pieces GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
 
 add_test(NAME pieces_tests COMMAND test_pieces)
+
+include ("${CMAKE_SOURCE_DIR}/cmake/SIMDConfig.cmake")
+
+enable_simd(mosaic)

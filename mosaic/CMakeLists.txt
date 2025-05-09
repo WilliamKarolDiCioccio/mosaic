@@ -159,6 +159,13 @@ if(NOT DEFINED EMSCRIPTEN)
 endif()
 
 # ----------------------------------------
+# Additional settings
+# ----------------------------------------
+include ("${CMAKE_SOURCE_DIR}/cmake/SIMDConfig.cmake")
+
+enable_simd(mosaic)
+
+# ----------------------------------------
 # Post-Build Step
 # ----------------------------------------
 
