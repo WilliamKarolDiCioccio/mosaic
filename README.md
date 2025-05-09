@@ -1,66 +1,25 @@
 # 🎮 Mosaic Game Engine
 
-Welcome to the **Mosaic Game Engine** — a modern, lightweight, cross-platform game engine built with ❤️ and **C++20**.
+**Mosaic** is a modern, cross-platform game engine written in **C++20**, built from the ground up as both a learning journey and a foundation for something greater.
 
-This is my second journey into building a game engine from scratch, and the goal is simple: **learn deeply**, **build something beautiful**, and **invite others to create with me**.
+Like all of my projects, Mosaic is first and foremost an exploration: a deep dive into systems programming, computer graphics, and game architecture. But it's not a toy. The engine is designed with the long-term goal of becoming a stable, professional-grade platform for interactive experiences — games, simulations, creative tools, and beyond.
 
----
+Unlike many hobby engines that wrap existing libraries, Mosaic takes a bottom-up approach. I'm building its **core systems from scratch** — from a cache-friendly **Entity-Component-System (ECS)** and **layered input system**, to a **Vulkan/WebGPU-based renderer**, an **async-aware I/O layer**, and eventually a full **editor and asset pipeline**. It's about understanding, not just using.
 
-## ✨ Project Highlights
-
-- 🔧 **Modern C++20** codebase
-- 🌍 **Cross-platform support**: Windows, Linux, and Web
-- 🚀 **High-performance rendering**: Vulkan for native platforms, WebGPU for the web
-- 🧱 Modular architecture:
-  - Engine runtime (DLL)
-  - Editor
-  - Testbed
-  - Unit and integration tests
+Mosaic is still under heavy development — but the foundation is solid, and contributions or discussions are always welcome.
 
 ---
 
-## 📦 Build System & Dependencies
+## ✨ Goals and Highlights
 
-We use:
-
-- **CMake** for build configuration
-- **VCPKG** for cross-platform package management
-- External dependencies not available on VCPKG are added as Git submodules under the `vendor/` directory
-
----
-
-## 🧪 Testing
-
-Robust testing using **Google Test (GTest)**:
-
-- ✅ Unit tests for math, serialization, and core utilities
-- 🔗 Integration tests for systems like the render pipeline and asset importers
-
----
-
-## 📚 Coding Style
-
-To maintain consistency and code quality, we follow our own style conventions based on the Google C++ Style Guide.
-
-👉 [See our Coding Style Guide](./CONVENTIONS.md)
-
-Please read this before contributing! Clean code helps everyone 😄
-
----
-
-## 🤝 Contributing
-
-You're more than welcome to contribute — in fact, you're **strongly encouraged** to! This project is just getting started and there's **a lot of room to grow**. If you're passionate about:
-
-- Game engine architecture
-- Modern rendering APIs
-- Cross-platform development
-- Tooling, UI/UX in game editors
-- ...or just want to learn C++ with a real-world project
-
-**Then jump in! 🙌**
-
-All skill levels are welcome. Open issues, suggest features, fix bugs, or just ask questions — let’s build this together.
+- 🧱 **Build it to understand it** — nearly every core system is handcrafted, from ECS to rendering.
+- 🌍 **Cross-platform** — supports Windows, Linux, and the Web (via WebGPU).
+- 🎨 **Modern graphics** — Vulkan backend, with a future-facing WebGPU renderer for browser targets.
+- 🧠 **Layered architecture** — clean separation of engine, editor, runtime, and testbed.
+- 🖱 **Input like Flutter/Unity** — rich input system with context-aware, stateful bindings.
+- 🔄 **Sync + Async APIs** — inspired by Dart’s ergonomic approach to I/O.
+- 🧪 **Stress-tested** — with unit tests and integration tests covering critical systems.
+- 🛠 **CMake + vcpkg** — modern and maintainable build setup, with submodules where needed.
 
 ---
 
