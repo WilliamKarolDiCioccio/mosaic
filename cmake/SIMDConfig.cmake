@@ -11,8 +11,14 @@ include(CheckCXXSourceCompiles)
 include(CMakePushCheckState)
 
 # X86 SIMD definitions: levels, test code, flags, and macros
-set(_simd_x86_levels SSE2 SSE4.1 AVX AVX2 AVX512F)
+set(_simd_x86_levels SSE2 SSE4.2 AVX AVX2 AVX512F)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+set(_simd_x86_flags /arch:SSE2 /arch:SSE4.2 /arch:AVX /arch:AVX2 /arch:AVX512)
+else()
 set(_simd_x86_flags -msse2 -msse4.1 -mavx -mavx2 -mavx512f)
+endif()
+
 set(_simd_x86_defs  SIMD_X86_SSE2 SIMD_X86_SSE4_1 SIMD_X86_AVX SIMD_X86_AVX2 SIMD_X86_AVX512F)
 
 # Test source code for each SIMD level
