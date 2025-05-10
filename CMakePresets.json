@@ -28,9 +28,9 @@
       "binaryDir": "${sourceDir}/out/build/linux",
       "installDir": "${sourceDir}/out/install/linux",
       "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "GLFW_BUILD_X11": true,
         "WEBGPU_BACKEND": "WGPU",
