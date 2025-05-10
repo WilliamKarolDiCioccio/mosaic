@@ -36,7 +36,7 @@ endif()
 # ----------------------------------------
 include ("${CMAKE_SOURCE_DIR}/cmake/SIMDConfig.cmake")
 
-enable_simd(mosaic)
+enable_simd(testbed)
 
 # ----------------------------------------
 # Shader Compilation Setup

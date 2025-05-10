@@ -15,4 +15,4 @@ add_test(NAME pieces_tests COMMAND test_pieces)
 
 include ("${CMAKE_SOURCE_DIR}/cmake/SIMDConfig.cmake")
 
-enable_simd(mosaic)
+enable_simd(pieces_tests)
