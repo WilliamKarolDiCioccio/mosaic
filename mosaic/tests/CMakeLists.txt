@@ -10,3 +10,7 @@ add_custom_command(TARGET mosaic_tests POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:mosaic_tests> $<TARGET_FILE_DIR:mosaic_tests>
 	COMMAND_EXPAND_LISTS
 )
+
+include ("${CMAKE_SOURCE_DIR}/cmake/EnableSIMD.cmake")
+
+enable_simd(mosaic_tests)

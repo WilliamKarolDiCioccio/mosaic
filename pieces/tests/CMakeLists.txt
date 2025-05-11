@@ -13,6 +13,6 @@ target_link_libraries(pieces_tests PRIVATE pieces GTest::gtest GTest::gtest_main
 
 add_test(NAME pieces_tests COMMAND test_pieces)
 
-include ("${CMAKE_SOURCE_DIR}/cmake/SIMDConfig.cmake")
+include ("${CMAKE_SOURCE_DIR}/cmake/EnableSIMD.cmake")
 
 enable_simd(pieces_tests)

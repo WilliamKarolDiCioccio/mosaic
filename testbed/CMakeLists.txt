@@ -34,7 +34,7 @@ endif()
 # ----------------------------------------
 # Additional settings
 # ----------------------------------------
-include ("${CMAKE_SOURCE_DIR}/cmake/SIMDConfig.cmake")
+include ("${CMAKE_SOURCE_DIR}/cmake/EnableSIMD.cmake")
 
 enable_simd(testbed)
 
