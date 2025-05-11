@@ -7,3 +7,6 @@
 [submodule "vendor/glfw3"]
 	path = vendor/glfw3
 	url = https://github.com/glfw/glfw.git
+[submodule "vendor/sanitizers-cmake"]
+	path = vendor/sanitizers-cmake
+	url = https://github.com/arsenm/sanitizers-cmake.git
