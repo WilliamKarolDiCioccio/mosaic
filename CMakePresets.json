@@ -9,7 +9,7 @@
       "installDir": "${sourceDir}/out/install/windows-multi",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Release",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Dev;Release",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "GLFW_BUILD_WIN32": true,
         "WEBGPU_BACKEND": "WGPU",
@@ -22,11 +22,10 @@
       }
     },
     {
+      "hidden": true,
       "name": "linux-base",
       "displayName": "Linux (Ninja)",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/linux",
-      "installDir": "${sourceDir}/out/install/linux",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
@@ -43,11 +42,40 @@
       }
     },
     {
+      "name": "linux-debug",
+      "inherits": "linux-base",
+      "displayName": "Linux Debug",
+      "binaryDir": "${sourceDir}/out/build/debug",
+      "installDir": "${sourceDir}/out/install/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "linux-dev",
+      "inherits": "linux-base",
+      "displayName": "Linux Dev",
+      "binaryDir": "${sourceDir}/out/build/dev",
+      "installDir": "${sourceDir}/out/install/dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Dev"
+      }
+    },
+    {
+      "name": "linux-release",
+      "inherits": "linux-base",
+      "displayName": "Linux Release",
+      "binaryDir": "${sourceDir}/out/build/release",
+      "installDir": "${sourceDir}/out/install/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "hidden": true,
       "name": "emscripten-base",
-      "displayName": "Emscripten",
+      "displayName": "Emscripten (Ninja)",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/emscripten",
-      "installDir": "${sourceDir}/out/install/emscripten",
       "cacheVariables": {
         "EMSCRIPTEN": true,
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -58,49 +86,96 @@
         "BUILD_SHARED_LIBS": false,
         "VCPKG_LIBRARY_LINKAGE": "static",
         "WEBGPU_LINK_TYPE": "STATIC",
-        "CMAKE_CXX_FLAGS": "-fwasm-exceptions",
         "VCPKG_MANIFEST_MODE": "ON"
       },
       "environment": {
         "EMSCRIPTEN_ROOT": "$env{EMSDK}/upstream/emscripten"
       }
+    },
+    {
+      "name": "emscripten-debug",
+      "inherits": "emscripten-base",
+      "displayName": "Emscripten Debug",
+      "binaryDir": "${sourceDir}/out/build/emscripten-debug",
+      "installDir": "${sourceDir}/out/install/emscripten-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "emscripten-dev",
+      "inherits": "emscripten-base",
+      "displayName": "Emscripten Dev",
+      "binaryDir": "${sourceDir}/out/build/emscripten-dev",
+      "installDir": "${sourceDir}/out/install/emscripten-dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Dev"
+      }
+    },
+    {
+      "name": "emscripten-release",
+      "inherits": "emscripten-base",
+      "displayName": "Emscripten Release",
+      "binaryDir": "${sourceDir}/out/build/emscripten-release",
+      "installDir": "${sourceDir}/out/install/emscripten-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ],
   "buildPresets": [
     {
-      "name": "vs2022-debug",
-      "displayName": "VS2022 Debug",
+      "name": "windows-debug",
+      "displayName": "Windows Debug",
       "configurePreset": "windows-multi",
       "configuration": "Debug"
     },
     {
-      "name": "vs2022-release",
-      "displayName": "VS2022 Release",
+      "name": "windows-dev",
+      "displayName": "Windows Dev",
+      "configurePreset": "windows-multi",
+      "configuration": "Dev"
+    },
+    {
+      "name": "windows-release",
+      "displayName": "Windows Release",
       "configurePreset": "windows-multi",
       "configuration": "Release"
     },
     {
       "name": "linux-debug",
       "displayName": "Linux Debug",
-      "configurePreset": "linux-base",
+      "configurePreset": "linux-debug",
       "configuration": "Debug"
+    },
+    {
+      "name": "linux-dev",
+      "displayName": "Linux Dev",
+      "configurePreset": "linux-dev",
+      "configuration": "Dev"
     },
     {
       "name": "linux-release",
       "displayName": "Linux Release",
-      "configurePreset": "linux-base",
+      "configurePreset": "linux-release",
       "configuration": "Release"
     },
     {
       "name": "emscripten-debug",
       "displayName": "Emscripten Debug",
-      "configurePreset": "emscripten-base",
+      "configurePreset": "emscripten-debug",
       "configuration": "Debug"
+    },
+    {
+      "name": "emscripten-dev",
+      "displayName": "Emscripten Dev",
+      "configurePreset": "emscripten-dev",
+      "configuration": "Dev"
     },
     {
       "name": "emscripten-release",
       "displayName": "Emscripten Release",
-      "configurePreset": "emscripten-base",
+      "configurePreset": "emscripten-release",
       "configuration": "Release"
     }
   ]
