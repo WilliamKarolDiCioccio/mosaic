@@ -28,6 +28,8 @@ void VulkanRenderSystem::shutdown()
 
     destroyDevice(m_device);
     destroyInstance(m_instance);
+
+    destroyAllContexts();
 }
 
 } // namespace vulkan

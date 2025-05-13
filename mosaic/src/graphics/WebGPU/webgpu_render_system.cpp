@@ -13,7 +13,7 @@ pieces::RefResult<RenderSystem, std::string> WebGPURenderSystem::initialize(
     return pieces::OkRef<RenderSystem, std::string>(*this);
 }
 
-void WebGPURenderSystem::shutdown() { return; }
+void WebGPURenderSystem::shutdown() { destroyAllContexts(); }
 
 } // namespace webgpu
 } // namespace graphics

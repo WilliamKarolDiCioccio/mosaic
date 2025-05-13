@@ -183,10 +183,6 @@ class TestbedApplication : public mosaic::core::Application
 
 int main()
 {
-#ifdef _DEBUG
-    mosaic::utils::enableMemoryLeakDetection();
-#endif
-
     TestbedApplication app;
 
     auto result = app.initialize().andThen(std::mem_fn(&TestbedApplication::run));

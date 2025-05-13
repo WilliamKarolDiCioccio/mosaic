@@ -25,8 +25,7 @@ pieces::RefResult<RenderContext, std::string> WebGPURenderContext::initialize(
 
     if (!isAdapterSuitable(m_adapter))
     {
-        auto msg = std::string("WebGPU adapter is not suitable!");
-        return pieces::ErrRef<RenderContext, std::string>(msg);
+        return pieces::ErrRef<RenderContext, std::string>("WebGPU adapter is not suitable!");
     }
 
     m_device = createDevice(m_adapter);

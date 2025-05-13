@@ -29,7 +29,7 @@ class MOSAIC_API RenderSystem
 
    public:
     RenderSystem(RendererAPIType _apiType) : m_apiType(_apiType) {};
-    ~RenderSystem() { destroyAllContexts(); }
+    virtual ~RenderSystem() = default;
 
     RenderSystem(const RenderSystem&) = delete;
     RenderSystem& operator=(const RenderSystem&) = delete;

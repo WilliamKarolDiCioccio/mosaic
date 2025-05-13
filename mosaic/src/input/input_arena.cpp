@@ -173,7 +173,7 @@ void InputArena::update()
 
     if (!m_rawInputHandler->isActive())
     {
-        const auto& lastSample = m_cursorPosSamples.back().unwrap();
+        const auto lastSample = m_cursorPosSamples.back().unwrap();
 
         MouseCursorPosSample fakeSample{
             glm::vec2(0.f),
@@ -194,7 +194,7 @@ void InputArena::update()
             m_pollCount,
         };
 
-        const auto& lastSample = m_cursorPosSamples.back().unwrap();
+        const auto lastSample = m_cursorPosSamples.back().unwrap();
 
         if (currentTime - lastSample.timestamp > 16ms)
         {
@@ -210,7 +210,7 @@ void InputArena::update()
 
     if (!m_rawInputHandler->mouseScrollInputAvailable() || !m_rawInputHandler->isActive())
     {
-        const auto& lastSample = m_mouseScrollWheelSamples.back();
+        const auto lastSample = m_mouseScrollWheelSamples.back();
 
         MouseWheelScrollSample fakeSample{
             glm::vec2(0.f),
@@ -228,7 +228,7 @@ void InputArena::update()
             m_mouseScrollEvent.metadata.timestamp = currentTime;
             m_mouseScrollEvent.rawScrollOffset = mouseScrollInput;
 
-            const auto& lastSample = m_mouseScrollWheelSamples.back().unwrap();
+            const auto lastSample = m_mouseScrollWheelSamples.back().unwrap();
 
             if (currentTime - lastSample.timestamp > 16ms)
             {
