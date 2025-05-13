@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12...3.31)
+cmake_minimum_required(VERSION 3.23)
 
 # ---------------------------
 # CMake Policies and Features
@@ -30,7 +30,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ---------------------------
 if(MSVC)
   add_compile_options(/utf-8)
-  set_property(GLOBAL PROPERTY VS_STARTUP_PROJECT testbed)
 endif()
 
 # ---------------------------

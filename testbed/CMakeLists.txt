@@ -32,8 +32,12 @@ if(DEFINED EMSCRIPTEN)
 endif()
 
 # ----------------------------------------
-# Additional settings
+# Compiler options
 # ----------------------------------------
+include ("${CMAKE_SOURCE_DIR}/cmake/ConfigureForBuildType.cmake")
+
+configure_for_build_type(testbed)
+
 include ("${CMAKE_SOURCE_DIR}/cmake/EnableSIMD.cmake")
 
 enable_simd(testbed)

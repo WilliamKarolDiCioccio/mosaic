@@ -1,5 +1,9 @@
 ﻿{
   "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 23
+  },
   "configurePresets": [
     {
       "name": "windows-multi",
@@ -9,7 +13,7 @@
       "installDir": "${sourceDir}/out/install/windows-multi",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_CONFIGURATION_TYPES": "Debug;Dev;Release",
+        "CMAKE_CONFIGURATION_TYPES": "Debug;Dev;Release;Sanitizers",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "GLFW_BUILD_WIN32": true,
         "WEBGPU_BACKEND": "WGPU",
@@ -121,6 +125,17 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "clang-sanitizers",
+      "displayName": "Clang Sanitizers",
+      "generator": "Ninja",
+      "inherits": "linux-base",
+      "binaryDir": "${sourceDir}/out/build/clang-sanitizers",
+      "installDir": "${sourceDir}/out/install/clang-sanitizers",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     }
   ],
   "buildPresets": [
@@ -141,6 +156,12 @@
       "displayName": "Windows Release",
       "configurePreset": "windows-multi",
       "configuration": "Release"
+    },
+    {
+      "name": "msvc-sanitizers",
+      "displayName": "MSVC Sanitizers",
+      "configurePreset": "windows-multi",
+      "configuration": "Sanitizers"
     },
     {
       "name": "linux-debug",
@@ -177,6 +198,12 @@
       "displayName": "Emscripten Release",
       "configurePreset": "emscripten-release",
       "configuration": "Release"
+    },
+    {
+      "name": "clang-sanitizers",
+      "displayName": "Clang Sanitizers",
+      "configurePreset": "clang-sanitizers",
+      "configuration": "Debug"
     }
   ]
 }
