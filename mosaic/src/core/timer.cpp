@@ -18,10 +18,12 @@ double Timer::getCurrentTime()
 
 std::string Timer::getCurrentDate()
 {
+#pragma warning(disable : 4996)
     std::time_t now = std::time(nullptr);
     char buf[64];
     std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
     return std::string(buf);
+#pragma warning(default : 4996)
 }
 
 double Timer::getDeltaTime()
