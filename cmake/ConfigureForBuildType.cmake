@@ -38,14 +38,14 @@ function(configure_for_build_type target)
       $<$<CONFIG:Debug>:-O0 -g>
     )
     target_compile_definitions(${target} PRIVATE
-      $<$<CONFIG:Debug>:MOSAIC_DEBUG>
+      $<$<CONFIG:Debug>:MOSAIC_DEBUG_BUILD>
     )
   elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_options(${target} PRIVATE
       $<$<CONFIG:Debug>:/Od /Z7 /RTC1 /MDd>
     )
     target_compile_definitions(${target} PRIVATE
-      $<$<CONFIG:Debug>:MOSAIC_DEBUG>
+      $<$<CONFIG:Debug>:MOSAIC_DEBUG_BUILD>
     )
   endif()
 
@@ -55,7 +55,7 @@ function(configure_for_build_type target)
       $<$<CONFIG:Dev>:-O2 -g -fstack-protector -fno-omit-frame-pointer>
     )
     target_compile_definitions(${target} PRIVATE
-      $<$<CONFIG:Dev>:MOSAIC_DEV NDEBUG>
+      $<$<CONFIG:Dev>:MOSAIC_DEV_BUILD NDEBUG>
     )
     target_link_options(${target} PRIVATE
       $<$<CONFIG:Dev>:-flto>
@@ -65,7 +65,7 @@ function(configure_for_build_type target)
       $<$<CONFIG:Dev>:/GS /O2 /Ob1 /Zi>
     )
     target_compile_definitions(${target} PRIVATE
-      $<$<CONFIG:Dev>:MOSAIC_DEV NDEBUG>
+      $<$<CONFIG:Dev>:MOSAIC_DEV_BUILD NDEBUG>
     )
     target_link_options(${target} PRIVATE
       $<$<CONFIG:Dev>:/LTCG>
@@ -78,7 +78,7 @@ function(configure_for_build_type target)
       $<$<CONFIG:Release>:-O3 -Wconversion -Wsign-conversion -Wcast-qual -Wdouble-promotion -Wold-style-cast -Wdeprecated -Wundef -fstack-protector-strong -fno-common -D_FORTIFY_SOURCE=2 -fPIE -fvisibility=hidden>
     )
     target_compile_definitions(${target} PRIVATE
-      $<$<CONFIG:Release>:MOSAIC_RELEASE NDEBUG>
+      $<$<CONFIG:Release>:MOSAIC_RELEASE_BUILD NDEBUG>
     )
     target_link_options(${target} PRIVATE
       $<$<CONFIG:Release>:-flto>
@@ -88,7 +88,7 @@ function(configure_for_build_type target)
       $<$<CONFIG:Release>:/GS /guard:cf /Qspectre /sdl /analyze /O2 /Ob3 /GL /Gy /we4289 /w14905 /w14906>
     )
     target_compile_definitions(${target} PRIVATE
-      $<$<CONFIG:Release>:MOSAIC_RELEASE NDEBUG _FORTIFY_SOURCE=2>
+      $<$<CONFIG:Release>:MOSAIC_RELEASE_BUILD NDEBUG _FORTIFY_SOURCE=2>
     )
     target_link_options(${target} PRIVATE
       $<$<CONFIG:Release>:/LTCG>
