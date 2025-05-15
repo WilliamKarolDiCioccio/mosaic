@@ -25,13 +25,42 @@ Mosaic is still under heavy development — but the foundation is solid, and con
 
 ## 🛠 Getting Started
 
-Instructions coming soon — stay tuned!
+Mosaic uses CMake as its build system. Most dependencies are managed via vcpkg, while those unavailable through vcpkg — such as WebGPU, utility libraries, or components requiring special build profiles — are included as submodules under the vendor/ directory.
+
+On Windows, we recommend using Visual Studio 2022 over VS Code for better CMake integration. The default compiler on Windows is MSVC, but Clang is also supported — and is the preferred compiler on Linux and Web targets (via Emscripten).
+
+### 🔧 Build Instructions
+
+- Clone the repository and initialize submodules. `git clone --recurse-submodules https://github.com/WilliamKarolDiCioccio/mosaic`.
+
+- Select a CMake configure preset, then a build preset (the vcpkg toolchain manages installation automatically).
+
+- Build the project — and you're good to go!
+
+> [!WARNING]
+> When building for the Web, you might encounter issues related to threading support.
+>
+> Mosaic uses the -pthread flag in Emscripten to enable Web Workers, which helps retain compatibility with native threading code. Occasionally, you may need to manually patch the build system to support this.
+>
+> If the build fails with missing atomic features, add the following flag manually in the emdawnwebgpu.port.py file located at:
+>
+> out/build/emscripten-{PROFILE}/\_deps/emdawnwebgpu-src/
+>
+> Update the flags section as follows:
+>
+> ```py
+> flags = ['-g', '-std=c++17', '-fno-exceptions']
+> flags += ['-matomics', '-mbulk-memory'] # <-- Add this line
+> flags += \_compute_library_compile_flags(settings)
+>
+> This ensures compatibility with multi-threaded WebAssembly targets.
+> ```
 
 ---
 
 ## 📄 License
 
-Mosaic comes under the permissive MIT License to encourage contributions. See the LICENSE.md file for more information.
+Mosaic comes under the permissive MIT License to encourage contributions. See the [`LICENSE.md`](./LICENSE.md) file for more information.
 
 ---
 
