@@ -29,30 +29,33 @@ set(FRAMEWORK_SRC
   "src/graphics/WebGPU/webgpu_swapchain.cpp"
   "src/graphics/WebGPU/webgpu_pipeline.cpp"
 
-  # Vulkan Backend
-  "src/graphics/vulkan/vulkan_render_context.cpp"
-  "src/graphics/vulkan/vulkan_render_system.cpp"
-  "src/graphics/vulkan/context/vulkan_instance.cpp"
-  "src/graphics/vulkan/context/vulkan_device.cpp"
-  "src/graphics/vulkan/context/vulkan_surface.cpp"
-  "src/graphics/vulkan/pipelines/vulkan_shader_module.cpp"
-  "src/graphics/vulkan/pipelines/vulkan_pipeline.cpp"
-  "src/graphics/vulkan/commands/vulkan_command_pool.cpp"
-  "src/graphics/vulkan/commands/vulkan_command_buffer.cpp"
-  "src/graphics/vulkan/commands/vulkan_render_pass.cpp"
-  "src/graphics/vulkan/vulkan_allocator.cpp"
-  "src/graphics/vulkan/vulkan_framebuffers.cpp"
-  "src/graphics/vulkan/vulkan_swapchain.cpp"
-
   # External headers that need compilation
   "src/stb.cpp"
 )
 
+if (NOT EMSCRIPTEN)
+  list(APPEND FRAMEWORK_SRC
+    # Vulkan Backend
+    "src/graphics/vulkan/vulkan_render_context.cpp"
+    "src/graphics/vulkan/vulkan_render_system.cpp"
+    "src/graphics/vulkan/context/vulkan_instance.cpp"
+    "src/graphics/vulkan/context/vulkan_device.cpp"
+    "src/graphics/vulkan/context/vulkan_surface.cpp"
+    "src/graphics/vulkan/pipelines/vulkan_shader_module.cpp"
+    "src/graphics/vulkan/pipelines/vulkan_pipeline.cpp"
+    "src/graphics/vulkan/commands/vulkan_command_pool.cpp"
+    "src/graphics/vulkan/commands/vulkan_command_buffer.cpp"
+    "src/graphics/vulkan/commands/vulkan_render_pass.cpp"
+    "src/graphics/vulkan/vulkan_allocator.cpp"
+    "src/graphics/vulkan/vulkan_framebuffers.cpp"
+    "src/graphics/vulkan/vulkan_swapchain.cpp"
+  )
+endif()
+
 # ----------------------------------------
 # Target Definition
 # ----------------------------------------
-
-if(DEFINED EMSCRIPTEN)
+if(EMSCRIPTEN)
   add_library(mosaic STATIC ${FRAMEWORK_SRC})
 else()
   add_library(mosaic SHARED ${FRAMEWORK_SRC})
@@ -70,30 +73,37 @@ target_compile_definitions(mosaic
 )
 
 # Platform-specific Vulkan and GLFW defines
-if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-  target_compile_definitions(mosaic PRIVATE
-    WIN32_LEAN_AND_MEAN
-    GLFW_EXPOSE_NATIVE_WIN32
-    VOLK_STATIC_DEFINES
-    VK_USE_PLATFORM_WIN32_KHR
-  )
-elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-  target_compile_definitions(mosaic PRIVATE
-    GLFW_EXPOSE_NATIVE_X11
-    VOLK_STATIC_DEFINES
-    VK_USE_PLATFORM_XLIB_KHR
-  )
-elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-  target_compile_definitions(mosaic PRIVATE
-    GLFW_EXPOSE_NATIVE_COCOA
-    VOLK_STATIC_DEFINES
-    VK_USE_PLATFORM_MACOS_MVK
-  )
+if (NOT EMSCRIPTEN)
+  if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    target_compile_definitions(mosaic PRIVATE
+      WIN32_LEAN_AND_MEAN
+      GLFW_EXPOSE_NATIVE_WIN32
+      VOLK_STATIC_DEFINES
+      VK_USE_PLATFORM_WIN32_KHR
+    )
+  elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_compile_definitions(mosaic PRIVATE
+      GLFW_EXPOSE_NATIVE_X11
+      VOLK_STATIC_DEFINES
+      VK_USE_PLATFORM_XLIB_KHR
+    )
+  elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    target_compile_definitions(mosaic PRIVATE
+      GLFW_EXPOSE_NATIVE_COCOA
+      VOLK_STATIC_DEFINES
+      VK_USE_PLATFORM_MACOS_MVK
+    )
+  endif()
 endif()
 
 # Emscripten-specific flags
-if(DEFINED EMSCRIPTEN)
-  target_link_options(mosaic PRIVATE "-sASYNCIFY")
+if(EMSCRIPTEN)
+  target_link_options(mosaic PRIVATE
+    "-sUSE_WEBGPU=1"
+    "-sASYNCIFY"
+    "-sALLOW_MEMORY_GROWTH"
+    "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+  )
 endif()
 
 # ----------------------------------------
@@ -141,17 +151,20 @@ target_link_libraries(mosaic
   PUBLIC
     pieces
     glm::glm-header-only
-    glfw
-    spdlog::spdlog
     nlohmann_json::nlohmann_json
     stduuid
+    glfw
   PRIVATE
-    glfw3webgpu
     webgpu
+    glfw3webgpu
 )
 
-if(NOT DEFINED EMSCRIPTEN)
+if(EMSCRIPTEN)
+  target_link_options(mosaic PUBLIC -sUSE_GLFW=3)
+else()
   target_link_libraries(mosaic
+    PUBLIC
+      spdlog::spdlog
     PRIVATE
       volk::volk
       GPUOpen::VulkanMemoryAllocator
@@ -167,7 +180,9 @@ configure_for_build_type(mosaic)
 
 include ("${CMAKE_SOURCE_DIR}/cmake/EnableSIMD.cmake")
 
-enable_simd(mosaic)
+if(NOT EMSCRIPTEN)
+  enable_simd(mosaic)
+endif()
 
 # ----------------------------------------
 # Post-Build Step

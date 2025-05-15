@@ -12,4 +12,6 @@ configure_for_build_type(mosaic)
 
 include ("${CMAKE_SOURCE_DIR}/cmake/EnableSIMD.cmake")
 
-enable_simd(pieces_benchmark)
+if(NOT EMSCRIPTEN)
+  enable_simd(pieces_benchmark)
+endif()

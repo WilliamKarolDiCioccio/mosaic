@@ -7,13 +7,28 @@
     "glm",
     "gtest",
     "nlohmann-json",
-    "spdlog",
     "stb",
     "stduuid",
-    "volk",
-    "vulkan",
-    "vulkan-memory-allocator",
-    "vulkan-utility-libraries",
-    "benchmark"
+    "benchmark",
+    {
+      "name": "spdlog",
+      "platform": "!emscripten"
+    },
+    {
+      "name": "volk",
+      "platform": "!emscripten"
+    },
+    {
+      "name": "vulkan",
+      "platform": "!emscripten"
+    },
+    {
+      "name": "vulkan-memory-allocator",
+      "platform": "!emscripten"
+    },
+    {
+      "name": "vulkan-utility-libraries",
+      "platform": "!emscripten"
+    }
   ]
 }

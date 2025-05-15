@@ -33,19 +33,31 @@ if(MSVC)
 endif()
 
 # ---------------------------
+# Emscripten-Specific Config
+# ---------------------------
+if(EMSCRIPTEN)
+  set(CMAKE_EXECUTABLE_SUFFIX ".html")
+  add_compile_options(-pthread)
+  add_link_options(-pthread -sUSE_PTHREADS=1 -sPTHREAD_POOL_SIZE=2 -sASYNCIFY -sALLOW_MEMORY_GROWTH -sDISABLE_EXCEPTION_CATCHING=0)
+endif()
+
+# ---------------------------
 # Dependencies via find_package
 # ---------------------------
 find_package(glm CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(benchmark REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(stduuid CONFIG REQUIRED)
+find_package(Stb REQUIRED)
+
+if (NOT EMSCRIPTEN)
+find_package(spdlog CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(volk CONFIG REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-find_package(stduuid CONFIG REQUIRED)
-find_package(Stb REQUIRED)
+endif()
 
 # ---------------------------
 # Third-Party (Vendored) Libraries
@@ -53,10 +65,9 @@ find_package(Stb REQUIRED)
 add_subdirectory("vendor/webgpu")
 
 # Special case: GLFW handling
-if(DEFINED EMSCRIPTEN)
+if(EMSCRIPTEN)
   add_library(glfw INTERFACE)
-  target_link_options(glfw INTERFACE "-sUSE_GLFW=3")
-  target_include_directories(glfw INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/glfw3/include")
+	target_link_options(glfw INTERFACE -sUSE_GLFW=3)
 else()
   add_subdirectory("vendor/glfw3")
 endif()

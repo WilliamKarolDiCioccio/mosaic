@@ -81,15 +81,14 @@
       "displayName": "Emscripten (Ninja)",
       "generator": "Ninja",
       "cacheVariables": {
-        "EMSCRIPTEN": true,
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
         "VCPKG_TARGET_TRIPLET": "wasm32-emscripten",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
-        "WEBGPU_BACKEND": "EMSCRIPTEN",
         "BUILD_SHARED_LIBS": false,
         "VCPKG_LIBRARY_LINKAGE": "static",
         "WEBGPU_LINK_TYPE": "STATIC",
+        "WEBGPU_BACKEND": "EMDAWNWEBGPU",
         "VCPKG_MANIFEST_MODE": "ON"
       },
       "environment": {
