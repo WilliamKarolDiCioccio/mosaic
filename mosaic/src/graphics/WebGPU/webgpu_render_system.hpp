@@ -15,7 +15,7 @@ namespace webgpu
 class WebGPURenderSystem : public RenderSystem
 {
    public:
-    WebGPURenderSystem() : RenderSystem(RendererAPIType::vulkan) {};
+    WebGPURenderSystem() : RenderSystem(RendererAPIType::web_gpu) {};
 
    public:
     pieces::RefResult<RenderSystem, std::string> initialize(const core::Window* _window) override;

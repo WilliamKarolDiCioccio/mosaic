@@ -2,8 +2,8 @@
 
 // Platform detection
 #if defined(__EMSCRIPTEN__)
-#define MOSAIC_PLATFORM_WASM
-#define MOSCAIC_PLATFORM_NAME "WASM"
+#define MOSAIC_PLATFORM_EMSCRIPTEN
+#define MOSCAIC_PLATFORM_NAME "Emscripten"
 #include <emscripten.h>
 #elif defined(_WIN32) || defined(_WIN64)
 #define MOSAIC_PLATFORM_WINDOWS

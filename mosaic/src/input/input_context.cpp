@@ -46,7 +46,7 @@ void InputContext::loadVirtualKeysAndButtons(const std::string& _filePath)
 
     if (!file.is_open())
     {
-        MOSAIC_ERROR("Failed to open virtual mouse buttons file: {}", _filePath);
+        MOSAIC_ERROR("Failed to open virtual mouse buttons file: {}", _filePath.c_str());
         return;
     }
 
@@ -85,7 +85,7 @@ void InputContext::saveVirtualKeysAndButtons(const std::string& _filePath)
 
     if (!file.is_open())
     {
-        MOSAIC_ERROR("Failed to open virtual keyboard keys file: {}", _filePath);
+        MOSAIC_ERROR("Failed to open virtual keyboard keys file: {}", _filePath.c_str());
         return;
     }
 
@@ -113,7 +113,7 @@ void InputContext::updateVirtualKeyboardKeys(
         {
             if (m_virtualKeyboardKeys.find(k) == m_virtualKeyboardKeys.end())
             {
-                MOSAIC_WARN("Virtual keyboard key not found: {}", k);
+                MOSAIC_WARN("Virtual keyboard key not found: {}", k.c_str());
             }
 
             m_virtualKeyboardKeys[k] = v;
@@ -137,7 +137,7 @@ void InputContext::updateVirtualMouseButtons(
         {
             if (m_virtualMouseButtons.find(k) == m_virtualMouseButtons.end())
             {
-                MOSAIC_WARN("Virtual mouse button not found: {}", k);
+                MOSAIC_WARN("Virtual mouse button not found: {}", k.c_str());
             }
 
             m_virtualMouseButtons[k] = v;
@@ -161,7 +161,7 @@ void InputContext::registerActions(const std::unordered_map<std::string, Action>
         {
             if (m_actions.find(k) != m_actions.end())
             {
-                MOSAIC_WARN("Action already registered: {}", k);
+                MOSAIC_WARN("Action already registered: {}", k.c_str());
                 continue;
             }
 
@@ -182,7 +182,7 @@ void InputContext::unregisterActions(const std::vector<std::string>&& _names)
     {
         if (m_actions.find(name) == m_actions.end())
         {
-            MOSAIC_WARN("Action not found: {}", name);
+            MOSAIC_WARN("Action not found: {}", name.c_str());
             continue;
         }
 
@@ -214,7 +214,7 @@ bool InputContext::isActionTriggered(const std::string& _name)
 
     if (m_actions.find(_name) == m_actions.end() || m_actions.at(_name).empty())
     {
-        MOSAIC_ERROR("Action not found: {}", _name);
+        MOSAIC_ERROR("Action not found: {}", _name.c_str());
         return false;
     }
 

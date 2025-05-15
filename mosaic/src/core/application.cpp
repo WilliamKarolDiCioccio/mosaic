@@ -49,10 +49,10 @@ pieces::RefResult<Application, std::string> Application::run()
     {
         Application* pApp = reinterpret_cast<Application*>(arg);
 
-        pApp->realUpdate();
+        pApp->realRun();
     };
 
-    emscripten_set_main_loop_arg(callback, &app, 0, true);
+    emscripten_set_main_loop_arg(callback, this, 0, true);
 #else
     while (m_properties.isInitialized && !m_properties.isPaused)
     {

@@ -24,7 +24,7 @@ WGPUInstance createInstance()
     desc.nextInChain = &toggles.chain;
 #endif
 
-#ifdef WEBGPU_BACKEND_EMSCRIPTEN
+#ifdef __EMSCRIPTEN__
     WGPUInstance instance = wgpuCreateInstance(nullptr);
 #else
     WGPUInstance instance = wgpuCreateInstance(&instanceDesc);

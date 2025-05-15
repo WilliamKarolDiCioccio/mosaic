@@ -1,9 +1,12 @@
 #include "mosaic/graphics/render_system.hpp"
 
 #include "WebGPU/webgpu_render_context.hpp"
-#include "Vulkan/vulkan_render_context.hpp"
 #include "WebGPU/webgpu_render_system.hpp"
+
+#ifndef __EMSCRIPTEN__
+#include "Vulkan/vulkan_render_context.hpp"
 #include "Vulkan/vulkan_render_system.hpp"
+#endif
 
 namespace mosaic
 {
@@ -47,12 +50,14 @@ pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const co
 
             break;
         }
+#ifndef __EMSCRIPTEN__
         case RendererAPIType::vulkan:
         {
             m_contexts[glfwWindow] = std::make_unique<vulkan::VulkanRenderContext>(
                 _window, RenderContextSettings(true, 2));
 
             break;
+#endif
         }
         default:
         {
@@ -83,8 +88,10 @@ std::unique_ptr<RenderSystem> RenderSystem::create(RendererAPIType _apiType)
     {
         case RendererAPIType::web_gpu:
             return std::make_unique<webgpu::WebGPURenderSystem>();
+#ifndef __EMSCRIPTEN__
         case RendererAPIType::vulkan:
             return std::make_unique<vulkan::VulkanRenderSystem>();
+#endif
         default:
             return nullptr;
     }

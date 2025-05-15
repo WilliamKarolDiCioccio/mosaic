@@ -1,11 +1,12 @@
 #include "mosaic/core/logger.hpp"
 
+#ifndef __EMSCRIPTEN__
 MOSAIC_DISABLE_ALL_WARNINGS
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/spdlog.h>
 MOSAIC_POP_WARNINGS
+#endif
 
 #include <chrono>
 #include <ctime>
@@ -16,11 +17,15 @@ namespace core
 {
 
 bool LoggerManager::s_isInitialized = false;
+
+#ifndef __EMSCRIPTEN__
 std::shared_ptr<spdlog::logger> LoggerManager::s_instance = nullptr;
+#endif
 
 bool LoggerManager::initialize(const std::string& _loggerName,
                                const std::string& _filePath) noexcept
 {
+#ifndef __EMSCRIPTEN__
     if (s_instance != nullptr) return false;
 
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -42,24 +47,29 @@ bool LoggerManager::initialize(const std::string& _loggerName,
     spdlog::set_default_logger(s_instance);
     spdlog::set_level(spdlog::level::info);
     spdlog::flush_on(spdlog::level::info);
+#endif
 
     return true;
 }
 
 void LoggerManager::shutdown() noexcept
 {
+#ifndef __EMSCRIPTEN__
     if (!s_instance) return;
 
     spdlog::drop_all();
     s_instance = nullptr;
+#endif
 }
 
+#ifndef __EMSCRIPTEN__
 std::shared_ptr<spdlog::logger> LoggerManager::get()
 {
     if (!s_instance)
         throw std::runtime_error("Logger not initialized. Call LoggerManager::initialize() first.");
     return s_instance;
 }
+#endif
 
 } // namespace core
 } // namespace mosaic

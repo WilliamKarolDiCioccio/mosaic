@@ -55,6 +55,7 @@ WGPUAdapter requestAdapter(WGPUInstance _instance, WGPUSurface _surface)
 #endif
 
     assert(userData.requestEnded);
+    assert(userData.adapter);
 
     return userData.adapter;
 }

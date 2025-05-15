@@ -17,9 +17,9 @@ namespace webgpu
 pieces::RefResult<RenderContext, std::string> WebGPURenderContext::initialize(
     RenderSystem* _renderSystem)
 {
-    m_instance = createInstance();
-
     m_surface = glfwCreateWindowWGPUSurface(m_instance, m_window->getGLFWHandle());
+
+    m_instance = createInstance();
 
     m_adapter = requestAdapter(m_instance, m_surface);
 

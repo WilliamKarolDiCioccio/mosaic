@@ -23,8 +23,11 @@ Window::Window(const std::string& _title, glm::ivec2 _size) : m_window(nullptr)
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+
+#ifndef __EMSCRIPTEN__
     glfwWindowHint(GLFW_POSITION_X, m_properties.position.x);
     glfwWindowHint(GLFW_POSITION_Y, m_properties.position.y);
+#endif
 
     m_window = glfwCreateWindow(_size.x, _size.y, _title.c_str(), nullptr, nullptr);
 
@@ -117,7 +120,9 @@ void Window::setCursorMode(CursorMode _mode)
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             break;
         case CursorMode::captured:
+#ifndef __EMSCRIPTEN__
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+#endif
             break;
         case CursorMode::hidden:
             glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -151,7 +156,7 @@ void Window::setCursorIcon(const std::string& _path, int _width, int _height)
 
     if (!data)
     {
-        MOSAIC_ERROR("Failed to load cursor icon: {0}", _path);
+        MOSAIC_ERROR("Failed to load cursor icon: {0}", _path.c_str());
         return;
     }
 
@@ -164,7 +169,7 @@ void Window::setCursorIcon(const std::string& _path, int _width, int _height)
 
         if (!resized)
         {
-            MOSAIC_ERROR("Failed to resize cursor icon: {0}", _path);
+            MOSAIC_ERROR("Failed to resize cursor icon: {0}", _path.c_str());
             stbi_image_free(data);
             return;
         }
@@ -185,7 +190,7 @@ void Window::setCursorIcon(const std::string& _path, int _width, int _height)
 
     if (!cursor)
     {
-        MOSAIC_ERROR("Failed to create cursor from image: {0}", _path);
+        MOSAIC_ERROR("Failed to create cursor from image: {0}", _path.c_str());
         stbi_image_free(data);
         return;
     }
@@ -203,7 +208,7 @@ void Window::setWindowIcon(const std::string& _path, int _width, int _height)
 
     if (!data)
     {
-        MOSAIC_ERROR("Failed to load window icon: {0}", _path);
+        MOSAIC_ERROR("Failed to load window icon: {0}", _path.c_str());
         return;
     }
 
@@ -216,7 +221,7 @@ void Window::setWindowIcon(const std::string& _path, int _width, int _height)
 
         if (!resized)
         {
-            MOSAIC_ERROR("Failed to resize window icon: {0}", _path);
+            MOSAIC_ERROR("Failed to resize window icon: {0}", _path.c_str());
             stbi_image_free(data);
             return;
         }

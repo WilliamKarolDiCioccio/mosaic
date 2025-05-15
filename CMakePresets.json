@@ -16,7 +16,7 @@
         "CMAKE_CONFIGURATION_TYPES": "Debug;Dev;Release;Sanitizers",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "GLFW_BUILD_WIN32": true,
-        "WEBGPU_BACKEND": "WGPU",
+        "WEBGPU_BACKEND": "DAWN",
         "VCPKG_MANIFEST_MODE": "ON"
       },
       "condition": {
@@ -36,7 +36,7 @@
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true,
         "GLFW_BUILD_X11": true,
-        "WEBGPU_BACKEND": "WGPU",
+        "WEBGPU_BACKEND": "DAWN",
         "VCPKG_MANIFEST_MODE": "ON"
       },
       "condition": {
