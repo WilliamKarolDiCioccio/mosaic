@@ -353,7 +353,7 @@ class SparseSet
 
         if (pageIdx >= m_pages.size())
         {
-            // grow to either exactly what we need, or double the current size—whichever is larger
+            // grow to either exactly what we need, or double the current size whichever is larger
             size_t newSize = std::max(pageIdx + 1, m_pages.size() * 2);
             m_pages.resize(newSize);
         }
