@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Serve Emscripten Build",
+      "type": "shell",
+      "command": "emrun",
+      "args": [
+        "--no_browser",
+        "${command:cmake.buildDirectory}/testbed/testbed.html"
+      ],
+      "problemMatcher": [],
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}
