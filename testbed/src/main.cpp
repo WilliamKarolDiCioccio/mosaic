@@ -189,7 +189,7 @@ int main()
 
     if (result.isErr())
     {
-        MOSAIC_ERROR("Failed to initialize the application: {0}", result.error());
+        MOSAIC_ERROR("Failed to initialize the application: {0}", result.error().c_str());
         return 1;
     }
 

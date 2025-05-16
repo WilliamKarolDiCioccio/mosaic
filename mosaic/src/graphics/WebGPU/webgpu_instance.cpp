@@ -21,7 +21,7 @@ WGPUInstance createInstance()
     const char* toggleName = "enable_immediate_error_handling";
     toggles.enabledToggles = &toggleName;
 
-    desc.nextInChain = &toggles.chain;
+    instanceDesc.nextInChain = &toggles.chain;
 #endif
 
 #ifdef __EMSCRIPTEN__

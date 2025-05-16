@@ -57,8 +57,8 @@ pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const co
                 _window, RenderContextSettings(true, 2));
 
             break;
-#endif
         }
+#endif
         default:
         {
             return pieces::Err<RenderContext*, std::string>("RenderSystem: Unsupported API type");

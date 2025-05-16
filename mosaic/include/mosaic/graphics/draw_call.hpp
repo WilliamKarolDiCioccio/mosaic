@@ -21,6 +21,8 @@ enum class DrawCallType
     Indirect
 };
 
+using ResourceHandle = uint32_t;
+
 struct DrawCall
 {
     DrawCallType type;
@@ -45,9 +47,9 @@ struct DrawCall
 
     DrawCall(const std::string& _debugName)
         : type(DrawCallType::NonIndexed),
-          pipeline(ResourceHandle::Null()),
-          indexBuffer(ResourceHandle::Null()),
-          indirectBuffer(ResourceHandle::Null()),
+          pipeline(0),
+          indexBuffer(0),
+          indirectBuffer(0),
           vertexCount(0),
           indexCount(0),
           instanceCount(1),
