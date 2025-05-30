@@ -9,7 +9,7 @@
 #include "mosaic/core/logger.hpp"
 #include "mosaic/core/window.hpp"
 
-#include "glfw_mappings.hpp"
+#include "input_mappings.hpp"
 
 namespace mosaic
 {
@@ -17,60 +17,65 @@ namespace input
 {
 
 /**
- * @brief The `RawInputHandler` provides thread-safe access the input state.
+ * @brief Abstract base class for raw input handling.
  *
- * @note Due to latency issues we've switched from callbacks to polling the input state. This
- * means this class now has really little responsibility and is just a wrapper around GLFW
- * functions, except for the mouse scroll input which is still handled by callbacks. The reason for
- * this is that GLFW does not provide a way to poll mouse scroll input.
+ * This class provides a generic interface for input handling that can be
+ * implemented by different input backends (GLFW, SDL, etc.).
+ * It defines the common input data types and methods that all implementations should provide.
  */
 class RawInputHandler
 {
-   private:
+   public:
     using KeyboardKeyInputData = int;
     using MouseButtonInputData = int;
     using MouseScrollInputData = glm::vec2;
     using CursorPosInputData = glm::vec2;
 
-   private:
-    GLFWwindow* m_glfwWindow;
-    std::queue<MouseScrollInputData> m_mouseScrollQueue;
+   protected:
+    void* m_nativeHandle;
     bool m_isActive;
+    std::queue<MouseScrollInputData> m_mouseScrollQueue;
 
    public:
-    RawInputHandler(const core::Window* _window);
-    ~RawInputHandler() = default;
+    RawInputHandler(core::Window* _window);
+    virtual ~RawInputHandler() = default;
 
     RawInputHandler(const RawInputHandler&) = delete;
     RawInputHandler& operator=(const RawInputHandler&) = delete;
 
+    static std::unique_ptr<RawInputHandler> create(core::Window* _window);
+
+   public:
     inline bool isActive() const { return m_isActive; }
 
-    inline KeyboardKeyInputData getKeyboardKeyInput(KeyboardKey _key) const
-    {
-        return glfwGetKey(m_glfwWindow, static_cast<int>(_key));
-    }
+    // Input handling methods
+    virtual KeyboardKeyInputData getKeyboardKeyInput(KeyboardKey key) const = 0;
+    virtual MouseButtonInputData getMouseButtonInput(MouseButton button) const = 0;
+    virtual CursorPosInputData getCursorPosInput() = 0;
 
-    inline MouseButtonInputData getMouseButtonInput(MouseButton _button) const
-    {
-        return glfwGetMouseButton(m_glfwWindow, static_cast<int>(_button));
-    }
-
-    inline CursorPosInputData getCursorPosInput()
-    {
-        double xpos, ypos;
-        glfwGetCursorPos(m_glfwWindow, &xpos, &ypos);
-        return glm::vec2(xpos, ypos);
-    }
+    // Input state checking methods
 
     inline bool mouseScrollInputAvailable() const { return !m_mouseScrollQueue.empty(); }
 
     inline MouseScrollInputData getMouseScrollInput()
     {
+        if (m_mouseScrollQueue.empty())
+        {
+            return MouseScrollInputData(0.0f, 0.0f);
+        }
+
         MouseScrollInputData scrollInput = m_mouseScrollQueue.front();
         m_mouseScrollQueue.pop();
         return scrollInput;
     }
+
+   protected:
+    inline void addMouseScrollInput(double xoffset, double yoffset)
+    {
+        m_mouseScrollQueue.push(MouseScrollInputData(xoffset, yoffset));
+    }
+
+    inline void setActive(bool active) { m_isActive = active; }
 };
 
 } // namespace input

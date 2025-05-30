@@ -1,6 +1,9 @@
 #pragma once
 
+#if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_LINUX) || \
+    defined(MOSAIC_PLATFORM_MACOS) || defined(MOSAIC_PLATFORM_EMSCRIPTEN)
 #include <GLFW/glfw3.h>
+#endif
 
 namespace mosaic
 {

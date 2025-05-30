@@ -103,7 +103,7 @@ class InputArena
     pieces::CircularBuffer<MouseCursorPosSample> m_cursorPosSamples;
 
    public:
-    InputArena(const core::Window* _window);
+    InputArena(core::Window* _window);
     InputArena(const InputArena&) = delete;
     InputArena& operator=(const InputArena&) = delete;
 

@@ -5,7 +5,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "glfw_mappings.hpp"
+#include "input_mappings.hpp"
 #include "events.hpp"
 
 namespace mosaic

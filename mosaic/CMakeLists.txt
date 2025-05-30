@@ -35,7 +35,8 @@ set(FRAMEWORK_SRC
 
 # Platform specific
 list(APPEND FRAMEWORK_SRC
-    "src/platform/GLFW/glfw_window.cpp"
+  "src/platform/GLFW/glfw_window.cpp"
+  "src/platform/GLFW/glfw_raw_input_handler.cpp"
 )
 
 if (NOT EMSCRIPTEN)

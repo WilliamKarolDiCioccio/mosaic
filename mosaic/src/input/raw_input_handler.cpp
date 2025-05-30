@@ -1,37 +1,21 @@
 #include "mosaic/input/raw_input_handler.hpp"
 
+#include "platform/GLFW/glfw_raw_input_handler.hpp"
+
 namespace mosaic
 {
 namespace input
 {
 
-RawInputHandler::RawInputHandler(const core::Window* _window)
-    : m_glfwWindow(_window->getGLFWHandle()),
-      m_isActive(glfwGetWindowAttrib(m_glfwWindow, GLFW_FOCUSED))
+RawInputHandler::RawInputHandler(core::Window* _window)
+    : m_nativeHandle(_window->getNativeHandle()), m_isActive(false) {};
+
+std::unique_ptr<RawInputHandler> RawInputHandler::create(core::Window* _window)
 {
-    const_cast<core::Window*>(_window)->registerWindowScrollCallback(
-        [this](double _xoffset, double _yoffset)
-        {
-            if (!this)
-            {
-                MOSAIC_ERROR("RawInputHandler: No handler found for window");
-                return;
-            }
-
-            this->m_mouseScrollQueue.push(MouseScrollInputData(_xoffset, _yoffset));
-        });
-
-    const_cast<core::Window*>(_window)->registerWindowFocusCallback(
-        [this](int _focused)
-        {
-            if (!this)
-            {
-                MOSAIC_ERROR("RawInputHandler: No handler found for window");
-                return;
-            }
-
-            this->m_isActive = _focused == GLFW_TRUE;
-        });
+#if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_LINUX) || \
+    defined(MOSAIC_PLATFORM_MACOS) || defined(MOSAIC_PLATFORM_EMSCRIPTEN)
+    return std::make_unique<platform::glfw::GLFWRawInputHandler>(_window);
+#endif
 }
 
 } // namespace input
