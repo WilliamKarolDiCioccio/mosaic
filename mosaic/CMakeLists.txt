@@ -33,6 +33,11 @@ set(FRAMEWORK_SRC
   "src/stb.cpp"
 )
 
+# Platform specific
+list(APPEND FRAMEWORK_SRC
+    "src/platform/GLFW/glfw_window.cpp"
+)
+
 if (NOT EMSCRIPTEN)
   list(APPEND FRAMEWORK_SRC
     # Vulkan Backend

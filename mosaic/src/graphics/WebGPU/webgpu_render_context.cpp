@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <GLFW/glfw3.h>
+
 #include "webgpu_device.hpp"
 #include "webgpu_instance.hpp"
 #include "webgpu_commands.hpp"
@@ -17,7 +19,8 @@ namespace webgpu
 pieces::RefResult<RenderContext, std::string> WebGPURenderContext::initialize(
     RenderSystem* _renderSystem)
 {
-    m_surface = glfwCreateWindowWGPUSurface(m_instance, m_window->getGLFWHandle());
+    m_surface = glfwCreateWindowWGPUSurface(m_instance,
+                                            static_cast<GLFWwindow*>(m_window->getNativeHandle()));
 
     m_instance = createInstance();
 
@@ -66,7 +69,8 @@ pieces::RefResult<RenderContext, std::string> WebGPURenderContext::initialize(
 
     wgpuQueueOnSubmittedWorkDone(m_presentQueue, workDoneCallbackInfo);
 
-    configureSwapchain(m_adapter, m_device, m_surface, m_window->getGLFWHandle(),
+    configureSwapchain(m_adapter, m_device, m_surface,
+                       static_cast<GLFWwindow*>(m_window->getNativeHandle()),
                        m_window->getFramebufferSize());
 
     wgpuAdapterRelease(m_adapter);

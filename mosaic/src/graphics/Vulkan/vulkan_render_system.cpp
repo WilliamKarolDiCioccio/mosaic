@@ -13,7 +13,7 @@ pieces::RefResult<RenderSystem, std::string> VulkanRenderSystem::initialize(
     createInstance(m_instance);
 
     Surface dummySurface;
-    createSurface(dummySurface, m_instance, _window->getGLFWHandle());
+    createSurface(dummySurface, m_instance, _window->getNativeHandle());
 
     createDevice(m_device, m_instance, dummySurface);
 

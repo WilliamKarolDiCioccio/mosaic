@@ -41,7 +41,7 @@ namespace input
 class MOSAIC_API InputSystem
 {
    public:
-    std::unordered_map<GLFWwindow*, std::unique_ptr<InputContext>> m_contexts;
+    std::unordered_map<void*, std::unique_ptr<InputContext>> m_contexts;
 
    public:
     InputSystem() = default;
@@ -54,8 +54,8 @@ class MOSAIC_API InputSystem
     InputSystem& operator=(InputSystem&&) = default;
 
    public:
-    pieces::Result<InputContext*, std::string> registerWindow(const core::Window* _window);
-    void unregisterWindow(const core::Window* _window);
+    pieces::Result<InputContext*, std::string> registerWindow(core::Window* _window);
+    void unregisterWindow(core::Window* _window);
 
     inline void unregisterAllWindows() { m_contexts.clear(); }
 
@@ -78,7 +78,7 @@ class MOSAIC_API InputSystem
 
     inline InputContext* getContext(const core::Window* _window) const
     {
-        const auto glfwWindow = _window->getGLFWHandle();
+        const auto glfwWindow = _window->getNativeHandle();
 
         if (m_contexts.find(glfwWindow) != m_contexts.end())
         {

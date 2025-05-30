@@ -2,8 +2,9 @@
 
 #include <string>
 #include <array>
+#include <functional>
+#include <vector>
 
-#include <GLFW/glfw3.h>
 #ifdef __EMSCRIPTEN__
 #define GLM_FORCE_PURE
 #endif
@@ -19,7 +20,7 @@ namespace core
 /**
  * @brief Enumeration for different cursor types.
  *
- * It is used to provide mapping between the cursor type and the corresponding icon.
+ * It provides mapping between the cursor type and the corresponding icon.
  * This allows for easy customization of the cursor appearance based on the context.
  */
 enum class CursorType
@@ -39,7 +40,7 @@ enum class CursorType
 /**
  * @brief Enumeration for different cursor modes.
  *
- * It is used to define the visibility and interaction mode of the cursor.
+ * It defines the visibility and interaction mode of the cursor.
  * This allows for better control over the cursor behavior in different contexts.
  */
 enum class CursorMode
@@ -52,9 +53,6 @@ enum class CursorMode
 
 /**
  * @brief Structure to hold properties related to the cursor.
- *
- * This includes the current cursor type, paths to cursor images for each cursor type, and
- * visibility status in the window.
  */
 struct CursorProperties
 {
@@ -74,9 +72,6 @@ struct CursorProperties
 
 /**
  * @brief Structure to hold properties related to the window.
- *
- * This includes the title, size, fullscreen status, minimized/maximized status, resizeable status,
- * VSync status, and cursor properties.
  */
 struct WindowProperties
 {
@@ -103,9 +98,12 @@ struct WindowProperties
 };
 
 /**
- * @brief Class representing a window in the application.
+ * @brief Abstract base class representing a window in the application.
  *
- * This class provides an interface to facilitate GLFW window management. It keeps track of the
+ * This class provides a generic interface for window management that can be
+ * implemented by different windowing backends (GLFW, SDL, etc.).
+ *
+ * It keeps track of the
  * window properties and cursor properties and allows to manipulate them easily.
  *
  * @see WindowProperties
@@ -113,11 +111,12 @@ struct WindowProperties
  */
 class MOSAIC_API Window
 {
-   private:
+   public:
+    // Callback type definitions
     using WindowCloseCallback = std::function<void()>;
     using WindowFocusCallback = std::function<void(int)>;
     using WindowResizeCallback = std::function<void(int, int)>;
-    using WindowRefreshCallback = std::function<void(GLFWwindow*)>;
+    using WindowRefreshCallback = std::function<void()>;
     using WindowIconifyCallback = std::function<void(int)>;
     using WindowMaximizeCallback = std::function<void(int)>;
     using WindowDropCallback = std::function<void(int, const char**)>;
@@ -126,60 +125,60 @@ class MOSAIC_API Window
     using WindowPosCallback = std::function<void(int, int)>;
     using WindowContentScaleCallback = std::function<void(float, float)>;
 
-   private:
-    GLFWwindow* m_window;
+   protected:
     WindowProperties m_properties;
+
+    // Callback storage
+    std::vector<WindowCloseCallback> m_windowCloseCallbacks;
+    std::vector<WindowFocusCallback> m_windowFocusCallbacks;
+    std::vector<WindowResizeCallback> m_windowResizeCallbacks;
+    std::vector<WindowRefreshCallback> m_windowRefreshCallbacks;
+    std::vector<WindowIconifyCallback> m_windowIconifyCallbacks;
+    std::vector<WindowMaximizeCallback> m_windowMaximizeCallbacks;
+    std::vector<WindowDropCallback> m_windowDropCallbacks;
+    std::vector<WindowScrollCallback> m_windowScrollCallbacks;
+    std::vector<WindowCursorEnterCallback> m_windowCursorEnterCallbacks;
+    std::vector<WindowPosCallback> m_windowPosCallbacks;
+    std::vector<WindowContentScaleCallback> m_windowContentScaleCallbacks;
 
    public:
     Window(const std::string& _title, glm::ivec2 _size);
-    ~Window();
+    virtual ~Window() = default;
 
-    /**
-     * @brief Check if the window should close, based on user input or system events.
-     *
-     * @return true if the window should close, false otherwise.
-     * @return false if the window should remain open.
-     */
-    bool shouldClose() const;
+    static std::unique_ptr<Window> create(const std::string& _title, glm::ivec2 _size);
 
-    // Window properties
-    void setTitle(const std::string& _title);
-    void setMinimized(bool _minimized);
-    void setMaximized(bool _maximized);
-    void setFullscreen(bool _fullscreen);
-    void setSize(glm::vec2 _size);
-    void setResizeable(bool _resizeable);
-    void setVSync(bool _enabled);
+   public:
+    // Fundamental window operations
+    virtual void* getNativeHandle() const = 0;
+    virtual bool shouldClose() const = 0;
+    virtual glm::ivec2 getFramebufferSize() const = 0;
 
-    // Cursor properties
-    void setCursorMode(CursorMode _mode);
-    void setCursorType(CursorType _type);
-    void setCursorTypeIcon(CursorType _type, const std::string& _path, int _width = 0,
-                           int _height = 0);
+    // Window properties management
+    virtual void setTitle(const std::string& _title) = 0;
+    virtual void setMinimized(bool _minimized) = 0;
+    virtual void setMaximized(bool _maximized) = 0;
+    virtual void setFullscreen(bool _fullscreen) = 0;
+    virtual void setSize(glm::vec2 _size) = 0;
+    virtual void setResizeable(bool _resizeable) = 0;
+    virtual void setVSync(bool _enabled) = 0;
+    virtual void setWindowIcon(const std::string& _path, int _width = 0, int _height = 0) = 0;
+    virtual void resetWindowIcon() = 0;
+
+    // Cursor properties management
+    virtual void setCursorMode(CursorMode _mode) = 0;
+    virtual void setCursorType(CursorType _type) = 0;
+    virtual void setCursorTypeIcon(CursorType _type, const std::string& _path, int _width = 0,
+                                   int _height = 0) = 0;
 
     // Direct manipulation of cursor properties
-    void setCursorIcon(const std::string& _path, int _width = 0, int _height = 0);
-    void resetCursorIcon();
-    void setWindowIcon(const std::string& _path, int _width = 0, int _height = 0);
-    void resetWindowIcon();
+    virtual void setCursorIcon(const std::string& _path, int _width = 0, int _height = 0) = 0;
+    virtual void resetCursorIcon() = 0;
 
-    // Clipboard
-    inline void setClipboardString(const std::string& _string)
-    {
-        glfwSetClipboardString(nullptr, _string.c_str());
-    }
+    // Clipboard operations
+    virtual void setClipboardString(const std::string& _string) = 0;
+    virtual std::string getClipboardString() const = 0;
 
-    inline std::string getClipboardString() const { return glfwGetClipboardString(nullptr); }
-
-    inline GLFWwindow* getGLFWHandle() const { return m_window; }
-
-    inline glm::ivec2 getFramebufferSize() const
-    {
-        int width, height;
-        glfwGetFramebufferSize(m_window, &width, &height);
-        return glm::ivec2(width, height);
-    }
-
+    // Property getters
     inline const WindowProperties& getWindowProperties() const { return m_properties; }
 
     inline const CursorProperties& getCursorProperties() const
@@ -187,8 +186,7 @@ class MOSAIC_API Window
         return m_properties.cursorProperties;
     }
 
-    // Public callback registration
-
+    // Callback registration methods
     inline void registerWindowCloseCallback(WindowCloseCallback _callback)
     {
         m_windowCloseCallbacks.push_back(_callback);
@@ -199,9 +197,9 @@ class MOSAIC_API Window
         m_windowFocusCallbacks.push_back(_callback);
     }
 
-    inline void registerWindowResizeCallback(WindowResizeCallback _callback)
+    inline void registerWindowResizeCallback(WindowResizeCallback callback)
     {
-        m_windowResizeCallbacks.push_back(_callback);
+        m_windowResizeCallbacks.push_back(callback);
     }
 
     inline void registerWindowRefreshCallback(WindowRefreshCallback _callback)
@@ -244,21 +242,19 @@ class MOSAIC_API Window
         m_windowContentScaleCallbacks.push_back(_callback);
     }
 
-   private:
-    std::vector<WindowCloseCallback> m_windowCloseCallbacks;
-    std::vector<WindowFocusCallback> m_windowFocusCallbacks;
-    std::vector<WindowResizeCallback> m_windowResizeCallbacks;
-    std::vector<WindowRefreshCallback> m_windowRefreshCallbacks;
-    std::vector<WindowIconifyCallback> m_windowIconifyCallbacks;
-    std::vector<WindowMaximizeCallback> m_windowMaximizeCallbacks;
-    std::vector<WindowDropCallback> m_windowDropCallbacks;
-    std::vector<WindowScrollCallback> m_windowScrollCallbacks;
-    std::vector<WindowCursorEnterCallback> m_windowCursorEnterCallbacks;
-    std::vector<WindowPosCallback> m_windowPosCallbacks;
-    std::vector<WindowContentScaleCallback> m_windowContentScaleCallbacks;
-
-    void registerCallbacks();
-    void unregisterCallbacks();
+   protected:
+    // Helper methods for derived classes to invoke callbacks
+    void invokeCloseCallbacks();
+    void invokeFocusCallbacks(int _focused);
+    void invokeResizeCallbacks(int _width, int _height);
+    void invokeRefreshCallbacks();
+    void invokeIconifyCallbacks(int _iconified);
+    void invokeMaximizeCallbacks(int _maximized);
+    void invokeDropCallbacks(int _count, const char** _paths);
+    void invokeScrollCallbacks(double _xoffset, double _yoffset);
+    void invokeCursorEnterCallbacks(int _entered);
+    void invokePosCallbacks(int _x, int _y);
+    void invokeContentScaleCallbacks(float _xscale, float _yscale);
 };
 
 } // namespace core

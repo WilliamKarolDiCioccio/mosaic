@@ -5,9 +5,9 @@ namespace mosaic
 namespace input
 {
 
-pieces::Result<InputContext*, std::string> InputSystem::registerWindow(const core::Window* _window)
+pieces::Result<InputContext*, std::string> InputSystem::registerWindow(core::Window* _window)
 {
-    auto glfwWindow = _window->getGLFWHandle();
+    auto glfwWindow = _window->getNativeHandle();
 
     if (m_contexts.find(glfwWindow) != m_contexts.end())
     {
@@ -20,9 +20,9 @@ pieces::Result<InputContext*, std::string> InputSystem::registerWindow(const cor
     return pieces::Ok<InputContext*, std::string>(m_contexts.at(glfwWindow).get());
 }
 
-void InputSystem::unregisterWindow(const core::Window* _window)
+void InputSystem::unregisterWindow(core::Window* _window)
 {
-    auto glfwWindow = _window->getGLFWHandle();
+    auto glfwWindow = _window->getNativeHandle();
 
     if (m_contexts.find(glfwWindow) != m_contexts.end())
     {

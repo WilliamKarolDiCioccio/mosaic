@@ -7,7 +7,6 @@
 #include <mosaic/core/timer.hpp>
 #include <mosaic/input/input_system.hpp>
 #include <mosaic/graphics/render_system.hpp>
-#include <mosaic/utils/memory_leak.hpp>
 
 using namespace mosaic;
 
@@ -24,7 +23,7 @@ class TestbedApplication : public mosaic::core::Application
    private:
     void onInitialize() override
     {
-        m_window = std::make_unique<mosaic::core::Window>("Testbed", glm::vec2(1280, 720));
+        m_window = mosaic::core::Window::create("Testbed", glm::vec2(1280, 720));
         m_window->setResizeable(true);
 
         m_inputSystem = std::make_unique<mosaic::input::InputSystem>();

@@ -1,12 +1,5 @@
 #include "vulkan_surface.hpp"
 
-#include <GLFW/glfw3native.h>
-
-#ifdef MOSAIC_PLATFORM_WINDOWS
-#include <windows.h>
-#include <vulkan/vulkan_win32.h>
-#endif
-
 namespace mosaic
 {
 namespace graphics
@@ -31,15 +24,14 @@ VkResult createWin32Surface(VkInstance instance, const VkWin32SurfaceCreateInfoK
 }
 #endif
 
-void createSurface(Surface& _surface, const Instance& _instance,
-                         GLFWwindow* _glfwHandle)
+void createSurface(Surface& _surface, const Instance& _instance, void* _nativeWindowHandle)
 {
 #ifdef MOSAIC_PLATFORM_WINDOWS
     const VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
         .pNext = nullptr,
         .hinstance = GetModuleHandle(nullptr),
-        .hwnd = glfwGetWin32Window(_glfwHandle),
+        .hwnd = glfwGetWin32Window(static_cast<GLFWwindow*>(_nativeWindowHandle)),
     };
 
     if (createWin32Surface(_instance.instance, &surfaceCreateInfo, nullptr, &_surface.surface) !=

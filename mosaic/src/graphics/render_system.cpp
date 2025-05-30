@@ -1,9 +1,11 @@
 #include "mosaic/graphics/render_system.hpp"
 
+#ifndef MOSAIC_PLATFORM_ANDROID
 #include "WebGPU/webgpu_render_context.hpp"
 #include "WebGPU/webgpu_render_system.hpp"
+#endif
 
-#ifndef __EMSCRIPTEN__
+#ifndef MOSAIC_PLATFORM_EMSCRIPTEN
 #include "Vulkan/vulkan_render_context.hpp"
 #include "Vulkan/vulkan_render_system.hpp"
 #endif
@@ -15,10 +17,11 @@ namespace graphics
 
 pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const core::Window* _window)
 {
-    if (m_contexts.find(_window->getGLFWHandle()) != m_contexts.end())
+    if (m_contexts.find(_window->getNativeHandle()) != m_contexts.end())
     {
         MOSAIC_WARN("RenderSystem: Context already exists for this window");
-        return pieces::Ok<RenderContext*, std::string>(m_contexts[_window->getGLFWHandle()].get());
+        return pieces::Ok<RenderContext*, std::string>(
+            m_contexts[_window->getNativeHandle()].get());
     }
 
     if (!m_initialized)
@@ -33,7 +36,7 @@ pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const co
         m_initialized = true;
     }
 
-    auto glfwWindow = _window->getGLFWHandle();
+    auto glfwWindow = _window->getNativeHandle();
 
     switch (m_apiType)
     {
@@ -72,7 +75,7 @@ pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const co
 
 void RenderSystem::destroyContext(const core::Window* _window)
 {
-    auto it = m_contexts.find(_window->getGLFWHandle());
+    auto it = m_contexts.find(_window->getNativeHandle());
 
     if (it != m_contexts.end())
     {
@@ -92,8 +95,6 @@ std::unique_ptr<RenderSystem> RenderSystem::create(RendererAPIType _apiType)
         case RendererAPIType::vulkan:
             return std::make_unique<vulkan::VulkanRenderSystem>();
 #endif
-        default:
-            return nullptr;
     }
 }
 

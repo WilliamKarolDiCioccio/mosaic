@@ -17,9 +17,9 @@ pieces::RefResult<RenderContext, std::string> VulkanRenderContext::initialize(
 
     m_frameData.resize(m_settings.backbufferCount);
 
-    createSurface(m_surface, *m_instance, m_window->getGLFWHandle());
+    createSurface(m_surface, *m_instance, m_window->getNativeHandle());
 
-    createSwapchain(m_swapchain, *m_device, m_surface, m_window->getGLFWHandle(),
+    createSwapchain(m_swapchain, *m_device, m_surface, m_window->getNativeHandle(),
                     m_window->getFramebufferSize(), m_window->getWindowProperties().isFullscreen);
 
     createRenderPass(m_renderPass, *m_device, m_swapchain);
@@ -55,7 +55,6 @@ void VulkanRenderContext::resizeFramebuffer()
 
     while (framebufferSize.x * framebufferSize.y == 0)
     {
-        glfwWaitEvents();
         framebufferSize = m_window->getFramebufferSize();
     }
 
@@ -66,7 +65,7 @@ void VulkanRenderContext::resizeFramebuffer()
     destroyRenderPass(m_renderPass, *m_device);
     destroySwapchain(m_swapchain);
 
-    createSwapchain(m_swapchain, *m_device, m_surface, m_window->getGLFWHandle(), framebufferSize,
+    createSwapchain(m_swapchain, *m_device, m_surface, m_window->getNativeHandle(), framebufferSize,
                     m_window->getWindowProperties().isFullscreen);
 
     createRenderPass(m_renderPass, *m_device, m_swapchain);

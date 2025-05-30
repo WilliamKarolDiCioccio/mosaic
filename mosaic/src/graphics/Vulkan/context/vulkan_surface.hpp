@@ -18,7 +18,7 @@ struct Surface
     Surface() : surface(nullptr) {}
 };
 
-void createSurface(Surface& _surface, const Instance& _instance, GLFWwindow* _glfwHandle);
+void createSurface(Surface& _surface, const Instance& _instance, void* _nativeWindowHandle);
 
 void destroySurface(Surface& _surface, const Instance& _instance);
 

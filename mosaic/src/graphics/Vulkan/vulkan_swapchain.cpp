@@ -125,7 +125,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& _capabilities,
 }
 
 void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface& _surface,
-                     GLFWwindow* _glfwHandle, glm::uvec2 _framebufferExtent,
+                     void* _nativeWindowHandle, glm::uvec2 _framebufferExtent,
                      bool _exclusiveFullscreenRequestable)
 {
     _swapchain.device = _device.device;
@@ -160,7 +160,7 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
         VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT;
 
 #ifdef MOSAIC_PLATFORM_WINDOWS
-    HWND win32Handle = glfwGetWin32Window(_glfwHandle);
+    HWND win32Handle = glfwGetWin32Window(static_cast<GLFWwindow*>(_nativeWindowHandle));
     HMONITOR monitor = MonitorFromWindow(win32Handle, MONITOR_DEFAULTTONEAREST);
 
     VkSurfaceFullScreenExclusiveWin32InfoEXT win32FullScreenExclusiveInfo = {

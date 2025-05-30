@@ -25,7 +25,7 @@ class MOSAIC_API RenderSystem
    private:
     bool m_initialized = false;
     RendererAPIType m_apiType;
-    std::unordered_map<GLFWwindow*, std::unique_ptr<RenderContext>> m_contexts;
+    std::unordered_map<void*, std::unique_ptr<RenderContext>> m_contexts;
 
    public:
     RenderSystem(RendererAPIType _apiType) : m_apiType(_apiType) {};
@@ -65,7 +65,7 @@ class MOSAIC_API RenderSystem
 
     inline RenderContext* getContext(const core::Window* _window) const
     {
-        const auto glfwWindow = _window->getGLFWHandle();
+        const auto glfwWindow = _window->getNativeHandle();
 
         if (m_contexts.find(glfwWindow) != m_contexts.end())
         {
