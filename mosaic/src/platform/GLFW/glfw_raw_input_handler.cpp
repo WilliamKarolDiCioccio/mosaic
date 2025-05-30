@@ -9,6 +9,8 @@ namespace glfw
 GLFWRawInputHandler::GLFWRawInputHandler(core::Window* _window)
     : m_window(_window), input::RawInputHandler(_window)
 {
+    m_isActive = glfwGetWindowAttrib(static_cast<GLFWwindow*>(m_nativeHandle), GLFW_FOCUSED);
+
     registerCallbacks();
 }
 
