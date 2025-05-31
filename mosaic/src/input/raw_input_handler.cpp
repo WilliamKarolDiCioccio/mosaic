@@ -1,6 +1,9 @@
 #include "mosaic/input/raw_input_handler.hpp"
 
+#if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_LINUX) || \
+    defined(MOSAIC_PLATFORM_MACOS) || defined(MOSAIC_PLATFORM_EMSCRIPTEN)
 #include "platform/GLFW/glfw_raw_input_handler.hpp"
+#endif
 
 namespace mosaic
 {
