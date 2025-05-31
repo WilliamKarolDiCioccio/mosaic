@@ -4,6 +4,7 @@
 
 set(TESTBED_SRC
   "src/main.cpp"
+  "src/testbed.cpp"
 )
 
 # ----------------------------------------
@@ -11,7 +12,10 @@ set(TESTBED_SRC
 # ----------------------------------------
 
 add_executable(testbed ${TESTBED_SRC})
-set_target_properties(testbed PROPERTIES LINKER_LANGUAGE CXX)
+
+if (WIN32)
+  set_property(TARGET testbed PROPERTY WIN32_EXECUTABLE TRUE)
+endif()
 
 # ----------------------------------------
 # Dependencies
@@ -40,7 +44,7 @@ configure_for_build_type(testbed)
 
 include ("${CMAKE_SOURCE_DIR}/cmake/EnableSIMD.cmake")
 
-if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN AND NOT ANDROID)
   enable_simd(testbed)
 endif()
 
