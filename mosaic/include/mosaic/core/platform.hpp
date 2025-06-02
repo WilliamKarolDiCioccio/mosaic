@@ -6,8 +6,6 @@
 #include <pieces/result.hpp>
 
 #include "mosaic/defines.hpp"
-#include "mosaic/core/logger.hpp"
-#include "mosaic/core/tracer.hpp"
 
 namespace mosaic
 {
@@ -34,10 +32,10 @@ class MOSAIC_API Platform
 
     // Shell commands
 
-    virtual int runShellCommand(const std::string& _command,
-                                const std::vector<std::string>& _args) const = 0;
-    virtual int runProgram(const std::string& _programPath,
-                           const std::vector<std::string>& _args) const = 0;
+    virtual pieces::Result<int, std::string> runShellCommand(
+        const std::string& _command, const std::vector<std::string>& _args) const = 0;
+    virtual pieces::Result<int, std::string> runProgram(
+        const std::string& _programPath, const std::vector<std::string>& _args) const = 0;
 
     // Configuration management
 

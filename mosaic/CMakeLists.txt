@@ -35,10 +35,18 @@ set(FRAMEWORK_SRC
 )
 
 # Platform specific
-list(APPEND FRAMEWORK_SRC
-  "src/platform/GLFW/glfw_window.cpp"
-  "src/platform/GLFW/glfw_raw_input_handler.cpp"
-)
+if(NOT ANDROID AND NOT EMSCRIPTEN)
+  if(WIN32)
+    list(APPEND FRAMEWORK_SRC
+      "src/platform/Win32/win32_platform.cpp"
+    )
+  endif()
+
+  list(APPEND FRAMEWORK_SRC
+    "src/platform/GLFW/glfw_window.cpp"
+    "src/platform/GLFW/glfw_raw_input_handler.cpp"
+  )
+endif()
 
 if (NOT EMSCRIPTEN)
   list(APPEND FRAMEWORK_SRC
