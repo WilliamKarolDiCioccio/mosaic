@@ -40,6 +40,10 @@ if(NOT ANDROID AND NOT EMSCRIPTEN)
     list(APPEND FRAMEWORK_SRC
       "src/platform/Win32/win32_platform.cpp"
     )
+  elseif(EMSCRIPTEN)
+    list(APPEND FRAMEWORK_SRC
+      "src/platform/Emscripten/emscripten_platform.cpp"
+    )
   endif()
 
   list(APPEND FRAMEWORK_SRC
