@@ -29,6 +29,81 @@ Mosaic uses CMake as its build system. Most dependencies are managed via vcpkg, 
 
 On Windows, we recommend using Visual Studio 2022 over VS Code for better CMake integration. The default compiler on Windows is MSVC, but Clang is also supported — and is the preferred compiler on Linux and Web targets (via Emscripten).
 
+### 🌲 Environment Setup
+
+> [!NOTE]
+> Before building Mosaic, you'll need to set up a few tools and SDKs. The engine targets **Windows**, **Linux**, **Web** and **Android** but you can ignore requirements for the build configurations you're not interested in.
+
+#### ✅ Prerequisites
+
+- CMake 3.25 or later
+- Git — with submodule support
+- Python 3 — required for Emscripten and some build scripts
+- A C++23-compliant compiler (MSVC ≥ 17.13 Preview 2, Clang ≥ 13, or GCC ≥ 14)
+
+#### 📦 Install vcpkg
+
+We use **vcpkg in manifest mode** to manage most dependencies.
+
+1. Clone vcpkg:
+
+   ```bash
+   git clone https://github.com/microsoft/vcpkg.git
+   ./vcpkg/bootstrap-vcpkg.sh  # or .\bootstrap-vcpkg.bat on Windows
+   ```
+
+2. No need to integrate it globally — Mosaic uses the local `vcpkg.json` manifest.
+
+3. If needed, set the environment variable `VCPKG_ROOT` to point to your vcpkg directory.
+
+#### 🌐 Setup for Web (Emscripten/WebGPU)
+
+1. Install the **Emscripten SDK**:
+
+   ```bash
+   git clone https://github.com/emscripten-core/emsdk.git
+   cd emsdk
+   ./emsdk install latest
+   ./emsdk activate latest
+   source ./emsdk_env.sh  # or emsdk_env.bat on Windows
+   ```
+
+2. Ensure `emcc` is in your `PATH` before running CMake.
+
+3. Confirm that `-pthread`, `-matomics`, and `-mbulk-memory` flags are supported — see build notes below if WebGPU issues arise.
+
+#### 🪟 Setup for Windows (Visual Studio 2022)
+
+- Install **Visual Studio 2022** with the following components:
+
+  - "Desktop development with C++"
+  - "C++ CMake tools for Windows"
+  - "MSVC v143" or later
+  - "Windows 10 or 11 SDK"
+
+#### 🐧 Setup for Linux
+
+- Install **required packages**:
+
+  ```bash
+  sudo apt update
+  sudo apt install build-essential cmake git ninja-build python3 python3-pip libx11-dev libxcursor-dev libxrandr-dev libxi-dev libgl1-mesa-dev libvulkan-dev
+  ```
+
+#### 📱 Setup for Android (Experimental)
+
+> Android support is a work in progress. The current renderer uses Vulkan, so minimum API level 24 is required.
+
+1. Install **Android Studio**.
+2. Inside the SDK Manager, install:
+
+   - Android NDK (r23 or newer)
+   - CMake and LLDB
+   - SDK tools for API level 24+
+
+3. Configure an Android CMake toolchain or preset.
+4. Add a custom **vcpkg Android triplet** targeting `arm64-v8a` or `x86_64`, and make sure Vulkan is enabled.
+
 ### 🔧 Build Instructions
 
 - Clone the repository and initialize submodules. `git clone --recurse-submodules https://github.com/WilliamKarolDiCioccio/mosaic`.
@@ -42,19 +117,19 @@ On Windows, we recommend using Visual Studio 2022 over VS Code for better CMake 
 >
 > Mosaic uses the -pthread flag in Emscripten to enable Web Workers, which helps retain compatibility with native threading code. Occasionally, you may need to manually patch the build system to support this.
 >
-> If the build fails with missing atomic features, add the following flag manually in the emdawnwebgpu.port.py file located at:
+> If the build fails with missing atomic features, add the following flag manually in the `emdawnwebgpu.port.py` file located at:
 >
-> out/build/emscripten-{PROFILE}/\_deps/emdawnwebgpu-src/
+> `out/build/emscripten-${PROFILE}/\_deps/emdawnwebgpu-src/`
 >
 > Update the flags section as follows:
 >
 > ```py
 > flags = ['-g', '-std=c++17', '-fno-exceptions']
 > flags += ['-matomics', '-mbulk-memory'] # <-- Add this line
-> flags += \_compute_library_compile_flags(settings)
->
-> This ensures compatibility with multi-threaded WebAssembly targets.
+> flags += compute_library_compile_flags(settings)
 > ```
+
+This ensures compatibility with multi-threaded WebAssembly targets.
 
 ---
 
