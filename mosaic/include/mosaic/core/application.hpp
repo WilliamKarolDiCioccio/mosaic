@@ -12,7 +12,7 @@
 
 #include "logger.hpp"
 #include "tracer.hpp"
-#include "platform/platform.hpp"
+#include "platform.hpp"
 
 namespace mosaic
 {
