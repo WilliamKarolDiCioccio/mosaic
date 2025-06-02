@@ -12,6 +12,7 @@
 
 #include "logger.hpp"
 #include "tracer.hpp"
+#include "platform/platform.hpp"
 
 namespace mosaic
 {
@@ -63,10 +64,10 @@ class MOSAIC_API Application
 
    private:
     void realRun();
-    void initializePlatform();
-    void shutdownPlatform();
 
     ApplicationProperties m_properties;
+
+    std::unique_ptr<platform::Platform> m_platform;
 };
 
 } // namespace core

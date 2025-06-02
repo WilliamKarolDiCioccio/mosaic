@@ -1,7 +1,5 @@
 #include "mosaic/core/application.hpp"
 
-#include <GLFW/glfw3.h>
-
 #include <iostream>
 
 namespace mosaic
@@ -10,6 +8,7 @@ namespace core
 {
 
 Application::Application(const std::string& _appName)
+    : m_properties(), m_platform(platform::Platform::create())
 {
     m_properties.appName = _appName;
     m_properties.appVersion = _MOSAIC_VERSION;
@@ -33,7 +32,7 @@ pieces::RefResult<Application, std::string> Application::initialize()
 
     MOSAIC_DEBUG("Initializing Mosaic {0} application", _MOSAIC_VERSION);
 
-    initializePlatform();
+    m_platform->initialize();
 
     m_properties.isInitialized = true;
 
@@ -54,13 +53,17 @@ pieces::RefResult<Application, std::string> Application::run()
 
     emscripten_set_main_loop_arg(callback, this, 0, true);
 #else
-    while (m_properties.isInitialized && !m_properties.isPaused)
+    while (m_properties.isInitialized)
     {
+        if (m_properties.isPaused) continue;
+
+        m_platform->update();
+
         realRun();
     }
 #endif
 
-    onShutdown();
+    shutdown();
 
     return pieces::OkRef<Application, std::string>(*this);
 }
@@ -108,22 +111,14 @@ void Application::shutdown()
 {
     assert(m_properties.isInitialized && "Application is not initialized!");
 
-    shutdownPlatform();
-
     MOSAIC_DEBUG("Shutting down application");
+
+    onShutdown();
+
+    m_platform->shutdown();
 
     m_properties.isInitialized = false;
 }
-
-void Application::initializePlatform()
-{
-    if (!glfwInit())
-    {
-        throw std::runtime_error("Failed to initialize GLFW.");
-    }
-}
-
-void Application::shutdownPlatform() { glfwTerminate(); }
 
 } // namespace core
 } // namespace mosaic

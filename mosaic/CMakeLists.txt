@@ -6,6 +6,7 @@ set(FRAMEWORK_SRC
   # Core
   "src/core/logger.cpp"
   "src/core/application.cpp"
+  "src/core/platform.cpp"
   "src/core/tracer.cpp"
   "src/core/timer.cpp"
   "src/core/window.cpp"

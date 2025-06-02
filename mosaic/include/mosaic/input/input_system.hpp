@@ -1,6 +1,5 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
 #include <string>
 #include <fstream>
 #include <unordered_map>
@@ -60,7 +59,7 @@ class MOSAIC_API InputSystem
     inline void unregisterAllWindows() { m_contexts.clear(); }
 
     /**
-     * @brief Polls GLFW events and updates all registered input contexts.
+     * @brief Updates all registered input contexts.
      *
      * This is the first invocation in the main loop of the application. It should be called before
      * any other input handling functions to ensure fresh input data is available and minimize
@@ -68,8 +67,6 @@ class MOSAIC_API InputSystem
      */
     inline void poll() const
     {
-        glfwPollEvents();
-
         for (auto& [window, context] : m_contexts)
         {
             context->update();
@@ -78,11 +75,11 @@ class MOSAIC_API InputSystem
 
     inline InputContext* getContext(const core::Window* _window) const
     {
-        const auto glfwWindow = _window->getNativeHandle();
+        const auto nativeHandle = _window->getNativeHandle();
 
-        if (m_contexts.find(glfwWindow) != m_contexts.end())
+        if (m_contexts.find(nativeHandle) != m_contexts.end())
         {
-            return m_contexts.at(glfwWindow).get();
+            return m_contexts.at(nativeHandle).get();
         }
 
         return nullptr;

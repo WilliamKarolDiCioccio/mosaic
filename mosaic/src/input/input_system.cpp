@@ -7,26 +7,26 @@ namespace input
 
 pieces::Result<InputContext*, std::string> InputSystem::registerWindow(core::Window* _window)
 {
-    auto glfwWindow = _window->getNativeHandle();
+    auto nativeHandle = _window->getNativeHandle();
 
-    if (m_contexts.find(glfwWindow) != m_contexts.end())
+    if (m_contexts.find(nativeHandle) != m_contexts.end())
     {
         MOSAIC_WARN("InputSystem: Window already registered");
-        return pieces::Ok<InputContext*, std::string>(m_contexts.at(glfwWindow).get());
+        return pieces::Ok<InputContext*, std::string>(m_contexts.at(nativeHandle).get());
     }
 
-    m_contexts[glfwWindow] = std::make_unique<InputContext>(_window);
+    m_contexts[nativeHandle] = std::make_unique<InputContext>(_window);
 
-    return pieces::Ok<InputContext*, std::string>(m_contexts.at(glfwWindow).get());
+    return pieces::Ok<InputContext*, std::string>(m_contexts.at(nativeHandle).get());
 }
 
 void InputSystem::unregisterWindow(core::Window* _window)
 {
-    auto glfwWindow = _window->getNativeHandle();
+    auto nativeHandle = _window->getNativeHandle();
 
-    if (m_contexts.find(glfwWindow) != m_contexts.end())
+    if (m_contexts.find(nativeHandle) != m_contexts.end())
     {
-        m_contexts.erase(glfwWindow);
+        m_contexts.erase(nativeHandle);
     }
 }
 
