@@ -19,26 +19,13 @@ namespace mosaic
 namespace core
 {
 
-struct ApplicationProperties
+struct ApplicationState
 {
-    std::string appName;
-    std::string appVersion;
-    std::string engineVersion;
-    std::string logFilePath;
-    std::string tracesFilePath;
-    std::string workingDirectory;
-    std::atomic<bool> isInitialized;
-    std::atomic<bool> isPaused;
+    bool isInitialized;
+    bool isPaused;
+    bool isRunning;
 
-    ApplicationProperties()
-        : appName(""),
-          appVersion(""),
-          engineVersion(_MOSAIC_VERSION),
-          logFilePath("./logs"),
-          tracesFilePath("./traces"),
-          workingDirectory("./"),
-          isInitialized(false),
-          isPaused(false) {};
+    ApplicationState() : isInitialized(false), isPaused(false), isRunning(false) {};
 };
 
 class MOSAIC_API Application
@@ -47,13 +34,17 @@ class MOSAIC_API Application
     Application(const std::string& _appName);
     ~Application();
 
+    Application(Application&) = delete;
+    Application& operator=(Application&) = delete;
+    Application(Application&&) = delete;
+    Application& operator=(Application&&) = delete;
+
+   public:
     pieces::RefResult<Application, std::string> initialize();
     pieces::RefResult<Application, std::string> run();
     void pause();
     void resume();
     void shutdown();
-
-    inline const ApplicationProperties& getProperties() const { return m_properties; }
 
    protected:
     virtual void onInitialize() = 0;
@@ -65,7 +56,9 @@ class MOSAIC_API Application
    private:
     void realRun();
 
-    ApplicationProperties m_properties;
+    static bool s_created;
+
+    ApplicationState m_state;
 
     std::unique_ptr<platform::Platform> m_platform;
 };

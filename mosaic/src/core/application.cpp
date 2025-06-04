@@ -7,17 +7,19 @@ namespace mosaic
 namespace core
 {
 
-Application::Application(const std::string& _appName)
-    : m_properties(), m_platform(platform::Platform::create())
-{
-    m_properties.appName = _appName;
-    m_properties.appVersion = _MOSAIC_VERSION;
-    m_properties.logFilePath = "./logs/" + _appName + ".log";
-    m_properties.tracesFilePath = "./traces/" + _appName + ".trace";
-    m_properties.workingDirectory = "./";
+bool Application::s_created = false;
 
-    LoggerManager::initialize(m_properties.appName, m_properties.logFilePath);
-    TracerManager::initialize(m_properties.tracesFilePath);
+Application::Application(const std::string& _appName) : m_platform(platform::Platform::create())
+{
+    assert(!s_created);
+
+    s_created = true;
+
+    std::string logFilePath = "./logs/" + _appName + ".log";
+    std::string tracesFilePath = "./traces/" + _appName + ".trace";
+
+    LoggerManager::initialize(_appName, logFilePath);
+    TracerManager::initialize(tracesFilePath);
 }
 
 Application::~Application()
@@ -28,20 +30,22 @@ Application::~Application()
 
 pieces::RefResult<Application, std::string> Application::initialize()
 {
-    assert(!m_properties.isInitialized && "Application is already initialized!");
+    assert(!m_state.isInitialized && "Application is already initialized!");
 
     MOSAIC_DEBUG("Initializing Mosaic {0} application", _MOSAIC_VERSION);
 
     m_platform->initialize();
 
-    m_properties.isInitialized = true;
+    m_state.isInitialized = true;
+
+    onInitialize();
 
     return pieces::OkRef<Application, std::string>(*this);
 }
 
 pieces::RefResult<Application, std::string> Application::run()
 {
-    onInitialize();
+    m_state.isRunning = true;
 
 #ifdef __EMSCRIPTEN__
     auto callback = [](void* arg)
@@ -53,10 +57,8 @@ pieces::RefResult<Application, std::string> Application::run()
 
     emscripten_set_main_loop_arg(callback, this, 0, true);
 #else
-    while (m_properties.isInitialized)
+    while (m_state.isRunning)
     {
-        if (m_properties.isPaused) continue;
-
         m_platform->update();
 
         realRun();
@@ -70,46 +72,46 @@ pieces::RefResult<Application, std::string> Application::run()
 
 void Application::realRun()
 {
-    if (m_properties.isPaused) return;
+    if (m_state.isPaused) return;
 
     onUpdate();
 }
 
 void Application::pause()
 {
-    assert(m_properties.isInitialized && "Application is not initialized!");
+    assert(m_state.isInitialized && "Application is not initialized!");
 
     MOSAIC_DEBUG("Application paused");
 
-    if (m_properties.isPaused)
+    if (m_state.isPaused)
     {
         return;
     }
 
     onPause();
 
-    m_properties.isPaused = true;
+    m_state.isPaused = true;
 }
 
 void Application::resume()
 {
-    assert(m_properties.isInitialized && "Application is not initialized!");
+    assert(m_state.isInitialized && "Application is not initialized!");
 
     MOSAIC_DEBUG("Application resumed");
 
-    if (!m_properties.isPaused)
+    if (!m_state.isPaused)
     {
         return;
     }
 
     onResume();
 
-    m_properties.isPaused = false;
+    m_state.isPaused = false;
 }
 
 void Application::shutdown()
 {
-    assert(m_properties.isInitialized && "Application is not initialized!");
+    assert(m_state.isInitialized && "Application is not initialized!");
 
     MOSAIC_DEBUG("Shutting down application");
 
@@ -117,7 +119,7 @@ void Application::shutdown()
 
     m_platform->shutdown();
 
-    m_properties.isInitialized = false;
+    m_state.isRunning = false;
 }
 
 } // namespace core
