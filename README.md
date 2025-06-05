@@ -101,8 +101,9 @@ We use **vcpkg in manifest mode** to manage most dependencies.
    - CMake and LLDB
    - SDK tools for API level 24+
 
-3. Configure an Android CMake toolchain or preset.
-4. Add a custom **vcpkg Android triplet** targeting `arm64-v8a` or `x86_64`, and make sure Vulkan is enabled.
+3. Set the environment variable `ANDROID_NDK_HOME` to point to your NDK installation.
+4. Configure an Android CMake toolchain or preset.
+5. Add a custom **vcpkg Android triplet** targeting `arm64-v8a` or `x86_64`, and make sure Vulkan is enabled.
 
 ### 🔧 Build Instructions
 
