@@ -10,9 +10,6 @@
 #include <string>
 #include <random>
 
-#define UUID_SYSTEM_GENERATOR
-#include <stduuid/uuid.h>
-
 #include "mosaic/defines.hpp"
 
 namespace mosaic
@@ -28,16 +25,13 @@ namespace core
  */
 struct ScheduledCallback
 {
-    uuids::uuid uuid;
+    size_t id;
     double triggerTime;
     bool cancelled;
     std::function<void()> callback;
 
-    ScheduledCallback(double _triggerTime, std::function<void()> _callback)
-        : uuid(uuids::uuid_system_generator{}()),
-          triggerTime(_triggerTime),
-          cancelled(false),
-          callback(_callback) {};
+    ScheduledCallback(size_t _id, double _triggerTime, std::function<void()> _callback)
+        : id(_id), triggerTime(_triggerTime), cancelled(false), callback(_callback) {};
 };
 
 /**
@@ -107,7 +101,7 @@ class MOSAIC_API Timer
      *
      * @param _uuid The UUID of the callback to cancel.
      */
-    void cancelCallback(const uuids::uuid& _uuid);
+    void cancelCallback(const size_t _id);
 
    private:
     /**

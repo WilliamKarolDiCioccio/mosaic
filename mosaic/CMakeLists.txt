@@ -166,17 +166,10 @@ target_precompile_headers(mosaic PRIVATE
 # Link Libraries
 # ----------------------------------------
 
-target_link_libraries(mosaic
-  PUBLIC
-    pieces
-    glm::glm-header-only
-    nlohmann_json::nlohmann_json
-    stduuid
-    glfw
-  PRIVATE
-    webgpu
-    glfw3webgpu
-)
+target_link_libraries(
+  mosaic
+  PUBLIC pieces glm::glm-header-only nlohmann_json::nlohmann_json glfw
+  PRIVATE webgpu glfw3webgpu)
 
 if(EMSCRIPTEN)
   target_link_options(mosaic PUBLIC -sUSE_GLFW=3)

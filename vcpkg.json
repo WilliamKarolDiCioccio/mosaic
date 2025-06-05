@@ -8,7 +8,6 @@
     "gtest",
     "nlohmann-json",
     "stb",
-    "stduuid",
     "benchmark",
     {
       "name": "spdlog",

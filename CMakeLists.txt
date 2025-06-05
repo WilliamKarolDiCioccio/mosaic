@@ -49,7 +49,6 @@ find_package(fmt CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(benchmark REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(stduuid CONFIG REQUIRED)
 find_package(Stb REQUIRED)
 
 if (NOT EMSCRIPTEN)
