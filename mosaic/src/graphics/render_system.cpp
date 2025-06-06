@@ -40,6 +40,7 @@ pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const co
 
     switch (m_apiType)
     {
+#ifndef MOSAIC_PLATFORM_ANDROID
         case RendererAPIType::web_gpu:
         {
             if (m_contexts.size() > 1)
@@ -53,7 +54,8 @@ pieces::Result<RenderContext*, std::string> RenderSystem::createContext(const co
 
             break;
         }
-#ifndef __EMSCRIPTEN__
+#endif
+#ifndef MOSAIC_PLATFORM_EMSCRIPTEN
         case RendererAPIType::vulkan:
         {
             m_contexts[glfwWindow] = std::make_unique<vulkan::VulkanRenderContext>(
@@ -89,9 +91,11 @@ std::unique_ptr<RenderSystem> RenderSystem::create(RendererAPIType _apiType)
 {
     switch (_apiType)
     {
+#ifndef MOSAIC_PLATFORM_ANDROID
         case RendererAPIType::web_gpu:
             return std::make_unique<webgpu::WebGPURenderSystem>();
-#ifndef __EMSCRIPTEN__
+#endif
+#ifndef MOSAIC_PLATFORM_EMSCRIPTEN
         case RendererAPIType::vulkan:
             return std::make_unique<vulkan::VulkanRenderSystem>();
 #endif

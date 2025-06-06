@@ -1,7 +1,6 @@
 #include "vulkan_swapchain.hpp"
 
 #include <algorithm>
-#include <GLFW/glfw3native.h>
 
 #ifdef MOSAIC_PLATFORM_WINDOWS
 #include <windows.h>
@@ -14,6 +13,8 @@ namespace graphics
 {
 namespace vulkan
 {
+
+#ifdef MOSAIC_PLATFORM_WINDOWS
 
 VkResult acquireExclusiveFullscreenMode(Swapchain& _swapchain)
 {
@@ -36,6 +37,8 @@ VkResult releaseExclusiveFullscreenMode(Swapchain& _swapchain)
 
     return VK_SUCCESS;
 }
+
+#endif
 
 void createImageViews(Swapchain& _swapchain)
 {
@@ -150,6 +153,8 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
 
     void* headExtPtr = nullptr;
 
+#ifdef MOSAIC_PLATFORM_WINDOWS
+
     _swapchain.exclusiveFullscreenAvailable =
         std::find(_device.availableExtensions.begin(), _device.availableExtensions.end(),
                   VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME) != _device.availableExtensions.end();
@@ -159,7 +164,6 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
     fullScreenExclusiveInfo.fullScreenExclusive =
         VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT;
 
-#ifdef MOSAIC_PLATFORM_WINDOWS
     HWND win32Handle = glfwGetWin32Window(static_cast<GLFWwindow*>(_nativeWindowHandle));
     HMONITOR monitor = MonitorFromWindow(win32Handle, MONITOR_DEFAULTTONEAREST);
 
@@ -170,12 +174,13 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
     };
 
     fullScreenExclusiveInfo.pNext = &win32FullScreenExclusiveInfo;
-#endif
 
     if (_exclusiveFullscreenRequestable && _swapchain.exclusiveFullscreenAvailable)
     {
         headExtPtr = (void*)&fullScreenExclusiveInfo;
     }
+
+#endif
 
     createInfo.pNext = headExtPtr;
 
@@ -226,12 +231,17 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
 
     createImageViews(_swapchain);
 
+#ifdef MOSAIC_PLATFORM_WINDOWS
     if (_swapchain.exclusiveFullscreenAvailable) acquireExclusiveFullscreenMode(_swapchain);
+#endif
 }
 
 void destroySwapchain(Swapchain& _swapchain)
 {
+#ifdef MOSAIC_PLATFORM_WINDOWS
     if (_swapchain.exclusiveFullscreenAvailable) releaseExclusiveFullscreenMode(_swapchain);
+#endif
+
     destroyImageViews(_swapchain);
     vkDestroySwapchainKHR(_swapchain.device, _swapchain.swapchain, nullptr);
 }

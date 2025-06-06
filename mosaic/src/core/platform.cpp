@@ -17,6 +17,8 @@ std::unique_ptr<Platform> Platform::create()
     return std::make_unique<platform::win32::Win32Platform>();
 #elif defined(MOSAIC_PLATFORM_EMSCRIPTEN)
     return std::make_unique<platform::emscripten::EmscriptenPlatform>();
+#elif defined(MOSAIC_PLATFORM_ANDROID)
+    return nullptr; // TODO: Implement platform::agdk::AGDKPlatform
 #endif
 }
 

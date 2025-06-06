@@ -51,7 +51,9 @@ struct Device
         };
 
         optionalExtensions = {
+#ifdef MOSAIC_PLATFORM_WINDOWS
             VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME,
+#endif
         };
 
 #ifdef _DEBUG

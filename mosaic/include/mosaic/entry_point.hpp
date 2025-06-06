@@ -72,4 +72,8 @@ int runApp(Args&&... args)
 #define MOSAIC_ENTRY_POINT(AppType, ...) \
     int main(int argc, char** argv) { return mosaic::runApp<AppType>(__VA_ARGS__); }
 
+#elif defined(MOSAIC_PLATFORM_ANDROID)
+
+#define MOSAIC_ENTRY_POINT(AppType, ...)
+
 #endif

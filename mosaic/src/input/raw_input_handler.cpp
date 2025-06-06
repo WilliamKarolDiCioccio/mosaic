@@ -18,6 +18,8 @@ std::unique_ptr<RawInputHandler> RawInputHandler::create(core::Window* _window)
 #if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_LINUX) || \
     defined(MOSAIC_PLATFORM_MACOS) || defined(MOSAIC_PLATFORM_EMSCRIPTEN)
     return std::make_unique<platform::glfw::GLFWRawInputHandler>(_window);
+#elif defined(MOSAIC_PLATFORM_ANDROID)
+    return nullptr; // TODO: Implement platform::agdk::AGDKRawInputHandler
 #endif
 }
 

@@ -21,6 +21,8 @@ std::unique_ptr<Window> Window::create(const std::string& _title, glm::ivec2 _si
 #if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_LINUX) || \
     defined(MOSAIC_PLATFORM_MACOS) || defined(MOSAIC_PLATFORM_EMSCRIPTEN)
     return std::make_unique<platform::glfw::GLFWWindow>(_title, _size);
+#elif defined(MOSAIC_PLATFORM_ANDROID)
+    return nullptr; // TODO: Implement platform::agdk::AGDKWindow
 #endif
 }
 

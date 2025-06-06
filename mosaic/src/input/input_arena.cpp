@@ -34,7 +34,7 @@ void InputArena::update()
     {
         if (!m_rawInputHandler->isActive()) break;
 
-        const int action = m_rawInputHandler->getKeyboardKeyInput(key);
+        const InputAction action = m_rawInputHandler->getKeyboardKeyInput(key);
 
         auto& keyEvent = m_keyboardKeyEvents[static_cast<uint32_t>(key)];
 
@@ -44,7 +44,7 @@ void InputArena::update()
         auto actionDuration = std::chrono::duration_cast<std::chrono::milliseconds>(
             currentTime - keyEvent.metadata.timestamp);
 
-        if (action == GLFW_RELEASE)
+        if (action == InputAction::release)
         {
             if (actionDuration < KEY_RELEASE_DURATION) continue;
 
@@ -66,7 +66,7 @@ void InputArena::update()
                 };
             }
         }
-        else if (action == GLFW_PRESS)
+        else if (action == InputAction::press)
         {
             if (utils::hasFlag(keyEvent.lastSignificantState, KeyButtonState::release) &&
                 actionDuration > DOUBLE_CLICK_MIN_INTERVAL &&
@@ -116,7 +116,7 @@ void InputArena::update()
         auto actionDuration = std::chrono::duration_cast<std::chrono::milliseconds>(
             currentTime - buttonEvent.metadata.timestamp);
 
-        if (action == GLFW_RELEASE)
+        if (action == InputAction::release)
         {
             if (actionDuration < KEY_RELEASE_DURATION) continue;
 
@@ -138,7 +138,7 @@ void InputArena::update()
                 };
             }
         }
-        else if (action == GLFW_PRESS)
+        else if (action == InputAction::press)
         {
             if (utils::hasFlag(buttonEvent.lastSignificantState, KeyButtonState::release) &&
                 actionDuration > DOUBLE_CLICK_MIN_INTERVAL &&

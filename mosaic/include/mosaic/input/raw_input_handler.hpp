@@ -26,8 +26,8 @@ namespace input
 class RawInputHandler
 {
    public:
-    using KeyboardKeyInputData = int;
-    using MouseButtonInputData = int;
+    using KeyboardKeyInputData = InputAction;
+    using MouseButtonInputData = InputAction;
     using MouseScrollInputData = glm::vec2;
     using CursorPosInputData = glm::vec2;
 
@@ -40,6 +40,8 @@ class RawInputHandler
     RawInputHandler(core::Window* _window);
     virtual ~RawInputHandler() = default;
 
+    RawInputHandler(RawInputHandler&) = delete;
+    RawInputHandler& operator=(RawInputHandler&) = delete;
     RawInputHandler(const RawInputHandler&) = delete;
     RawInputHandler& operator=(const RawInputHandler&) = delete;
 
