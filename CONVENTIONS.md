@@ -200,6 +200,8 @@ bool Rendered::init();
 
 We avoid using exceptions for flow control. Exceptions are only used in scenarios where crashing is acceptable or necessary (e.g., irrecoverable logic errors). In most cases, we prefer to use the `Result` class from the `pieces` template library to model recoverable errors. This encourages explicit handling and improves clarity when dealing with failure cases. If a function doesn't produce additional data on failure, a simple `bool` or `return code` may be used instead for simplicity. However, if the failure involves meaningful data (e.g., an error message or diagnostic payload), even when already logged, a `Result` must still be returned so that the information can bubble up to a caller that may know how to respond appropriately.
 
+To ensure proper handling of errors in objects, we recommend not using constructors to call functions or perform operations that can fail. Instead, limit them to invariants and conditions that require crashing the program. For all initialization code that may not succeed use `initialize()` methods that return the desired object or an error message/code.
+
 ---
 
 By following these conventions, we promote a unified and professional development experience. These guidelines aim to simplify onboarding, facilitate collaboration, and ensure long-term maintainability.
