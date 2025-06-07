@@ -18,21 +18,21 @@ namespace mosaic
 namespace core
 {
 
-class LoggerManager final
+class MOSAIC_API LoggerManager final
 {
    private:
-    MOSAIC_API static bool s_isInitialized;
+    static bool s_isInitialized;
 
-#ifndef __EMSCRIPTEN__
-    MOSAIC_API static std::shared_ptr<spdlog::logger> s_instance;
+#ifndef MOSAIC_PLATFORM_EMSCRIPTEN
+    static std::shared_ptr<spdlog::logger> s_instance;
 #endif
 
    public:
-    static bool initialize(const std::string& _loggerName, const std::string& _filePath) noexcept;
+    static bool initialize(const std::string& _filePath) noexcept;
     static void shutdown() noexcept;
 
-#ifndef __EMSCRIPTEN__
-    MOSAIC_API static std::shared_ptr<spdlog::logger> get();
+#ifndef MOSAIC_PLATFORM_EMSCRIPTEN
+    static std::shared_ptr<spdlog::logger> get();
 #endif
 };
 

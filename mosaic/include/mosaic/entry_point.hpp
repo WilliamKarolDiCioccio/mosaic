@@ -2,7 +2,10 @@
 
 #include <memory>
 
-#include "core/application.hpp"
+#include <mosaic/core/logger.hpp>
+#include <mosaic/core/tracer.hpp>
+#include <mosaic/core/application.hpp>
+#include <mosaic/core/platform.hpp>
 
 namespace mosaic
 {
@@ -15,15 +18,30 @@ template <typename AppType, typename... Args>
     requires IsApplication<AppType>
 int runApp(Args&&... args)
 {
-    auto app = std::make_unique<AppType>(std::forward<Args>(args)...);
+    core::LoggerManager::initialize("./logs/");
+    core::TracerManager::initialize("./traces/");
 
-    auto result = app->initialize().andThen(std::mem_fn(&core::Application::run));
+    // This scope guard ensures all resources have been disposed before shutting down the logger and
+    // tracer.
 
-    if (result.isErr())
     {
-        MOSAIC_ERROR("Failed to initialize the application: {0}", result.error().c_str());
-        return 1;
+        auto app = std::make_unique<AppType>(std::forward<Args>(args)...);
+
+        auto platform = core::Platform::create(app.get());
+
+        auto result = platform->initialize().andThen(std::mem_fn(&core::Platform::run));
+
+        if (result.isErr())
+        {
+            MOSAIC_ERROR(result.error().c_str());
+            return 1;
+        }
+
+        platform->shutdown();
     }
+
+    core::LoggerManager::shutdown();
+    core::TracerManager::shutdown();
 
     return 0;
 }

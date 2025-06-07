@@ -145,7 +145,7 @@ void TestbedApplication::onUpdate()
 
     if (m_window->shouldClose() || inputContext->isActionTriggered("closeApp"))
     {
-        return shutdown();
+        return requestExit();
     }
 }
 

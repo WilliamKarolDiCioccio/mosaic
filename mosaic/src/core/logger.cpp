@@ -22,8 +22,7 @@ bool LoggerManager::s_isInitialized = false;
 std::shared_ptr<spdlog::logger> LoggerManager::s_instance = nullptr;
 #endif
 
-bool LoggerManager::initialize(const std::string& _loggerName,
-                               const std::string& _filePath) noexcept
+bool LoggerManager::initialize(const std::string& _filePath) noexcept
 {
 #ifndef __EMSCRIPTEN__
     if (s_instance != nullptr) return false;
@@ -42,7 +41,7 @@ bool LoggerManager::initialize(const std::string& _loggerName,
     file_sink->set_level(spdlog::level::info);
 
     std::vector<spdlog::sink_ptr> sinks{stdout_sink, stderr_sink, file_sink};
-    s_instance = std::make_shared<spdlog::logger>(_loggerName, sinks.begin(), sinks.end());
+    s_instance = std::make_shared<spdlog::logger>("MosaicLogger", sinks.begin(), sinks.end());
 
     spdlog::set_default_logger(s_instance);
     spdlog::set_level(spdlog::level::info);

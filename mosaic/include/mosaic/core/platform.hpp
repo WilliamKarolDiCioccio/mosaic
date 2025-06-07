@@ -7,41 +7,36 @@
 
 #include "mosaic/defines.hpp"
 
+#include "application.hpp"
+
 namespace mosaic
 {
-namespace platform
+namespace core
 {
 
 class MOSAIC_API Platform
 {
+   private:
+    // Unlike other singletons here we choose to store an instance pointer, due to
+    // some platforms requiring a static instance for their main loop.
+    static Platform* s_instance;
+
+   protected:
+    Application* m_app;
+
    public:
+    Platform(Application* _app);
     virtual ~Platform() = default;
 
-    static std::unique_ptr<Platform> create();
+    static std::unique_ptr<Platform> create(Application* _app);
 
    public:
     virtual pieces::RefResult<Platform, std::string> initialize() = 0;
-    virtual void update() = 0;
+    virtual pieces::RefResult<Platform, std::string> run() = 0;
+    virtual void pause() = 0;
+    virtual void resume() = 0;
     virtual void shutdown() = 0;
-
-    // Messages boxes / alert dialogs
-
-    virtual void showInfo(const std::string& _message) = 0;
-    virtual void showWarning(const std::string& _message) = 0;
-    virtual void showError(const std::string& _message) = 0;
-
-    // Shell commands
-
-    virtual pieces::Result<int, std::string> runShellCommand(
-        const std::string& _command, const std::vector<std::string>& _args) const = 0;
-    virtual pieces::Result<int, std::string> runProgram(
-        const std::string& _programPath, const std::vector<std::string>& _args) const = 0;
-
-    // Configuration management
-
-    virtual bool writeConfig(const std::string& key, const std::string& value) const = 0;
-    virtual pieces::Result<std::string, std::string> readConfig(const std::string& key) const = 0;
 };
 
-} // namespace platform
+} // namespace core
 } // namespace mosaic
