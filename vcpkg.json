@@ -10,6 +10,10 @@
     "stb",
     "benchmark",
     {
+      "name": "glfw3",
+      "platform": "!android"
+    },
+    {
       "name": "spdlog",
       "platform": "!emscripten"
     },

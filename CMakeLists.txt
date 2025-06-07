@@ -76,7 +76,7 @@ if(NOT ANDROID)
     add_library(glfw INTERFACE)
     target_link_options(glfw INTERFACE -sUSE_GLFW=3)
   else()
-    add_subdirectory("vendor/glfw3")
+    find_package(glfw3 CONFIG REQUIRED)
   endif()
 
   add_subdirectory("vendor/glfw3webgpu")

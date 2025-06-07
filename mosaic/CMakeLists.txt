@@ -106,6 +106,8 @@ endif()
 
 # Emscripten-specific flags
 if(EMSCRIPTEN)
+  target_include_directories(
+    mosaic PRIVATE "$ENV{EMSDK}/upstream/emscripten/system/include")
   target_link_options(
     mosaic PRIVATE -sUSE_WEBGPU=1 -sASYNCIFY -sALLOW_MEMORY_GROWTH
     -sEXPORTED_RUNTIME_METHODS=['ccall','cwrap'])
@@ -162,8 +164,8 @@ elseif(ANDROID)
 else()
   target_link_libraries(
     mosaic
-    PUBLIC spdlog::spdlog glfw
-    PRIVATE volk::volk GPUOpen::VulkanMemoryAllocator)
+    PUBLIC spdlog::spdlog
+    PRIVATE glfw glfw3webgpu webgpu volk::volk GPUOpen::VulkanMemoryAllocator)
 endif()
 
 # ----------------------------------------
