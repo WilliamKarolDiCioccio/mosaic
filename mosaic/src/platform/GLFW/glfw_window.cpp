@@ -19,13 +19,24 @@ namespace glfw
 GLFWWindow::GLFWWindow(const std::string& _title, glm::ivec2 _size)
     : m_glfwHandle(nullptr), core::Window(_title, _size)
 {
+#ifdef MOSAIC_PLATFORM_EMSCRIPTEN
+    static int windowCount = 0;
+
+    if (windowCount > 0)
+    {
+        throw std::runtime_error("Only one GLFW window is allowed in Emscripten builds.");
+    }
+
+    windowCount++;
+#endif
+
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
     glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
-#ifndef __EMSCRIPTEN__
+#ifndef MOSAIC_PLATFORM_EMSCRIPTEN
     glfwWindowHint(GLFW_POSITION_X, m_properties.position.x);
     glfwWindowHint(GLFW_POSITION_Y, m_properties.position.y);
 #endif

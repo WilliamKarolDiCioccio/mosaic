@@ -17,13 +17,15 @@ GLFWRawInputHandler::GLFWRawInputHandler(core::Window* _window)
 input::RawInputHandler::KeyboardKeyInputData GLFWRawInputHandler::getKeyboardKeyInput(
     input::KeyboardKey _key) const
 {
-    return glfwGetKey(static_cast<GLFWwindow*>(m_nativeHandle), static_cast<int>(_key));
+    return static_cast<input::RawInputHandler::MouseButtonInputData>(
+        glfwGetKey(static_cast<GLFWwindow*>(m_nativeHandle), static_cast<int>(_key)));
 }
 
 input::RawInputHandler::MouseButtonInputData GLFWRawInputHandler::getMouseButtonInput(
     input::MouseButton _button) const
 {
-    return glfwGetMouseButton(static_cast<GLFWwindow*>(m_nativeHandle), static_cast<int>(_button));
+    return static_cast<input::RawInputHandler::MouseButtonInputData>(
+        glfwGetMouseButton(static_cast<GLFWwindow*>(m_nativeHandle), static_cast<int>(_button)));
 }
 
 input::RawInputHandler::CursorPosInputData GLFWRawInputHandler::getCursorPosInput()
