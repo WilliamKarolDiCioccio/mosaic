@@ -18,7 +18,7 @@ Application::Application(const std::string& _appName)
       m_state(ApplicationState::paused)
 
 {
-    assert(!s_created);
+    assert(!s_created && "Application instance already exists!");
 
     s_created = true;
 }

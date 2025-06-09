@@ -17,7 +17,7 @@ Platform* Platform::s_instance = nullptr;
 
 Platform::Platform(Application* _app) : m_app(_app)
 {
-    assert(s_instance != nullptr && "Platform instance already exists!");
+    assert(!s_instance && "Platform instance already exists!");
 
     s_instance = this;
 }
@@ -29,7 +29,7 @@ std::unique_ptr<Platform> Platform::create(Application* _app)
 #elif defined(MOSAIC_PLATFORM_EMSCRIPTEN)
     return std::make_unique<platform::emscripten::EmscriptenPlatform>(_app);
 #elif defined(MOSAIC_PLATFORM_ANDROID)
-    return std::make_unique<platform::agdk::AGDKPlatform>(_app)
+    return std::make_unique<platform::agdk::AGDKPlatform>(_app);
 #endif
 }
 
