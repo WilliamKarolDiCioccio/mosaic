@@ -20,6 +20,19 @@
 #error "Unknown platform!"
 #endif
 
+// Platform type detection
+#if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_MACOS) || \
+    defined(MOSAIC_PLATFORM_LINUX)
+#define MOSAIC_PLATFORM_DESKTOP
+#define MOSAIC_PLATFORM_TYPE "Desktop"
+#elif defined(MOSAIC_PLATFORM_EMSCRIPTEN)
+#define MOSAIC_PLATFORM_WEB
+#define MOSAIC_PLATFORM_TYPE "Web"
+#elif defined(MOSAIC_PLATFORM_ANDROID)
+#define MOSAIC_PLATFORM_MOBILE
+#define MOSAIC_PLATFORM_TYPE "Mobile"
+#endif
+
 // Compiler detection
 #if defined(__EMSCRIPTEN__)
 #define MOSAIC_COMPILER_EMSCRIPTEN
