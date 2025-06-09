@@ -162,11 +162,10 @@ elseif(ANDROID)
     mosaic PUBLIC log android jnigraphics game-activity::game-activity
                   volk::volk GPUOpen::VulkanMemoryAllocator)
 else()
-  target_link_libraries(
-    mosaic
-    PUBLIC spdlog::spdlog
-    PUBLIC spdlog::spdlog
-    PRIVATE glfw glfw3webgpu webgpu volk::volk GPUOpen::VulkanMemoryAllocator)
+  find_path(COLORCONSOLE_INCLUDE_DIRS "colorconsole.hpp")
+  target_include_directories(mosaic PRIVATE ${COLORCONSOLE_INCLUDE_DIRS})
+  target_link_libraries(mosaic PRIVATE glfw glfw3webgpu webgpu volk::volk
+                                       GPUOpen::VulkanMemoryAllocator)
 endif()
 
 # ----------------------------------------

@@ -7,19 +7,18 @@
 #include <mosaic/core/application.hpp>
 #include <mosaic/core/platform.hpp>
 
+#ifndef MOSAIC_PLATFORM_ANDROID
+
 namespace mosaic
 {
 
-template <typename AppType>
-concept IsApplication =
-    std::derived_from<AppType, core::Application> && !std::is_abstract_v<AppType>;
-
 template <typename AppType, typename... Args>
-    requires IsApplication<AppType>
+    requires core::IsApplication<AppType>
 int runApp(Args&&... args)
 {
-    core::LoggerManager::initialize("./logs/");
-    core::TracerManager::initialize("./traces/");
+    core::LoggerManager::initialize();
+
+    core::LoggerManager::getInstance()->addSink<core::DefaultSink>("default", core::DefaultSink());
 
     // This scope guard ensures all resources have been disposed before shutting down the logger and
     // tracer.
@@ -41,14 +40,13 @@ int runApp(Args&&... args)
     }
 
     core::LoggerManager::shutdown();
-    core::TracerManager::shutdown();
 
     return 0;
 }
 
 } // namespace mosaic
 
-#pragma once
+#endif
 
 #if defined(MOSAIC_PLATFORM_WINDOWS)
 
