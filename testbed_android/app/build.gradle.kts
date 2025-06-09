@@ -13,11 +13,13 @@ android {
     productFlavors {
         create("arm64") {
             dimension = "abi"
+            ndk.abiFilters.clear()
             ndk.abiFilters.add("arm64-v8a")
             externalNativeBuild.cmake.arguments += "-DVCPKG_TARGET_TRIPLET=arm64-android"
         }
         create("x86_64") {
             dimension = "abi"
+            ndk.abiFilters.clear()
             ndk.abiFilters.add("x86_64")
             externalNativeBuild.cmake.arguments += "-DVCPKG_TARGET_TRIPLET=x64-android"
         }
@@ -31,11 +33,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters.add("arm64-v8a")
-            abiFilters.add("x86_64")
-        }
     }
 
     buildTypes {
