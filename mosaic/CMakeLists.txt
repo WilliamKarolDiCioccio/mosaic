@@ -25,7 +25,7 @@ set(FRAMEWORK_SRC
 if(ANDROID)
   list(APPEND FRAMEWORK_SRC "src/platform/AGDK/agdk_window.cpp"
        "src/platform/AGDK/agdk_raw_input_handler.cpp"
-       "src/platform/AGDK/agdk_platform.cpp")
+       "src/platform/AGDK/agdk_platform.cpp" "src/game_activity.cpp")
 else()
   if(WIN32)
     list(APPEND FRAMEWORK_SRC "src/platform/Win32/win32_platform.cpp")
@@ -74,7 +74,7 @@ endif()
 # ----------------------------------------
 # Target Definition
 # ----------------------------------------
-if(EMSCRIPTEN)
+if(EMSCRIPTEN OR ANDROID)
   add_library(mosaic STATIC ${FRAMEWORK_SRC})
 else()
   add_library(mosaic SHARED ${FRAMEWORK_SRC})
@@ -164,6 +164,7 @@ elseif(ANDROID)
 else()
   target_link_libraries(
     mosaic
+    PUBLIC spdlog::spdlog
     PUBLIC spdlog::spdlog
     PRIVATE glfw glfw3webgpu webgpu volk::volk GPUOpen::VulkanMemoryAllocator)
 endif()
