@@ -19,13 +19,13 @@ set(FRAMEWORK_SRC
     "src/graphics/render_context.cpp"
     "src/graphics/render_system.cpp"
     # External headers that need compilation
-    "src/stb.cpp")
+    "src/external/stb.cpp")
 
 # Platform specific
 if(ANDROID)
   list(APPEND FRAMEWORK_SRC "src/platform/AGDK/agdk_window.cpp"
        "src/platform/AGDK/agdk_raw_input_handler.cpp"
-       "src/platform/AGDK/agdk_platform.cpp" "src/game_activity.cpp")
+       "src/platform/AGDK/agdk_platform.cpp" "src/external/game_activity.cpp")
 else()
   if(WIN32)
     list(APPEND FRAMEWORK_SRC "src/platform/Win32/win32_platform.cpp")
@@ -54,7 +54,8 @@ if(NOT EMSCRIPTEN)
     "src/graphics/vulkan/commands/vulkan_render_pass.cpp"
     "src/graphics/vulkan/vulkan_allocator.cpp"
     "src/graphics/vulkan/vulkan_framebuffers.cpp"
-    "src/graphics/vulkan/vulkan_swapchain.cpp")
+    "src/graphics/vulkan/vulkan_swapchain.cpp"
+    "src/external/vma.cpp")
 endif()
 
 if(NOT ANDROID)

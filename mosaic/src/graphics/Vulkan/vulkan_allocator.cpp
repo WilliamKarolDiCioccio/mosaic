@@ -1,8 +1,5 @@
 #include "vulkan_allocator.hpp"
 
-#define VMA_IMPLEMENTATION
-#include <vk_mem_alloc.h>
-
 namespace mosaic
 {
 namespace graphics
