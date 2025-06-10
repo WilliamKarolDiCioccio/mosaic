@@ -7,7 +7,6 @@
 #include <sstream>
 #include <windows.h>
 #include <shlobj.h>
-#include <fmt/format.h>
 
 namespace mosaic
 {

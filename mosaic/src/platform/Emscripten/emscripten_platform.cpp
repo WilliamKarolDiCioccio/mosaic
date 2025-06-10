@@ -21,6 +21,8 @@ pieces::RefResult<core::Platform, std::string> EmscriptenPlatform::initialize()
         return pieces::ErrRef<core::Platform, std::string>(std::move(result.error()));
     }
 
+    m_app->resume();
+
     return pieces::OkRef<EmscriptenPlatform, std::string>(*this);
 }
 
@@ -37,7 +39,15 @@ pieces::RefResult<core::Platform, std::string> EmscriptenPlatform::run()
             return emscripten_cancel_main_loop();
         }
 
-        pApp->update();
+        if (pApp->isResumed())
+        {
+            auto result = pApp->update();
+
+            if (result.isErr())
+            {
+                return pieces::ErrRef<core::Platform, std::string>(std::move(result.error()));
+            }
+        }
     };
 
     emscripten_set_main_loop_arg(callback, this, 0, true);
@@ -45,9 +55,19 @@ pieces::RefResult<core::Platform, std::string> EmscriptenPlatform::run()
     return pieces::OkRef<core::Platform, std::string>(*this);
 }
 
-void EmscriptenPlatform::pause() {}
+void EmscriptenPlatform::pause()
+{
+    m_app->pause();
 
-void EmscriptenPlatform::resume() {}
+    emscripten_pause_main_loop();
+}
+
+void EmscriptenPlatform::resume()
+{
+    m_app->resume();
+
+    emscripten_resume_main_loop();
+}
 
 void EmscriptenPlatform::shutdown()
 {

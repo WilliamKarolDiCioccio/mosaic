@@ -20,8 +20,11 @@ namespace core
 
 enum class ApplicationState
 {
+    uninitialized,
+    initialized,
     resumed,
     paused,
+    shutdown
 };
 
 class Application;
@@ -34,7 +37,6 @@ class MOSAIC_API Application
 {
    private:
     static bool s_created;
-    bool m_initialized;
     bool m_exitRequested;
 
     std::string m_appName;
@@ -58,6 +60,11 @@ class MOSAIC_API Application
 
     [[nodiscard]] inline bool shouldExit() const { return m_exitRequested; }
     void requestExit() { m_exitRequested = true; }
+
+    [[nodiscard]] ApplicationState getState() const { return m_state; }
+    [[nodiscard]] bool isInitialized() const { return m_state != ApplicationState::uninitialized; }
+    [[nodiscard]] bool isPaused() const { return m_state == ApplicationState::paused; }
+    [[nodiscard]] bool isResumed() const { return m_state == ApplicationState::resumed; }
 
    protected:
     virtual void onInitialize() = 0;

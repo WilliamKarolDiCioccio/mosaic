@@ -13,10 +13,7 @@ namespace core
 bool Application::s_created = false;
 
 Application::Application(const std::string& _appName)
-    : m_initialized(false),
-      m_exitRequested(false),
-      m_appName(_appName),
-      m_state(ApplicationState::paused)
+    : m_exitRequested(false), m_appName(_appName), m_state(ApplicationState::uninitialized)
 
 {
     assert(!s_created && "Application instance already exists!");
@@ -26,61 +23,66 @@ Application::Application(const std::string& _appName)
 
 pieces::RefResult<Application, std::string> Application::initialize()
 {
-    assert(!m_initialized && "Application is already initialized!");
+    if (m_state != ApplicationState::uninitialized)
+    {
+        return pieces::ErrRef<Application, std::string>("Application already initialized");
+    }
 
-    MOSAIC_DEBUG("Initializing Mosaic {0} application", _MOSAIC_VERSION);
-
-    m_initialized = true;
-
-    onInitialize();
-
-    return pieces::OkRef<Application, std::string>(*this);
+    try
+    {
+        onInitialize();
+        m_state = ApplicationState::initialized;
+        return pieces::OkRef<Application, std::string>(*this);
+    }
+    catch (const std::exception& e)
+    {
+        return pieces::ErrRef<Application, std::string>(e.what());
+    }
 }
 
 pieces::RefResult<Application, std::string> Application::update()
 {
-    if (m_state != ApplicationState::resumed) std::this_thread::sleep_for(16ms);
+    if (m_state != ApplicationState::resumed)
+    {
+        return pieces::OkRef<Application, std::string>(*this); // Skip update when not resumed
+    }
 
-    onUpdate();
-
-    return pieces::OkRef<Application, std::string>(*this);
+    try
+    {
+        onUpdate();
+        return pieces::OkRef<Application, std::string>(*this);
+    }
+    catch (const std::exception& e)
+    {
+        return pieces::ErrRef<Application, std::string>(e.what());
+    }
 }
 
 void Application::pause()
 {
-    assert(m_initialized && "Application is not initialized!");
-
-    MOSAIC_DEBUG("Application paused");
-
-    if (m_state == ApplicationState::paused) return;
-
-    onPause();
-
-    m_state = ApplicationState::paused;
+    if (m_state == ApplicationState::resumed)
+    {
+        onPause();
+        m_state = ApplicationState::paused;
+    }
 }
 
 void Application::resume()
 {
-    assert(m_initialized && "Application is not initialized!");
-
-    MOSAIC_DEBUG("Application resumed");
-
-    if (m_state != ApplicationState::paused) return;
-
-    onResume();
-
-    m_state = ApplicationState::resumed;
+    if (m_state == ApplicationState::initialized || m_state == ApplicationState::paused)
+    {
+        onResume();
+        m_state = ApplicationState::resumed;
+    }
 }
 
 void Application::shutdown()
 {
-    assert(m_initialized && "Application is not initialized!");
-
-    MOSAIC_DEBUG("Shutting down application");
-
-    onShutdown();
-
-    m_initialized = false;
+    if (m_state != ApplicationState::shutdown)
+    {
+        onShutdown();
+        m_state = ApplicationState::shutdown;
+    }
 }
 
 } // namespace core

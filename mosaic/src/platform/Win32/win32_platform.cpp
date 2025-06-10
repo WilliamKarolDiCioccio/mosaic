@@ -27,6 +27,8 @@ pieces::RefResult<core::Platform, std::string> Win32Platform::initialize()
         return pieces::ErrRef<core::Platform, std::string>(std::move(result.error()));
     }
 
+    m_app->resume();
+
     return pieces::OkRef<Platform, std::string>(*this);
 }
 
@@ -36,15 +38,23 @@ pieces::RefResult<core::Platform, std::string> Win32Platform::run()
     {
         glfwPollEvents();
 
-        m_app->update();
+        if (m_app->isResumed())
+        {
+            auto result = m_app->update();
+
+            if (result.isErr())
+            {
+                return pieces::ErrRef<core::Platform, std::string>(std::move(result.error()));
+            }
+        }
     }
 
     return pieces::OkRef<core::Platform, std::string>(*this);
 }
 
-void Win32Platform::pause() {}
+void Win32Platform::pause() { m_app->pause(); }
 
-void Win32Platform::resume() {}
+void Win32Platform::resume() { m_app->resume(); }
 
 void Win32Platform::shutdown()
 {

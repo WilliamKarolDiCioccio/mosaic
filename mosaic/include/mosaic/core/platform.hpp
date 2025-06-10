@@ -14,11 +14,20 @@ namespace mosaic
 namespace core
 {
 
+/**
+ * @brief Abstract base class representing the platform layer of the application.
+ *
+ * This class provides a generic interface for managing the interaction between the platform and the
+ * application. Specifically, it handles the lifecycle and resources and enforces platform-specific
+ * behaviors.
+ *
+ * Web and mobile runtimes are the primary reasons for this class, as they require specific
+ * initialization, running, pausing, resuming, and shutdown behaviors that differ from traditional
+ * desktop applications.
+ */
 class MOSAIC_API Platform
 {
    private:
-    // Unlike other singletons here we choose to store an instance pointer, due to
-    // some platforms requiring a static instance for their main loop.
     static Platform* s_instance;
 
    protected:
