@@ -23,12 +23,19 @@ class MOSAIC_API Platform
 
    protected:
     Application* m_app;
+    void* m_platformContext;
 
    public:
     Platform(Application* _app);
     virtual ~Platform() = default;
 
     static std::unique_ptr<Platform> create(Application* _app);
+
+    [[nodiscard]] static Platform* getInstance() { return s_instance; }
+
+    [[nodiscard]] void* getPlatformContext() { return m_platformContext; }
+
+    void setPlatformContext(void* _context) { m_platformContext = _context; }
 
    public:
     virtual pieces::RefResult<Platform, std::string> initialize() = 0;
