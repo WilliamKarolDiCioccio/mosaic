@@ -49,11 +49,37 @@ endif()
 # Shader Compilation Setup
 # ----------------------------------------
 
-set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/assets/vulkan/shaders")
-set(TARGET_SHADER_DIR "$<TARGET_FILE_DIR:testbed>/assets/shaders/bin")
+set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/assets/shaders/vulkan")
+set(TARGET_SHADER_DIR "$<TARGET_FILE_DIR:testbed>/shaders/bin")
+set(ANDROID_SHADER_DIR
+    "${CMAKE_SOURCE_DIR}/testbed_android/app/src/main/assets/shaders/bin")
 
-if(NOT EMSCRIPTEN AND NOT ANDROID)
-  if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+if(ANDROID)
+  if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+    add_custom_command(
+      TARGET testbed
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E echo "Copying shaders to Android assets..."
+      COMMAND
+        powershell -ExecutionPolicy Bypass -File
+        "${CMAKE_SOURCE_DIR}/scripts/compile_shaders.ps1" -InputDir
+        "${SHADER_INPUT_DIR}" -CompileDir
+        "${CMAKE_SOURCE_DIR}/assets/shaders/vulkan/bin" -OutputDir
+        "${ANDROID_SHADER_DIR}"
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+  elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux" OR CMAKE_HOST_SYSTEM_NAME
+                                                   MATCHES "Darwin")
+    add_custom_command(
+      TARGET testbed
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E echo "Copying shaders to Android assets..."
+      COMMAND
+        "${CMAKE_SOURCE_DIR}/scripts/compile_shaders.sh" "${SHADER_INPUT_DIR}"
+        "${CMAKE_SOURCE_DIR}/assets/shaders/vulkan/bin" "${ANDROID_SHADER_DIR}"
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+  endif()
+elseif(NOT EMSCRIPTEN)
+  if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     add_custom_command(
       TARGET testbed
       POST_BUILD
@@ -61,20 +87,20 @@ if(NOT EMSCRIPTEN AND NOT ANDROID)
       COMMAND
         powershell -ExecutionPolicy Bypass -File
         "${CMAKE_SOURCE_DIR}/scripts/compile_shaders.ps1" -InputDir
-        "${SHADER_INPUT_DIR}" -OutputDir "${TARGET_SHADER_DIR}"
-      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-      COMMENT
-        "Compiling Vulkan shaders with PowerShell directly to target directory")
-  elseif(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES
-                                              "Darwin")
+        "${SHADER_INPUT_DIR}" -CompileDir
+        "${CMAKE_SOURCE_DIR}/assets/shaders/vulkan/bin" -OutputDir
+        "${TARGET_SHADER_DIR}"
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+  elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux" OR CMAKE_HOST_SYSTEM_NAME
+                                                   MATCHES "Darwin")
     add_custom_command(
       TARGET testbed
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E echo "Compiling shaders using Bash..."
-      COMMAND "${CMAKE_SOURCE_DIR}/scripts/compile_shaders.sh"
-              "${SHADER_INPUT_DIR}" "${TARGET_SHADER_DIR}"
-      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-      COMMENT "Compiling Vulkan shaders with Bash directly to target directory")
+      COMMAND
+        "${CMAKE_SOURCE_DIR}/scripts/compile_shaders.sh" "${SHADER_INPUT_DIR}"
+        "${CMAKE_SOURCE_DIR}/assets/shaders/vulkan/bin" "${TARGET_SHADER_DIR}"
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endif()
 endif()
 
