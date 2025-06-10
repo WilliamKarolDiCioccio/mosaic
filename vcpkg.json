@@ -4,6 +4,7 @@
   "dependencies": [
     "clipp",
     "fmt",
+    "color-console",
     "glm",
     "gtest",
     "nlohmann-json",
@@ -14,16 +15,12 @@
       "platform": "!android"
     },
     {
-      "name": "spdlog",
-      "platform": "!emscripten"
-    },
-    {
       "name": "volk",
       "platform": "!emscripten"
     },
     {
       "name": "vulkan",
-      "platform": "!emscripten"
+      "platform": "!android & !emscripten"
     },
     {
       "name": "vulkan-memory-allocator",

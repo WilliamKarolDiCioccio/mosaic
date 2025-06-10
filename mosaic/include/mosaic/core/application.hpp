@@ -24,6 +24,12 @@ enum class ApplicationState
     paused,
 };
 
+class Application;
+
+template <typename AppType>
+concept IsApplication =
+    std::derived_from<AppType, core::Application> && !std::is_abstract_v<AppType>;
+
 class MOSAIC_API Application
 {
    private:

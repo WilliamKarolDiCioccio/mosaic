@@ -1,6 +1,7 @@
 #include "mosaic/core/application.hpp"
 
 #include <thread>
+#include <chrono>
 
 using namespace std::chrono_literals;
 

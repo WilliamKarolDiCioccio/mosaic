@@ -6,6 +6,7 @@ namespace platform
 {
 namespace glfw
 {
+
 GLFWRawInputHandler::GLFWRawInputHandler(core::Window* _window)
     : m_window(_window), input::RawInputHandler(_window)
 {
@@ -17,7 +18,7 @@ GLFWRawInputHandler::GLFWRawInputHandler(core::Window* _window)
 input::RawInputHandler::KeyboardKeyInputData GLFWRawInputHandler::getKeyboardKeyInput(
     input::KeyboardKey _key) const
 {
-    return static_cast<input::RawInputHandler::MouseButtonInputData>(
+    return static_cast<input::RawInputHandler::KeyboardKeyInputData>(
         glfwGetKey(static_cast<GLFWwindow*>(m_nativeHandle), static_cast<int>(_key)));
 }
 
