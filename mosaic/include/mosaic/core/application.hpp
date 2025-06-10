@@ -2,16 +2,19 @@
 
 #include <memory>
 #include <string>
-#include <vector>
-#include <atomic>
+#include <optional>
 
 #include <pieces/result.hpp>
 
-#include "mosaic/defines.hpp"
-#include "mosaic/version.hpp"
-
 #include "logger.hpp"
 #include "tracer.hpp"
+#include "timer.hpp"
+#include "window.hpp"
+
+#include "mosaic/defines.hpp"
+#include "mosaic/version.hpp"
+#include "mosaic/input/input_system.hpp"
+#include "mosaic/graphics/render_system.hpp"
 
 namespace mosaic
 {
@@ -42,6 +45,11 @@ class MOSAIC_API Application
     std::string m_appName;
     ApplicationState m_state;
 
+   protected:
+    std::unique_ptr<core::Window> m_window;
+    std::unique_ptr<input::InputSystem> m_inputSystem;
+    std::unique_ptr<graphics::RenderSystem> m_renderSystem;
+
    public:
     Application(const std::string& _appName);
     virtual ~Application() = default;
@@ -67,8 +75,8 @@ class MOSAIC_API Application
     [[nodiscard]] bool isResumed() const { return m_state == ApplicationState::resumed; }
 
    protected:
-    virtual void onInitialize() = 0;
-    virtual void onUpdate() = 0;
+    virtual std::optional<std::string> onInitialize() = 0;
+    virtual std::optional<std::string> onUpdate() = 0;
     virtual void onPause() = 0;
     virtual void onResume() = 0;
     virtual void onShutdown() = 0;

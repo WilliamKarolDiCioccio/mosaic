@@ -27,35 +27,43 @@ pieces::RefResult<Application, std::string> Application::initialize()
     {
         return pieces::ErrRef<Application, std::string>("Application already initialized");
     }
+    
+    m_window = mosaic::core::Window::create("Testbed", glm::vec2(1280, 720));
+    m_inputSystem = std::make_unique<input::InputSystem>();
+    m_renderSystem = graphics::RenderSystem::create(graphics::RendererAPIType::vulkan);
 
-    try
+    auto result = onInitialize();
+
+    if (result.has_value())
     {
-        onInitialize();
-        m_state = ApplicationState::initialized;
-        return pieces::OkRef<Application, std::string>(*this);
+        return pieces::ErrRef<Application, std::string>(std::move(result.value()));
     }
-    catch (const std::exception& e)
-    {
-        return pieces::ErrRef<Application, std::string>(e.what());
-    }
+
+    m_state = ApplicationState::initialized;
+
+    return pieces::OkRef<Application, std::string>(*this);
 }
 
 pieces::RefResult<Application, std::string> Application::update()
 {
     if (m_state != ApplicationState::resumed)
     {
-        return pieces::OkRef<Application, std::string>(*this); // Skip update when not resumed
-    }
-
-    try
-    {
-        onUpdate();
         return pieces::OkRef<Application, std::string>(*this);
     }
-    catch (const std::exception& e)
+
+    core::Timer::tick();
+
+    m_renderSystem->render();
+    m_inputSystem->poll();
+
+    auto result = onUpdate();
+
+    if (result.has_value())
     {
-        return pieces::ErrRef<Application, std::string>(e.what());
+        return pieces::ErrRef<Application, std::string>(std::move(result.value()));
     }
+
+    return pieces::OkRef<Application, std::string>(*this);
 }
 
 void Application::pause()
@@ -63,6 +71,7 @@ void Application::pause()
     if (m_state == ApplicationState::resumed)
     {
         onPause();
+
         m_state = ApplicationState::paused;
     }
 }
@@ -72,6 +81,7 @@ void Application::resume()
     if (m_state == ApplicationState::initialized || m_state == ApplicationState::paused)
     {
         onResume();
+
         m_state = ApplicationState::resumed;
     }
 }
@@ -81,6 +91,10 @@ void Application::shutdown()
     if (m_state != ApplicationState::shutdown)
     {
         onShutdown();
+
+        m_inputSystem.reset();
+        m_renderSystem.reset();
+
         m_state = ApplicationState::shutdown;
     }
 }
