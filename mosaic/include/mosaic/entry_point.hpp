@@ -90,6 +90,223 @@ int runApp(Args&&... args)
 
 #elif defined(MOSAIC_PLATFORM_ANDROID)
 
-#define MOSAIC_ENTRY_POINT(AppType, ...)
+#include <jni.h>
+#include <game-activity/GameActivity.cpp>
+#include <game-text-input/gametextinput.cpp>
+
+#include <mosaic/platform/AGDK/agdk_platform_context.hpp>
+
+extern "C"
+{
+
+#include <game-activity/native_app_glue/android_native_app_glue.c>
+
+    /*!
+     * Handles commands sent to this Android application
+     * @param pApp the app the commands are coming from
+     * @param cmd the command to handle
+     */
+    void handle_cmd(android_app* _pApp, int32_t _cmd)
+    {
+        auto platform = mosaic::core::Platform::getInstance();
+
+        // Track initialization and window state separately
+        static bool platformInitialized = false;
+        static bool windowReady = false;
+
+        switch (_cmd)
+        {
+            case APP_CMD_INIT_WINDOW:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_INIT_WINDOW");
+
+                // Set up platform context
+                auto context = new mosaic::platform::agdk::AGDKPlatformContext{
+                    .app = _pApp,
+                    .window = _pApp->window,
+                    .assetManager = _pApp->activity->assetManager,
+                    .env = _pApp->activity->env,
+                };
+
+                platform->setPlatformContext(static_cast<void*>(context));
+                windowReady = true;
+
+                // Initialize platform only once, but after window is ready
+                if (!platformInitialized && windowReady)
+                {
+                    _pApp->userData = platform;
+
+                    auto initResult = platform->initialize();
+                    if (initResult.isErr())
+                    {
+                        MOSAIC_ERROR("Platform initialization failed: %s",
+                                     initResult.error().c_str());
+                        return;
+                    }
+
+                    platformInitialized = true;
+                }
+                else if (platformInitialized)
+                {
+                    // Window recreated - resume if we were paused
+                    platform->resume();
+                }
+            }
+            break;
+
+            case APP_CMD_TERM_WINDOW:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_TERM_WINDOW");
+
+                if (platformInitialized)
+                {
+                    // Pause when losing window (but don't shutdown)
+                    platform->pause();
+                }
+
+                windowReady = false;
+
+                // Clean up platform context
+                if (platform->getPlatformContext())
+                {
+                    delete static_cast<mosaic::platform::agdk::AGDKPlatformContext*>(
+                        platform->getPlatformContext());
+                    platform->setPlatformContext(nullptr);
+                }
+            }
+            break;
+
+            case APP_CMD_PAUSE:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_PAUSE");
+
+                if (platformInitialized)
+                {
+                    platform->pause();
+                }
+            }
+            break;
+
+            case APP_CMD_RESUME:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_RESUME");
+
+                if (platformInitialized && windowReady)
+                {
+                    platform->resume();
+                }
+            }
+            break;
+
+            case APP_CMD_STOP:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_STOP");
+
+                if (platformInitialized)
+                {
+                    platform->pause();
+                }
+            }
+            break;
+
+            case APP_CMD_DESTROY:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_DESTROY");
+
+                if (platformInitialized)
+                {
+                    platform->shutdown();
+                    platformInitialized = false;
+                }
+
+                _pApp->userData = nullptr;
+            }
+            break;
+
+            default:
+                break;
+        }
+    }
+
+    /*!
+     * Enable the motion events you want to handle; not handled events are
+     * passed back to OS for further processing. For this example case,
+     * only pointer and joystick devices are enabled.
+     *
+     * @param motionEvent the newly arrived GameActivityMotionEvent.
+     * @return true if the event is from a pointer or joystick device,
+     *         false for all other input devices.
+     */
+    bool motion_event_filter_func(const GameActivityMotionEvent* _motionEvent)
+    {
+        auto sourceClass = _motionEvent->source & AINPUT_SOURCE_CLASS_MASK;
+        return (sourceClass == AINPUT_SOURCE_CLASS_POINTER ||
+                sourceClass == AINPUT_SOURCE_CLASS_JOYSTICK);
+    }
+}
+
+#define MOSAIC_ENTRY_POINT(AppType, ...)                                                       \
+    extern "C"                                                                                 \
+    {                                                                                          \
+        void android_main(struct android_app* _pApp)                                           \
+        {                                                                                      \
+            mosaic::core::LoggerManager::initialize();                                         \
+                                                                                               \
+            mosaic::core::LoggerManager::getInstance()->addSink<mosaic::core::DefaultSink>(    \
+                "default", mosaic::core::DefaultSink());                                       \
+                                                                                               \
+            auto app = std::make_unique<AppType>(__VA_ARGS__);                                 \
+            auto platform = mosaic::core::Platform::create(app.get());                         \
+                                                                                               \
+            _pApp->onAppCmd = handle_cmd;                                                      \
+            android_app_set_motion_event_filter(_pApp, motion_event_filter_func);              \
+                                                                                               \
+            /* Main event loop */                                                              \
+            while (!_pApp->destroyRequested)                                                   \
+            {                                                                                  \
+                /* Process all pending events */                                               \
+                int timeout = 0; /* Non-blocking */                                            \
+                int events = 0;                                                                \
+                android_poll_source* pSource = nullptr;                                        \
+                                                                                               \
+                /* Process events until no more are available */                               \
+                while (true)                                                                   \
+                {                                                                              \
+                    int pollResult = ALooper_pollOnce(timeout, nullptr, &events,               \
+                                                      reinterpret_cast<void**>(&pSource));     \
+                                                                                               \
+                    if (pollResult == ALOOPER_POLL_TIMEOUT || pollResult == ALOOPER_POLL_WAKE) \
+                    {                                                                          \
+                        break; /* No more events */                                            \
+                    }                                                                          \
+                    else if (pollResult == ALOOPER_EVENT_ERROR)                                \
+                    {                                                                          \
+                        MOSAIC_ERROR("ALooper_pollOnce returned an error");                    \
+                        break;                                                                 \
+                    }                                                                          \
+                    else if (pSource != nullptr)                                               \
+                    {                                                                          \
+                        pSource->process(_pApp, pSource);                                      \
+                    }                                                                          \
+                }                                                                              \
+                                                                                               \
+                /* Run application logic if platform is ready */                               \
+                if (_pApp->userData != nullptr && !_pApp->destroyRequested)                    \
+                {                                                                              \
+                    auto pPlatform = static_cast<mosaic::core::Platform*>(_pApp->userData);    \
+                                                                                               \
+                    auto runResult = pPlatform->run();                                         \
+                                                                                               \
+                    if (runResult.isErr())                                                     \
+                    {                                                                          \
+                        MOSAIC_ERROR("Platform run failed: %s", runResult.error().c_str());    \
+                        break;                                                                 \
+                    }                                                                          \
+                }                                                                              \
+            }                                                                                  \
+                                                                                               \
+            MOSAIC_DEBUG("Android main loop exiting");                                         \
+        }                                                                                      \
+    }
 
 #endif
