@@ -47,7 +47,9 @@ struct Device
     {
         requiredExtensions = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#if defined(MOSAIC_PLATFORM_DESKTOP)
             VK_KHR_MULTIVIEW_EXTENSION_NAME,
+#endif
         };
 
         optionalExtensions = {

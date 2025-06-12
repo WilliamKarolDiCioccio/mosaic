@@ -2,9 +2,9 @@
 
 #include <algorithm>
 
-#ifdef MOSAIC_PLATFORM_WINDOWS
-#include <windows.h>
-#include <vulkan/vulkan_win32.h>
+#if defined(MOSAIC_PLATFORM_DESKTOP) || defined(MOSAIC_PLATFORM_WEB)
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
 #endif
 
 namespace mosaic
@@ -81,19 +81,47 @@ void destroyImageViews(Swapchain& _swapchain)
 
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& _availableFormats)
 {
-    auto it = std::find_if(_availableFormats.begin(), _availableFormats.end(),
-                           [](const VkSurfaceFormatKHR& _format)
-                           {
-                               return _format.format == VK_FORMAT_B8G8R8A8_SRGB &&
-                                      _format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-                           });
+    std::vector<VkFormat> preferredFormats;
 
-    if (it != _availableFormats.end())
+#if defined(MOSAIC_PLATFORM_ANDROID)
+    preferredFormats = {
+        VK_FORMAT_R8G8B8A8_UNORM,
+        VK_FORMAT_B8G8R8A8_UNORM,
+        VK_FORMAT_R8G8B8A8_SRGB,
+        VK_FORMAT_B8G8R8A8_SRGB,
+    };
+#else
+    preferredFormats = {
+        VK_FORMAT_B8G8R8A8_SRGB,
+        VK_FORMAT_R8G8B8A8_SRGB,
+        VK_FORMAT_B8G8R8A8_UNORM,
+        VK_FORMAT_R8G8B8A8_UNORM,
+    };
+#endif
+
+    for (const auto& format : preferredFormats)
     {
-        return *it;
+        auto it = std::find_if(_availableFormats.begin(), _availableFormats.end(),
+                               [format](const VkSurfaceFormatKHR& available)
+                               {
+                                   return available.format == format &&
+                                          available.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+                               });
+
+        if (it != _availableFormats.end()) return *it;
     }
 
-    return _availableFormats[0];
+    for (const auto& format : preferredFormats)
+    {
+        auto it = std::find_if(_availableFormats.begin(), _availableFormats.end(),
+                               [format](const VkSurfaceFormatKHR& available)
+                               { return available.format == format; });
+
+        if (it != _availableFormats.end()) return *it;
+    }
+
+    throw std::runtime_error(
+        "Failed to find a suitable Vulkan surface format! No preferred formats available.");
 }
 
 VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& _availablePresentModes)
@@ -217,6 +245,8 @@ void createSwapchain(Swapchain& _swapchain, const Device& _device, const Surface
     createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = nullptr;
+
+    MOSAIC_INFO("Surface dimensions: {}x{}", _swapchain.extent.width, _swapchain.extent.height);
 
     if (vkCreateSwapchainKHR(_swapchain.device, &createInfo, nullptr, &_swapchain.swapchain) !=
         VK_SUCCESS)
