@@ -7,13 +7,19 @@ namespace platform
 namespace glfw
 {
 
-GLFWRawInputHandler::GLFWRawInputHandler(core::Window* _window)
-    : m_window(_window), input::RawInputHandler(_window)
+GLFWRawInputHandler::GLFWRawInputHandler(const core::Window* _window)
+    : m_window(const_cast<core::Window*>(_window)), input::RawInputHandler(_window) {};
+
+pieces::RefResult<input::RawInputHandler, std::string> GLFWRawInputHandler::initialize()
 {
     m_isActive = glfwGetWindowAttrib(static_cast<GLFWwindow*>(m_nativeHandle), GLFW_FOCUSED);
 
     registerCallbacks();
+
+    return pieces::OkRef<input::RawInputHandler, std::string>(*this);
 }
+
+void GLFWRawInputHandler::shutdown() { m_isActive = false; }
 
 input::RawInputHandler::KeyboardKeyInputData GLFWRawInputHandler::getKeyboardKeyInput(
     input::KeyboardKey _key) const

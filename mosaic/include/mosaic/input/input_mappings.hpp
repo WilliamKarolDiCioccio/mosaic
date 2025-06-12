@@ -2,8 +2,7 @@
 
 #include "mosaic/defines.hpp"
 
-#if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_LINUX) || \
-    defined(MOSAIC_PLATFORM_MACOS) || defined(MOSAIC_PLATFORM_EMSCRIPTEN)
+#if defined(MOSAIC_PLATFORM_DESKTOP) || defined(MOSAIC_PLATFORM_WEB)
 #include "mosaic/platform/GLFW/glfw_input_mappings.hpp"
 #else
 #include "mosaic/platform/AGDK/agdk_input_mappings.hpp"
@@ -14,8 +13,7 @@ namespace mosaic
 namespace input
 {
 
-#if defined(MOSAIC_PLATFORM_WINDOWS) || defined(MOSAIC_PLATFORM_LINUX) || \
-    defined(MOSAIC_PLATFORM_MACOS) || defined(MOSAIC_PLATFORM_EMSCRIPTEN)
+#if defined(MOSAIC_PLATFORM_DESKTOP) || defined(MOSAIC_PLATFORM_WEB)
 using KeyboardKey = mosaic::platform::glfw::GLFWKeyboardKey;
 using MouseButton = mosaic::platform::glfw::GLFWMouseButton;
 using InputAction = mosaic::platform::glfw::GLFWInputAction;

@@ -8,7 +8,9 @@ namespace input
 InputArena::InputArena(core::Window* _window)
     : m_rawInputHandler(RawInputHandler::create(_window)),
       m_mouseScrollWheelSamples(MOUSE_WHEEL_NUM_SAMPLES),
-      m_cursorPosSamples(MOUSE_CURSOR_NUM_SAMPLES)
+      m_cursorPosSamples(MOUSE_CURSOR_NUM_SAMPLES) {};
+
+pieces::RefResult<InputArena, std::string> InputArena::initialize()
 {
     m_cursorPosSamples.push(MouseCursorPosSample{
         glm::vec2(0.f),
@@ -20,7 +22,18 @@ InputArena::InputArena(core::Window* _window)
         glm::vec2(0.f),
         std::chrono::high_resolution_clock::now(),
     });
-};
+
+    auto result = m_rawInputHandler->initialize();
+
+    if (result.isErr())
+    {
+        return pieces::ErrRef<InputArena, std::string>(std::move(result.error()));
+    }
+
+    return pieces::OkRef<InputArena, std::string>(*this);
+}
+
+void InputArena::shutdown() { m_rawInputHandler->shutdown(); }
 
 void InputArena::update()
 {

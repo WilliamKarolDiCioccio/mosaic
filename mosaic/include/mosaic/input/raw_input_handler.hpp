@@ -6,6 +6,8 @@
 #include <optional>
 #include <functional>
 
+#include <pieces/result.hpp>
+
 #include "mosaic/core/logger.hpp"
 #include "mosaic/core/window.hpp"
 
@@ -37,7 +39,7 @@ class RawInputHandler
     std::queue<MouseScrollInputData> m_mouseScrollQueue;
 
    public:
-    RawInputHandler(core::Window* _window);
+    RawInputHandler(const core::Window* _window);
     virtual ~RawInputHandler() = default;
 
     RawInputHandler(RawInputHandler&) = delete;
@@ -48,6 +50,9 @@ class RawInputHandler
     static std::unique_ptr<RawInputHandler> create(core::Window* _window);
 
    public:
+    virtual pieces::RefResult<RawInputHandler, std::string> initialize() = 0;
+    virtual void shutdown() = 0;
+
     inline bool isActive() const { return m_isActive; }
 
     // Input handling methods

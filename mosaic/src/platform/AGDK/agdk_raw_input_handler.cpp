@@ -7,11 +7,19 @@ namespace platform
 namespace agdk
 {
 
-AGDKRawInputHandler::AGDKRawInputHandler(core::Window* _window)
-    : m_window(_window), input::RawInputHandler(_window)
+AGDKRawInputHandler::AGDKRawInputHandler(const core::Window* _window)
+    : m_window(const_cast<core::Window*>(_window)), input::RawInputHandler(_window) {};
+
+pieces::RefResult<input::RawInputHandler, std::string> AGDKRawInputHandler::initialize()
 {
+    m_isActive = true;
+
     registerCallbacks();
+
+    return pieces::OkRef<input::RawInputHandler, std::string>(*this);
 }
+
+void AGDKRawInputHandler::shutdown() { m_isActive = false; }
 
 input::RawInputHandler::KeyboardKeyInputData AGDKRawInputHandler::getKeyboardKeyInput(
     input::KeyboardKey _key) const
