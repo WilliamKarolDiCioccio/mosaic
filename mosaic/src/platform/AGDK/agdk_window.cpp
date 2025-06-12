@@ -17,119 +17,119 @@ AGDKWindow::AGDKWindow(const std::string& _title, glm::ivec2 _size) : core::Wind
     }
 
     windowCount++;
+}
 
+void* AGDKWindow::getNativeHandle() const
+{
     auto context =
         static_cast<AGDKPlatformContext*>(AGDKPlatform::getInstance()->getPlatformContext());
+    auto window = context->getCurrentWindow();
 
-    m_window = context->window;
-
-    if (!m_window)
-    {
-        MOSAIC_ERROR("Failed to create AGDK window.");
-        return;
-    }
-
-    ANativeWindow_acquire(m_window);
-
-    registerCallbacks();
+    return static_cast<void*>(window);
 }
 
-AGDKWindow::~AGDKWindow()
+bool AGDKWindow::shouldClose() const
 {
-    unregisterCallbacks();
-
-    if (m_window)
-    {
-        ANativeWindow_release(m_window);
-        m_window = nullptr;
-    }
+    // AGDK does not have a direct method to check if the window should close.
+    // This is usually handled by the application logic or event loop.
+    return false;
 }
 
-void* AGDKWindow::getNativeHandle() const { return static_cast<void*>(m_window); }
+glm::ivec2 AGDKWindow::getFramebufferSize() const
+{
+    auto context =
+        static_cast<AGDKPlatformContext*>(AGDKPlatform::getInstance()->getPlatformContext());
+    auto window = context->getCurrentWindow();
 
-bool AGDKWindow::shouldClose() const { return false; }
+    int x = ANativeWindow_getWidth(window);
+    int y = ANativeWindow_getHeight(window);
 
-glm::ivec2 AGDKWindow::getFramebufferSize() const { return glm::ivec2(); }
+    return glm::ivec2(x, y);
+}
 
-void AGDKWindow::setTitle(const std::string& _title) {}
+void AGDKWindow::setTitle(const std::string& _title)
+{
+    // AGDK does not provide a method to set the window title.
+}
 
 void AGDKWindow::setMinimized(bool _minimized)
 {
-    MOSAIC_WARN("AGDKWindow::setMinimized: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the window to minimized.
 }
 
 void AGDKWindow::setMaximized(bool _maximized)
 {
-    MOSAIC_WARN("AGDKWindow::setMaximized: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the window to maximized.
 }
 
 void AGDKWindow::setFullscreen(bool _fullscreen)
 {
-    MOSAIC_WARN("AGDKWindow::setFullscreen: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the window to fullscreen.
 }
 
 void AGDKWindow::setSize(glm::vec2 _size)
 {
-    MOSAIC_WARN("AGDKWindow::setSize: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the window size directly.
 }
 
 void AGDKWindow::setResizeable(bool _resizeable)
 {
-    MOSAIC_WARN("AGDKWindow::setResizeable: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the window to be resizable.
 }
 
-void AGDKWindow::setVSync(bool _enabled) {}
+void AGDKWindow::setVSync(bool _enabled)
+{
+    MOSAIC_WARN("AGDKWindow::setVSync: Not implemented for AGDK platform.");
+}
 
 void AGDKWindow::setCursorMode(core::CursorMode _mode)
 {
-    MOSAIC_WARN("AGDKWindow::setCursorMode: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the cursor mode.
 }
 
 void AGDKWindow::setCursorType(core::CursorType _type)
 {
-    MOSAIC_WARN("AGDKWindow::setCursorType: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the cursor type.
 }
 
 void AGDKWindow::setCursorTypeIcon(core::CursorType _type, const std::string& _path, int _width,
                                    int _height)
 {
-    MOSAIC_WARN("AGDKWindow::setCursorTypeIcon: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the cursor type icon.
 }
 
 void AGDKWindow::setCursorIcon(const std::string& _path, int _width, int _height)
 {
-    MOSAIC_WARN("AGDKWindow::setCursorIcon: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the cursor icon.
 }
 
 void AGDKWindow::resetCursorIcon()
 {
-    MOSAIC_WARN("AGDKWindow::resetCursorIcon: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to reset the cursor icon.
 }
 
 void AGDKWindow::setWindowIcon(const std::string& _path, int _width, int _height)
 {
-    MOSAIC_WARN("AGDKWindow::setWindowIcon: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to set the window icon.
 }
 
 void AGDKWindow::resetWindowIcon()
 {
-    MOSAIC_WARN("AGDKWindow::resetWindowIcon: Not implemented for AGDK platform.");
+    // AGDK does not provide a method to reset the window icon.
 }
 
 void AGDKWindow::setClipboardString(const std::string& _string)
 {
-    MOSAIC_WARN("AGDKWindow::setClipboardString: Not implemented for AGDK platform.");
+    MOSAIC_WARN(
+        "AGDKWindow::setClipboardString: Not implemented for AGDK platform. (requires JNI bridge)");
 }
 
 std::string AGDKWindow::getClipboardString() const
 {
-    MOSAIC_WARN("AGDKWindow::getClipboardString: Not implemented for AGDK platform.");
+    MOSAIC_WARN(
+        "AGDKWindow::getClipboardString: Not implemented for AGDK platform. (requires JNI bridge)");
     return "";
 }
-
-void AGDKWindow::registerCallbacks() {}
-
-void AGDKWindow::unregisterCallbacks() {}
 
 } // namespace agdk
 } // namespace platform

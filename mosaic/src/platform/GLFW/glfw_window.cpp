@@ -64,7 +64,6 @@ GLFWWindow::~GLFWWindow()
     unregisterCallbacks();
 
     glfwDestroyWindow(m_glfwHandle);
-
     m_glfwHandle = nullptr;
 
     MOSAIC_DEBUG("Window destroyed.");
@@ -318,103 +317,158 @@ void GLFWWindow::unregisterCallbacks()
 void GLFWWindow::windowCloseCallback(GLFWwindow* window)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->invokeCloseCallbacks();
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowCloseCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowFocusCallback(GLFWwindow* window, int focused)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->invokeFocusCallbacks(focused);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowFocusCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowSizeCallback(GLFWwindow* window, int width, int height)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->m_properties.size = glm::ivec2(width, height);
         instance->invokeResizeCallbacks(width, height);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowSizeCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowRefreshCallback(GLFWwindow* window)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->invokeRefreshCallbacks();
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowRefreshCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowIconifyCallback(GLFWwindow* window, int iconified)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->m_properties.isMinimized = (iconified == GLFW_TRUE);
         instance->invokeIconifyCallbacks(iconified);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowIconifyCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowMaximizeCallback(GLFWwindow* window, int maximized)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->m_properties.isMaximized = (maximized == GLFW_TRUE);
         instance->invokeMaximizeCallbacks(maximized);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowMaximizeCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowDropCallback(GLFWwindow* window, int count, const char** paths)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->invokeDropCallbacks(count, paths);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowDropCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->invokeScrollCallbacks(xoffset, yoffset);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowScrollCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowCursorEnterCallback(GLFWwindow* window, int entered)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->invokeCursorEnterCallbacks(entered);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowCursorEnterCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowPosCallback(GLFWwindow* window, int x, int y)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->m_properties.position = glm::ivec2(x, y);
         instance->invokePosCallbacks(x, y);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowPosCallback(): callback receiver is null.");
     }
 }
 
 void GLFWWindow::windowContentScaleCallback(GLFWwindow* window, float xscale, float yscale)
 {
     GLFWWindow* instance = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+
     if (instance)
     {
         instance->invokeContentScaleCallbacks(xscale, yscale);
+    }
+    else
+    {
+        MOSAIC_ERROR("GLFWWindow::windowContentScaleCallback(): callback receiver is null.");
     }
 }
 

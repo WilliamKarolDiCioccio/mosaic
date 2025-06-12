@@ -1,8 +1,7 @@
 #pragma once
 
 #include "mosaic/core/window.hpp"
-
-#include "agdk_platform.hpp"
+#include "mosaic/platform/AGDK/agdk_platform.hpp"
 
 namespace mosaic
 {
@@ -13,12 +12,9 @@ namespace agdk
 
 class AGDKWindow : public core::Window
 {
-   private:
-    ANativeWindow* m_window;
-
    public:
     AGDKWindow(const std::string& _title, glm::ivec2 _size);
-    ~AGDKWindow() override;
+    ~AGDKWindow() override = default;
 
     void* getNativeHandle() const override;
     bool shouldClose() const override;
@@ -44,22 +40,6 @@ class AGDKWindow : public core::Window
 
     void setClipboardString(const std::string& _string) override;
     std::string getClipboardString() const override;
-
-   private:
-    void registerCallbacks();
-    void unregisterCallbacks();
-
-    static void windowCloseCallback(ANativeWindow* _window);
-    static void windowFocusCallback(ANativeWindow* _window, int _focused);
-    static void windowSizeCallback(ANativeWindow* _window, int _width, int _height);
-    static void windowRefreshCallback(ANativeWindow* _window);
-    static void windowIconifyCallback(ANativeWindow* _window, int _iconified);
-    static void windowMaximizeCallback(ANativeWindow* _window, int _maximized);
-    static void windowDropCallback(ANativeWindow* _window, int _count, const char** _paths);
-    static void windowScrollCallback(ANativeWindow* _window, double _xoffset, double _yoffset);
-    static void windowCursorEnterCallback(ANativeWindow* _window, int _entered);
-    static void windowPosCallback(ANativeWindow* _window, int _x, int _y);
-    static void windowContentScaleCallback(ANativeWindow* _window, float _xscale, float _yscale);
 };
 
 } // namespace agdk
