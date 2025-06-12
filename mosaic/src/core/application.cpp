@@ -13,7 +13,11 @@ namespace core
 bool Application::s_created = false;
 
 Application::Application(const std::string& _appName)
-    : m_exitRequested(false), m_appName(_appName), m_state(ApplicationState::uninitialized)
+    : m_exitRequested(false),
+      m_appName(_appName),
+      m_state(ApplicationState::uninitialized),
+      m_inputSystem(std::make_unique<input::InputSystem>()),
+      m_renderSystem(graphics::RenderSystem::create(graphics::RendererAPIType::vulkan))
 
 {
     assert(!s_created && "Application instance already exists!");
@@ -27,10 +31,11 @@ pieces::RefResult<Application, std::string> Application::initialize()
     {
         return pieces::ErrRef<Application, std::string>("Application already initialized");
     }
-    
+
     m_window = mosaic::core::Window::create("Testbed", glm::vec2(1280, 720));
-    m_inputSystem = std::make_unique<input::InputSystem>();
-    m_renderSystem = graphics::RenderSystem::create(graphics::RendererAPIType::vulkan);
+
+    m_inputSystem->initialize();
+    m_renderSystem->initialize(m_window.get());
 
     auto result = onInitialize();
 
@@ -53,8 +58,8 @@ pieces::RefResult<Application, std::string> Application::update()
 
     core::Timer::tick();
 
-    m_renderSystem->render();
     m_inputSystem->poll();
+    m_renderSystem->render();
 
     auto result = onUpdate();
 
@@ -92,8 +97,8 @@ void Application::shutdown()
     {
         onShutdown();
 
-        m_inputSystem.reset();
-        m_renderSystem.reset();
+        m_inputSystem->shutdown();
+        m_renderSystem->shutdown();
 
         m_state = ApplicationState::shutdown;
     }

@@ -94,7 +94,7 @@ int runApp(Args&&... args)
 #include <game-activity/GameActivity.cpp>
 #include <game-text-input/gametextinput.cpp>
 
-#include <mosaic/platform/AGDK/agdk_platform_context.hpp>
+#include <mosaic/platform/AGDK/agdk_platform.hpp>
 
 extern "C"
 {
@@ -109,70 +109,24 @@ extern "C"
     void handle_cmd(android_app* _pApp, int32_t _cmd)
     {
         auto platform = mosaic::core::Platform::getInstance();
+        auto context = static_cast<mosaic::platform::agdk::AGDKPlatformContext*>(
+            platform->getPlatformContext());
 
-        // Track initialization and window state separately
         static bool platformInitialized = false;
-        static bool windowReady = false;
 
         switch (_cmd)
         {
-            case APP_CMD_INIT_WINDOW:
+            case APP_CMD_START:
             {
-                MOSAIC_DEBUG("Android: APP_CMD_INIT_WINDOW");
+                MOSAIC_DEBUG("Android: APP_CMD_START");
 
-                // Set up platform context
-                auto context = new mosaic::platform::agdk::AGDKPlatformContext{
-                    .app = _pApp,
-                    .window = _pApp->window,
-                    .assetManager = _pApp->activity->assetManager,
-                    .env = _pApp->activity->env,
-                };
-
-                platform->setPlatformContext(static_cast<void*>(context));
-                windowReady = true;
-
-                // Initialize platform only once, but after window is ready
-                if (!platformInitialized && windowReady)
-                {
-                    _pApp->userData = platform;
-
-                    auto initResult = platform->initialize();
-                    if (initResult.isErr())
-                    {
-                        MOSAIC_ERROR("Platform initialization failed: %s",
-                                     initResult.error().c_str());
-                        return;
-                    }
-
-                    platformInitialized = true;
-                }
-                else if (platformInitialized)
-                {
-                    // Window recreated - resume if we were paused
-                    platform->resume();
-                }
+                context->setApp(_pApp);
             }
             break;
 
-            case APP_CMD_TERM_WINDOW:
+            case APP_CMD_RESUME:
             {
-                MOSAIC_DEBUG("Android: APP_CMD_TERM_WINDOW");
-
-                if (platformInitialized)
-                {
-                    // Pause when losing window (but don't shutdown)
-                    platform->pause();
-                }
-
-                windowReady = false;
-
-                // Clean up platform context
-                if (platform->getPlatformContext())
-                {
-                    delete static_cast<mosaic::platform::agdk::AGDKPlatformContext*>(
-                        platform->getPlatformContext());
-                    platform->setPlatformContext(nullptr);
-                }
+                MOSAIC_DEBUG("Android: APP_CMD_RESUME");
             }
             break;
 
@@ -180,21 +134,7 @@ extern "C"
             {
                 MOSAIC_DEBUG("Android: APP_CMD_PAUSE");
 
-                if (platformInitialized)
-                {
-                    platform->pause();
-                }
-            }
-            break;
-
-            case APP_CMD_RESUME:
-            {
-                MOSAIC_DEBUG("Android: APP_CMD_RESUME");
-
-                if (platformInitialized && windowReady)
-                {
-                    platform->resume();
-                }
+                platform->pause();
             }
             break;
 
@@ -202,10 +142,7 @@ extern "C"
             {
                 MOSAIC_DEBUG("Android: APP_CMD_STOP");
 
-                if (platformInitialized)
-                {
-                    platform->pause();
-                }
+                platform->pause();
             }
             break;
 
@@ -213,13 +150,73 @@ extern "C"
             {
                 MOSAIC_DEBUG("Android: APP_CMD_DESTROY");
 
-                if (platformInitialized)
+                platform->shutdown();
+            }
+            break;
+
+            case APP_CMD_INIT_WINDOW:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_INIT_WINDOW");
+
+                if (_pApp->window != nullptr)
                 {
-                    platform->shutdown();
-                    platformInitialized = false;
+                    context->updateWindow(_pApp->window);
+
+                    if (context->isWindowChanged())
+                    {
+                        // Notify systems that the window has changed
+
+                        context->acknowledgeWindowChange();
+                    }
                 }
 
-                _pApp->userData = nullptr;
+                if (!platformInitialized)
+                {
+                    auto result = platform->initialize();
+
+                    if (result.isErr())
+                    {
+                        MOSAIC_ERROR("Platform initialization failed: {}", result.error());
+                        _pApp->destroyRequested = true;
+                        return;
+                    }
+
+                    platformInitialized = true;
+                }
+
+                platform->resume();
+            }
+            break;
+
+            case APP_CMD_TERM_WINDOW:
+            {
+                MOSAIC_DEBUG("Android: APP_CMD_TERM_WINDOW");
+
+                context->updateWindow(nullptr);
+
+                if (context->isSurfaceDestroyed())
+                {
+                    // Notify systems that the surface has been destroyed
+
+                    context->acknowledgeWindowChange();
+                }
+            }
+            break;
+
+            case APP_CMD_WINDOW_RESIZED:
+            case APP_CMD_CONFIG_CHANGED:
+            {
+                if (_pApp->window != nullptr)
+                {
+                    context->updateWindow(_pApp->window);
+
+                    if (context->isWindowChanged())
+                    {
+                        // Notify systems that the window has resized or configuration changed
+
+                        context->acknowledgeWindowChange();
+                    }
+                }
             }
             break;
 
@@ -291,15 +288,13 @@ extern "C"
                 }                                                                              \
                                                                                                \
                 /* Run application logic if platform is ready */                               \
-                if (_pApp->userData != nullptr && !_pApp->destroyRequested)                    \
+                if (!_pApp->destroyRequested)                                                  \
                 {                                                                              \
-                    auto pPlatform = static_cast<mosaic::core::Platform*>(_pApp->userData);    \
-                                                                                               \
-                    auto runResult = pPlatform->run();                                         \
+                    auto runResult = platform->run();                                          \
                                                                                                \
                     if (runResult.isErr())                                                     \
                     {                                                                          \
-                        MOSAIC_ERROR("Platform run failed: %s", runResult.error().c_str());    \
+                        MOSAIC_ERROR("Platform run failed: {}", runResult.error());            \
                         break;                                                                 \
                     }                                                                          \
                 }                                                                              \

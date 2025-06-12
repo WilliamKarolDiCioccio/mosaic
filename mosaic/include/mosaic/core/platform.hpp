@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include <pieces/result.hpp>
 
@@ -13,6 +14,34 @@ namespace mosaic
 {
 namespace core
 {
+
+/**
+ * @brief Abstract base class representing the platform context.
+ *
+ * This class provides a generic interface for platform-specific context management.
+ */
+class MOSAIC_API PlatformContext
+{
+   public:
+    using PlatformContextChangedEvent = std::function<void(void* _newContext)>;
+
+   private:
+    std::vector<PlatformContextChangedEvent> m_platformContextListeners;
+
+   public:
+    virtual ~PlatformContext() = default;
+
+    static std::unique_ptr<PlatformContext> create();
+
+   public:
+    inline void registerPlatformContextChangedCallback(PlatformContextChangedEvent _callback)
+    {
+        m_platformContextListeners.push_back(_callback);
+    }
+
+   protected:
+    void invokePlatformContextChangedCallbacks(void* _context);
+};
 
 /**
  * @brief Abstract base class representing the platform layer of the application.
@@ -32,7 +61,7 @@ class MOSAIC_API Platform
 
    protected:
     Application* m_app;
-    void* m_platformContext;
+    std::unique_ptr<PlatformContext> m_platformContext;
 
    public:
     Platform(Application* _app);
@@ -42,9 +71,7 @@ class MOSAIC_API Platform
 
     [[nodiscard]] static Platform* getInstance() { return s_instance; }
 
-    [[nodiscard]] void* getPlatformContext() { return m_platformContext; }
-
-    void setPlatformContext(void* _context) { m_platformContext = _context; }
+    [[nodiscard]] PlatformContext* getPlatformContext() { return m_platformContext.get(); }
 
    public:
     virtual pieces::RefResult<Platform, std::string> initialize() = 0;
