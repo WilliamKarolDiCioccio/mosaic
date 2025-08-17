@@ -1,0 +1,13 @@
+set(TEST_SOURCES)
+
+add_executable(codex_tests ${TEST_SOURCES} "main.cpp")
+
+target_link_libraries(
+  codex_tests PRIVATE codex GTest::gtest GTest::gtest_main GTest::gmock
+                       GTest::gmock_main)
+
+add_test(NAME codex_tests COMMAND test_codex)
+
+include("${CMAKE_SOURCE_DIR}/cmake/ConfigureForBuildType.cmake")
+
+configure_for_build_type(codex_tests)
