@@ -1,4 +1,4 @@
-#include "codex/parser/parser.hpp"
+#include "codex/parser.hpp"
 
 #include <cstdint>
 #include <filesystem>

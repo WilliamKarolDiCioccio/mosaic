@@ -1,6 +1,6 @@
 set(CODEX_SOURCES
     "src/files_collector.cpp"
-    "src/parser/parser.cpp"
+    "src/parser.cpp"
 )
 
 add_library(codex STATIC ${CODEX_SOURCES})
