@@ -18,8 +18,8 @@ class FilesCollector final
     mutable std::mutex m_mutex;
 
    public:
-    FilesCollector(std::vector<std::string> _extensions, std::vector<std::string> _paths,
-                   bool _recursive = true);
+    FilesCollector(const std::vector<std::string>& _extensions,
+                   const std::vector<std::string>& _paths, bool _recursive = true);
 
    public:
     std::vector<std::filesystem::path> collect();

@@ -14,83 +14,123 @@
 #include <fmt/ranges.h>
 #include <tree_sitter/api.h>
 
-#include "codex/parser/nodes.hpp"
+#include "codex/nodes.hpp"
+
+#include "tree_sitter_cpp.hpp"
 
 namespace codex
 {
 
-Parser::Parser() : m_parser(nullptr), m_leadingComment(nullptr)
+class SingleParser
+{
+   private:
+    TSParser* m_parser;
+    std::shared_ptr<Source> m_source;
+    std::shared_ptr<CommentNode> m_leadingComment;
+    std::shared_ptr<TemplateNode> m_templateDeclaration;
+
+   public:
+    SingleParser(const std::shared_ptr<Source>& _source);
+    ~SingleParser();
+
+   public:
+    std::shared_ptr<SourceNode> parse();
+
+   private:
+    std::shared_ptr<Node> dispatch(TSNode _node);
+
+    // Dependent nodes (requiring to be linked to other nodes and leaving outisde the main tree)
+    std::shared_ptr<CommentNode> parseComment(const TSNode& _node);
+    std::shared_ptr<TemplateNode> parseTemplate(const TSNode& _node);
+
+    // Dependent nodes consumption helpers
+    std::shared_ptr<CommentNode> getLeadingComment();
+    std::shared_ptr<TemplateNode> getTemplateDeclaration();
+    void clearLeadingComment() { m_leadingComment = nullptr; }
+    void clearTemplateDeclaration() { m_templateDeclaration = nullptr; }
+
+    // Independent nodes
+    std::shared_ptr<IncludeNode> parseInclude(const TSNode& _node);
+    std::shared_ptr<ObjectLikeMacroNode> parseObjectLikeMacro(const TSNode& _node);
+    std::shared_ptr<FunctionLikeMacroNode> parseFunctionLikeMacro(const TSNode& _node);
+    std::shared_ptr<NamespaceNode> parseNamespace(const TSNode& _node);
+    std::shared_ptr<NamespaceAliasNode> parseNamespaceAlias(const TSNode& _node);
+    std::shared_ptr<UsingNamespaceNode> parseUsingNamespace(const TSNode& _node);
+    std::shared_ptr<TypedefNode> parseTypedef(const TSNode& _node);
+    std::shared_ptr<TypeAliasNode> parseTypeAlias(const TSNode& _node);
+    std::shared_ptr<EnumNode> parseEnum(const TSNode& _node);
+    std::shared_ptr<ConceptNode> parseConcept(const TSNode& _node);
+    std::shared_ptr<VariableNode> parseVariable(const TSNode& _node);
+    std::shared_ptr<FunctionNode> parseFunction(const TSNode& _node);
+    std::shared_ptr<OperatorNode> parseOperator(const TSNode& _node);
+    std::shared_ptr<UnionNode> parseUnion(const TSNode& _node);
+    std::shared_ptr<Node> parseFriend(const TSNode& _node);
+    std::shared_ptr<StructNode> parseStruct(const TSNode& _node);
+    std::shared_ptr<ClassNode> parseClass(const TSNode& _node);
+
+    // Custom AST helpers
+    std::shared_ptr<Node> parseAmbiguousDeclaration(const TSNode& _node);
+    std::shared_ptr<Node> parseAmbiguousDefinition(const TSNode& _node);
+
+    void parseInitDeclarator(const TSNode& _node, std::shared_ptr<VariableNode>& _varNode);
+    void parseFunctionDeclarator(const TSNode& _node, std::shared_ptr<FunctionNode>& _fn);
+    void parseOperatorDeclarator(const TSNode& _node, std::shared_ptr<OperatorNode>& _op);
+    void parseMemberList(const TSNode& _listNode, const std::string& _parentName,
+                         std::vector<std::shared_ptr<Node>>& _memberVars,
+                         std::vector<std::shared_ptr<Node>>& _staticMemberVars,
+                         std::vector<std::shared_ptr<Node>>& _memberFuncs,
+                         std::vector<std::shared_ptr<Node>>& _staticMemberFuncs,
+                         std::vector<std::shared_ptr<Node>>& _ctors,
+                         std::vector<std::shared_ptr<Node>>& _dtors,
+                         std::vector<std::shared_ptr<Node>>& _ops,
+                         std::vector<std::shared_ptr<Node>>& _friends,
+                         std::vector<std::shared_ptr<Node>>& _nestedTypes);
+    void parseClassMemberList(
+        const TSNode& _listNode, const std::string& _parentName,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _memberVars,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _staticMemberVars,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _memberFuncs,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _staticMemberFuncs,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _ctors,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _dtors,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _ops,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _friends,
+        std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _nestedTypes);
+
+    TypeSignature parseTypeSignature(const TSNode& _node);
+    std::vector<GenericParameter> parseGenericParametersList(const TSNode& _node);
+    std::vector<TemplateArgument> parseTemplateArgumentsList(const TSNode& _node);
+
+    // TS AST helpers
+    std::tuple<TSPoint, TSPoint> getPositionData(const TSNode& _node) const;
+    std::string getNodeText(const TSNode& _node) const;
+};
+
+SingleParser::SingleParser(const std::shared_ptr<Source>& _source) : m_source(_source)
 {
     m_parser = ts_parser_new();
+
+    if (!m_parser)
+    {
+        throw std::runtime_error("Failed to create TSParser");
+    }
+
     ts_parser_set_language(m_parser, tree_sitter_cpp());
 }
 
-Parser::~Parser() { ts_parser_delete(m_parser); }
+SingleParser::~SingleParser() { ts_parser_delete(m_parser); }
 
-std::vector<std::shared_ptr<FileNode>> Parser::parseFiles(
-    const std::vector<std::filesystem::path>& _filePaths)
+std::shared_ptr<SourceNode> SingleParser::parse()
 {
-    std::vector<std::future<std::shared_ptr<FileNode>>> futures;
-    std::vector<std::shared_ptr<FileNode>> results;
-
-    for (const auto& filePath : _filePaths)
-    {
-        futures.emplace_back(std::async(std::launch::async,
-                                        [this, filePath]() -> std::shared_ptr<FileNode>
-                                        { return Parser().parseFile(filePath); }));
-    }
-
-    results.reserve(_filePaths.size());
-
-    for (auto& future : futures)
-    {
-        try
-        {
-            auto result = future.get();
-            if (result) results.emplace_back(result);
-        }
-        catch (const std::exception& e)
-        {
-            std::cout << "Error parsing file: " << e.what() << "\n";
-        }
-    }
-
-    return results;
-}
-
-std::shared_ptr<FileNode> Parser::parseFile(const std::filesystem::path& _filePath)
-{
-    std::ifstream file(_filePath);
-    if (!file.is_open())
-    {
-        std::cerr << "Failed to open file: " << _filePath << "\n";
-        return nullptr;
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    m_sourceCode = buffer.str();
-
-    TSTree* tree = ts_parser_parse_string(m_parser, nullptr, m_sourceCode.c_str(),
-                                          static_cast<uint32_t>(m_sourceCode.size()));
-
-    if (!tree)
-    {
-        std::cerr << "Failed to parse file: " << _filePath << "\n";
-        return nullptr;
-    }
+    TSTree* tree = ts_parser_parse_string(m_parser, nullptr, m_source->sourceCode.c_str(),
+                                          static_cast<uint32_t>(m_source->sourceCode.size()));
 
     TSNode root = ts_tree_root_node(tree);
     TSPoint rootEnd = ts_node_end_point(root);
-    auto fileNode = std::make_shared<FileNode>(0, 0, static_cast<int>(rootEnd.row),
-                                               static_cast<int>(rootEnd.column));
+    auto srcNode = std::make_shared<SourceNode>(0, 0, static_cast<int>(rootEnd.row),
+                                                static_cast<int>(rootEnd.column));
 
-    fileNode->name = _filePath.filename().string();
-    fileNode->path = _filePath;
-    fileNode->sourceCode = m_sourceCode;
-    fileNode->encoding = "UTF-8";
-    fileNode->lastModifiedTime =
-        std::filesystem::last_write_time(_filePath).time_since_epoch().count();
+    srcNode->source = m_source;
 
     uint32_t childCount = ts_node_child_count(root);
 
@@ -99,15 +139,15 @@ std::shared_ptr<FileNode> Parser::parseFile(const std::filesystem::path& _filePa
         TSNode child = ts_node_child(root, i);
         auto childNode = dispatch(child);
 
-        if (childNode) fileNode->children.emplace_back(childNode);
+        if (childNode) srcNode->children.emplace_back(childNode);
     }
 
     ts_tree_delete(tree);
 
-    return fileNode;
+    return srcNode;
 }
 
-std::shared_ptr<Node> Parser::dispatch(TSNode _node)
+std::shared_ptr<Node> SingleParser::dispatch(TSNode _node)
 {
     std::string type = ts_node_type(_node);
 
@@ -218,17 +258,17 @@ std::shared_ptr<Node> Parser::dispatch(TSNode _node)
 // Dependent nodes (requiring to be linked to other nodes and leaving outisde the main tree)
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<CommentNode> Parser::parseComment(const TSNode& _node)
+std::shared_ptr<CommentNode> SingleParser::parseComment(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
 
-    auto text = m_sourceCode.substr(ts_node_start_byte(_node),
-                                    ts_node_end_byte(_node) - ts_node_start_byte(_node));
+    auto text = m_source->sourceCode.substr(ts_node_start_byte(_node),
+                                            ts_node_end_byte(_node) - ts_node_start_byte(_node));
 
     return std::make_shared<CommentNode>(text, start.row, start.column, end.row, end.column);
 }
 
-std::shared_ptr<TemplateNode> Parser::parseTemplate(const TSNode& _node)
+std::shared_ptr<TemplateNode> SingleParser::parseTemplate(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -305,7 +345,7 @@ std::shared_ptr<TemplateNode> Parser::parseTemplate(const TSNode& _node)
 // Dependent nodes consumption helpers
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<CommentNode> Parser::getLeadingComment()
+std::shared_ptr<CommentNode> SingleParser::getLeadingComment()
 {
     if (!m_leadingComment) return nullptr;
 
@@ -316,7 +356,7 @@ std::shared_ptr<CommentNode> Parser::getLeadingComment()
     return copy;
 }
 
-std::shared_ptr<TemplateNode> Parser::getTemplateDeclaration()
+std::shared_ptr<TemplateNode> SingleParser::getTemplateDeclaration()
 {
     if (!m_templateDeclaration) return nullptr;
 
@@ -331,7 +371,7 @@ std::shared_ptr<TemplateNode> Parser::getTemplateDeclaration()
 // Independent nodes
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-std::shared_ptr<IncludeNode> Parser::parseInclude(const TSNode& _node)
+std::shared_ptr<IncludeNode> SingleParser::parseInclude(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     uint32_t childCount = ts_node_child_count(_node);
@@ -362,7 +402,7 @@ std::shared_ptr<IncludeNode> Parser::parseInclude(const TSNode& _node)
     return incNode;
 }
 
-std::shared_ptr<ObjectLikeMacroNode> Parser::parseObjectLikeMacro(const TSNode& _node)
+std::shared_ptr<ObjectLikeMacroNode> SingleParser::parseObjectLikeMacro(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -391,7 +431,7 @@ std::shared_ptr<ObjectLikeMacroNode> Parser::parseObjectLikeMacro(const TSNode& 
     return objMacroNode;
 }
 
-std::shared_ptr<FunctionLikeMacroNode> Parser::parseFunctionLikeMacro(const TSNode& _node)
+std::shared_ptr<FunctionLikeMacroNode> SingleParser::parseFunctionLikeMacro(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -444,7 +484,7 @@ std::shared_ptr<FunctionLikeMacroNode> Parser::parseFunctionLikeMacro(const TSNo
     return fnMacroNode;
 }
 
-std::shared_ptr<NamespaceNode> Parser::parseNamespace(const TSNode& _node)
+std::shared_ptr<NamespaceNode> SingleParser::parseNamespace(const TSNode& _node)
 {
     auto collectNamespaceParts = [&](const TSNode& node, auto&& self,
                                      std::vector<std::string>& out) -> void
@@ -505,7 +545,7 @@ std::shared_ptr<NamespaceNode> Parser::parseNamespace(const TSNode& _node)
     return nsNode;
 }
 
-std::shared_ptr<NamespaceAliasNode> Parser::parseNamespaceAlias(const TSNode& _node)
+std::shared_ptr<NamespaceAliasNode> SingleParser::parseNamespaceAlias(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -537,7 +577,7 @@ std::shared_ptr<NamespaceAliasNode> Parser::parseNamespaceAlias(const TSNode& _n
     return nsAliasNode;
 }
 
-std::shared_ptr<UsingNamespaceNode> Parser::parseUsingNamespace(const TSNode& _node)
+std::shared_ptr<UsingNamespaceNode> SingleParser::parseUsingNamespace(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -562,7 +602,7 @@ std::shared_ptr<UsingNamespaceNode> Parser::parseUsingNamespace(const TSNode& _n
     return usingNsNode;
 }
 
-std::shared_ptr<TypedefNode> Parser::parseTypedef(const TSNode& _node)
+std::shared_ptr<TypedefNode> SingleParser::parseTypedef(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     uint32_t childCount = ts_node_child_count(_node);
@@ -598,7 +638,7 @@ std::shared_ptr<TypedefNode> Parser::parseTypedef(const TSNode& _node)
     return typedefNode;
 }
 
-std::shared_ptr<TypeAliasNode> Parser::parseTypeAlias(const TSNode& _node)
+std::shared_ptr<TypeAliasNode> SingleParser::parseTypeAlias(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -628,7 +668,7 @@ std::shared_ptr<TypeAliasNode> Parser::parseTypeAlias(const TSNode& _node)
     return typeAliasNode;
 }
 
-std::shared_ptr<EnumNode> Parser::parseEnum(const TSNode& _node)
+std::shared_ptr<EnumNode> SingleParser::parseEnum(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -708,7 +748,7 @@ std::shared_ptr<EnumNode> Parser::parseEnum(const TSNode& _node)
     return enumNode;
 }
 
-std::shared_ptr<ConceptNode> Parser::parseConcept(const TSNode& _node)
+std::shared_ptr<ConceptNode> SingleParser::parseConcept(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -739,7 +779,7 @@ std::shared_ptr<ConceptNode> Parser::parseConcept(const TSNode& _node)
     return conceptNode;
 }
 
-std::shared_ptr<VariableNode> Parser::parseVariable(const TSNode& _node)
+std::shared_ptr<VariableNode> SingleParser::parseVariable(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -794,7 +834,7 @@ std::shared_ptr<VariableNode> Parser::parseVariable(const TSNode& _node)
     return varNode;
 }
 
-void Parser::parseInitDeclarator(const TSNode& _node, std::shared_ptr<VariableNode>& _varNode)
+void SingleParser::parseInitDeclarator(const TSNode& _node, std::shared_ptr<VariableNode>& _varNode)
 {
     const uint32_t childCount = ts_node_child_count(_node);
 
@@ -833,7 +873,7 @@ void Parser::parseInitDeclarator(const TSNode& _node, std::shared_ptr<VariableNo
     }
 }
 
-std::shared_ptr<FunctionNode> Parser::parseFunction(const TSNode& _node)
+std::shared_ptr<FunctionNode> SingleParser::parseFunction(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -893,7 +933,7 @@ std::shared_ptr<FunctionNode> Parser::parseFunction(const TSNode& _node)
     return fnNode;
 }
 
-void Parser::parseFunctionDeclarator(const TSNode& _node, std::shared_ptr<FunctionNode>& _fn)
+void SingleParser::parseFunctionDeclarator(const TSNode& _node, std::shared_ptr<FunctionNode>& _fn)
 {
     const uint32_t childCount = ts_node_child_count(_node);
 
@@ -945,7 +985,7 @@ void Parser::parseFunctionDeclarator(const TSNode& _node, std::shared_ptr<Functi
     }
 }
 
-std::shared_ptr<OperatorNode> Parser::parseOperator(const TSNode& _node)
+std::shared_ptr<OperatorNode> SingleParser::parseOperator(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -983,7 +1023,7 @@ std::shared_ptr<OperatorNode> Parser::parseOperator(const TSNode& _node)
     return opNode;
 }
 
-void Parser::parseOperatorDeclarator(const TSNode& _node, std::shared_ptr<OperatorNode>& _op)
+void SingleParser::parseOperatorDeclarator(const TSNode& _node, std::shared_ptr<OperatorNode>& _op)
 {
     const uint32_t childCount = ts_node_child_count(_node);
 
@@ -1078,7 +1118,7 @@ auto toDestructorNode = [](const std::shared_ptr<FunctionNode>& func)
     return dtor;
 };
 
-std::shared_ptr<UnionNode> Parser::parseUnion(const TSNode& _node)
+std::shared_ptr<UnionNode> SingleParser::parseUnion(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -1131,7 +1171,7 @@ std::shared_ptr<UnionNode> Parser::parseUnion(const TSNode& _node)
     return unionNode;
 }
 
-std::shared_ptr<Node> Parser::parseFriend(const TSNode& _node)
+std::shared_ptr<Node> SingleParser::parseFriend(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -1159,7 +1199,7 @@ std::shared_ptr<Node> Parser::parseFriend(const TSNode& _node)
     return friendNode;
 }
 
-std::shared_ptr<StructNode> Parser::parseStruct(const TSNode& _node)
+std::shared_ptr<StructNode> SingleParser::parseStruct(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     const uint32_t childCount = ts_node_child_count(_node);
@@ -1227,7 +1267,7 @@ std::shared_ptr<StructNode> Parser::parseStruct(const TSNode& _node)
     return structNode;
 }
 
-std::shared_ptr<ClassNode> Parser::parseClass(const TSNode& _node)
+std::shared_ptr<ClassNode> SingleParser::parseClass(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
     auto classNode = std::make_shared<ClassNode>(start.row, start.column, end.row, end.column);
@@ -1313,7 +1353,7 @@ auto determineKind = [](const TSNode& _node)
     return NodeKind::Function;
 };
 
-std::shared_ptr<Node> Parser::parseAmbiguousDeclaration(const TSNode& _node)
+std::shared_ptr<Node> SingleParser::parseAmbiguousDeclaration(const TSNode& _node)
 {
     NodeKind kind = NodeKind::Variable;
 
@@ -1358,7 +1398,7 @@ std::shared_ptr<Node> Parser::parseAmbiguousDeclaration(const TSNode& _node)
     }
 }
 
-std::shared_ptr<Node> Parser::parseAmbiguousDefinition(const TSNode& _node)
+std::shared_ptr<Node> SingleParser::parseAmbiguousDefinition(const TSNode& _node)
 {
     NodeKind kind = NodeKind::Function;
 
@@ -1401,7 +1441,7 @@ std::shared_ptr<Node> Parser::parseAmbiguousDefinition(const TSNode& _node)
     }
 }
 
-TypeSignature Parser::parseTypeSignature(const TSNode& _node)
+TypeSignature SingleParser::parseTypeSignature(const TSNode& _node)
 {
     TypeSignature sig;
 
@@ -1455,7 +1495,7 @@ TypeSignature Parser::parseTypeSignature(const TSNode& _node)
     return sig;
 }
 
-std::vector<GenericParameter> Parser::parseGenericParametersList(const TSNode& _node)
+std::vector<GenericParameter> SingleParser::parseGenericParametersList(const TSNode& _node)
 {
     std::vector<GenericParameter> result;
 
@@ -1488,7 +1528,7 @@ std::vector<GenericParameter> Parser::parseGenericParametersList(const TSNode& _
     return result;
 }
 
-std::vector<TemplateArgument> Parser::parseTemplateArgumentsList(const TSNode& node)
+std::vector<TemplateArgument> SingleParser::parseTemplateArgumentsList(const TSNode& node)
 {
     std::vector<TemplateArgument> args;
 
@@ -1524,16 +1564,16 @@ std::vector<TemplateArgument> Parser::parseTemplateArgumentsList(const TSNode& n
     return args;
 }
 
-void Parser::parseMemberList(const TSNode& _listNode, const std::string& _parentName,
-                             std::vector<std::shared_ptr<Node>>& _memberVars,
-                             std::vector<std::shared_ptr<Node>>& _staticMemberVars,
-                             std::vector<std::shared_ptr<Node>>& _memberFuncs,
-                             std::vector<std::shared_ptr<Node>>& _staticMemberFuncs,
-                             std::vector<std::shared_ptr<Node>>& _ctors,
-                             std::vector<std::shared_ptr<Node>>& _dtors,
-                             std::vector<std::shared_ptr<Node>>& _ops,
-                             std::vector<std::shared_ptr<Node>>& _friends,
-                             std::vector<std::shared_ptr<Node>>& _nestedTypes)
+void SingleParser::parseMemberList(const TSNode& _listNode, const std::string& _parentName,
+                                   std::vector<std::shared_ptr<Node>>& _memberVars,
+                                   std::vector<std::shared_ptr<Node>>& _staticMemberVars,
+                                   std::vector<std::shared_ptr<Node>>& _memberFuncs,
+                                   std::vector<std::shared_ptr<Node>>& _staticMemberFuncs,
+                                   std::vector<std::shared_ptr<Node>>& _ctors,
+                                   std::vector<std::shared_ptr<Node>>& _dtors,
+                                   std::vector<std::shared_ptr<Node>>& _ops,
+                                   std::vector<std::shared_ptr<Node>>& _friends,
+                                   std::vector<std::shared_ptr<Node>>& _nestedTypes)
 {
     const uint32_t fieldCount = ts_node_child_count(_listNode);
 
@@ -1604,7 +1644,7 @@ void Parser::parseMemberList(const TSNode& _listNode, const std::string& _parent
     }
 }
 
-void Parser::parseClassMemberList(
+void SingleParser::parseClassMemberList(
     const TSNode& _listNode, const std::string& _parentName,
     std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _memberVars,
     std::vector<std::pair<AccessSpecifier, std::shared_ptr<Node>>>& _staticMemberVars,
@@ -1705,7 +1745,7 @@ void Parser::parseClassMemberList(
 // TS AST helpers
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-std::tuple<TSPoint, TSPoint> Parser::getPositionData(const TSNode& _node) const
+std::tuple<TSPoint, TSPoint> SingleParser::getPositionData(const TSNode& _node) const
 {
     TSPoint start = ts_node_start_point(_node);
     TSPoint end = ts_node_end_point(_node);
@@ -1713,17 +1753,48 @@ std::tuple<TSPoint, TSPoint> Parser::getPositionData(const TSNode& _node) const
     return {start, end};
 }
 
-std::string Parser::getNodeText(const TSNode& _node) const
+std::string SingleParser::getNodeText(const TSNode& _node) const
 {
     uint32_t startByte = ts_node_start_byte(_node);
     uint32_t endByte = ts_node_end_byte(_node);
 
-    if (startByte > endByte || endByte >= m_sourceCode.size())
+    if (startByte > endByte || endByte >= m_source->sourceCode.size())
     {
         throw std::runtime_error("Invalid node position data");
     }
 
-    return m_sourceCode.substr(startByte, endByte - startByte);
+    return m_source->sourceCode.substr(startByte, endByte - startByte);
+}
+
+std::vector<std::shared_ptr<SourceNode>> Parser::parse(
+    const std::vector<std::shared_ptr<Source>>& _sources)
+{
+    std::vector<std::future<std::shared_ptr<SourceNode>>> futures;
+    std::vector<std::shared_ptr<SourceNode>> results;
+
+    for (const auto& source : _sources)
+    {
+        futures.emplace_back(std::async(std::launch::async,
+                                        [this, source]() -> std::shared_ptr<SourceNode>
+                                        { return SingleParser(source).parse(); }));
+    }
+
+    results.reserve(_sources.size());
+
+    for (auto& future : futures)
+    {
+        try
+        {
+            auto result = future.get();
+            if (result) results.emplace_back(result);
+        }
+        catch (const std::exception& e)
+        {
+            std::cout << "Error parsing file: " << e.what() << "\n";
+        }
+    }
+
+    return results;
 }
 
 } // namespace codex

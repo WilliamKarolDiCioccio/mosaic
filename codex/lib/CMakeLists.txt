@@ -1,5 +1,6 @@
 set(CODEX_SOURCES
     "src/files_collector.cpp"
+    "src/source_extractor.cpp"
     "src/parser.cpp"
 )
 

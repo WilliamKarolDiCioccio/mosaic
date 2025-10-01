@@ -7,6 +7,8 @@
 #include <utility>
 #include <filesystem>
 
+#include "source.hpp"
+
 namespace codex
 {
 
@@ -14,9 +16,9 @@ namespace codex
 // avoid confusion with C++ keywords
 enum struct NodeKind
 {
+    Source,
     Comment,
     Template,
-    File,
     IncludeDirective,
     FunctionLikeMacro,
     ObjectLikeMacro,
@@ -45,8 +47,8 @@ inline std::string nodeKindToString(NodeKind kind)
 {
     switch (kind)
     {
-        case NodeKind::File:
-            return "File";
+        case NodeKind::Source:
+            return "Source";
         case NodeKind::IncludeDirective:
             return "IncludeDirective";
         case NodeKind::Namespace:
@@ -312,26 +314,22 @@ struct TemplateNode final : Node
 // Independent nodes
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-struct FileNode final : Node
+struct SourceNode final : Node
 {
-    std::string name;
-    std::filesystem::path path;
-    std::string sourceCode;
-    std::string encoding;
-    double lastModifiedTime = 0;
+    std::shared_ptr<Source> source;
     std::vector<std::shared_ptr<Node>> children;
 
-    explicit FileNode(int _startLine, int _startColumn, int _endLine, int _endColumn)
-        : Node(NodeKind::File, _startLine, _startColumn, _endLine, _endColumn) {};
+    explicit SourceNode(int _startLine, int _startColumn, int _endLine, int _endColumn)
+        : Node(NodeKind::Source, _startLine, _startColumn, _endLine, _endColumn) {};
 
     std::string toString(int _depth = 0) const override
     {
         std::string indent = getIndent(_depth);
-        std::string result = indent + nodeKindToString(kind) + "(\"" + name + "\")";
-        result += "\n" + indent + "  Path: " + path.string();
-        result += "\n" + indent + "  Encoding: " + encoding;
-        result += "\n" + indent + "  Last Modified: " + std::to_string(lastModifiedTime);
-        result += "\n" + indent + "  Source Length: " + std::to_string(sourceCode.length());
+        std::string result = indent + nodeKindToString(kind) + "(\"" + source->name + "\")";
+        result += "\n" + indent + "  Path: " + source->path.string();
+        result += "\n" + indent + "  Encoding: " + source->encoding;
+        result += "\n" + indent + "  Last Modified: " + std::to_string(source->lastModifiedTime);
+        result += "\n" + indent + "  Source Length: " + std::to_string(source->sourceCode.length());
 
         if (comment)
         {

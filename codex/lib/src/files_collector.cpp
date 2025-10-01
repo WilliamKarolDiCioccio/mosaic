@@ -11,9 +11,9 @@
 namespace codex
 {
 
-FilesCollector::FilesCollector(std::vector<std::string> _extensions,
-                               std::vector<std::string> _paths, bool _recursive)
-    : m_extensions(std::move(_extensions)), m_paths(std::move(_paths)), m_recursive(_recursive)
+FilesCollector::FilesCollector(const std::vector<std::string>& _extensions,
+                               const std::vector<std::string>& _paths, bool _recursive)
+    : m_extensions(_extensions), m_paths(_paths), m_recursive(_recursive)
 {
     // Normalize extensions to lowercase for consistency
     for (auto& ext : m_extensions)
@@ -29,14 +29,14 @@ std::vector<std::filesystem::path> FilesCollector::collect()
 
     for (const auto& path : m_paths)
     {
-        futures.push_back(
+        futures.emplace_back(
             std::async(std::launch::async, [this, path] { return collectFromPath(path); }));
     }
 
     for (auto& future : futures)
     {
-        auto result = future.get();
-        results.insert(results.end(), result.begin(), result.end());
+        auto fResult = future.get();
+        results.insert(results.end(), fResult.begin(), fResult.end());
     }
 
     return results;
