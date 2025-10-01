@@ -13,6 +13,21 @@ target_include_directories(
 
 target_link_libraries(codex PRIVATE pieces fmt::fmt-header-only unofficial::tree-sitter::tree-sitter tree-sitter-cpp)
 
+target_precompile_headers(
+  codex
+  PRIVATE
+  <vector>
+  <string>
+  <iostream>
+  <algorithm>
+  <unordered_map>
+  <unordered_set>
+  <functional>
+  <memory>
+  <array>
+  <chrono>
+  <tree_sitter/api.h>)
+
 include("${CMAKE_SOURCE_DIR}/cmake/ConfigureForBuildType.cmake")
 
 configure_for_build_type(codex)
