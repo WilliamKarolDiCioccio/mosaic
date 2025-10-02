@@ -329,7 +329,7 @@ struct SourceNode final : Node
         result += "\n" + indent + "  Path: " + source->path.string();
         result += "\n" + indent + "  Encoding: " + source->encoding;
         result += "\n" + indent + "  Last Modified: " + std::to_string(source->lastModifiedTime);
-        result += "\n" + indent + "  Source Length: " + std::to_string(source->sourceCode.length());
+        result += "\n" + indent + "  Source Length: " + std::to_string(source->content.length());
 
         if (comment)
         {

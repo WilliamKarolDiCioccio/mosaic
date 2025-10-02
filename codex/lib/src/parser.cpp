@@ -118,8 +118,8 @@ SingleParser::~SingleParser() { ts_parser_delete(m_parser); }
 
 std::shared_ptr<SourceNode> SingleParser::parse()
 {
-    TSTree* tree = ts_parser_parse_string(m_parser, nullptr, m_source->sourceCode.c_str(),
-                                          static_cast<uint32_t>(m_source->sourceCode.size()));
+    TSTree* tree = ts_parser_parse_string(m_parser, nullptr, m_source->content.c_str(),
+                                          static_cast<uint32_t>(m_source->content.size()));
 
     TSNode root = ts_tree_root_node(tree);
     TSPoint rootEnd = ts_node_end_point(root);
@@ -258,8 +258,8 @@ std::shared_ptr<CommentNode> SingleParser::parseComment(const TSNode& _node)
 {
     auto [start, end] = getPositionData(_node);
 
-    auto text = m_source->sourceCode.substr(ts_node_start_byte(_node),
-                                            ts_node_end_byte(_node) - ts_node_start_byte(_node));
+    auto text = m_source->content.substr(ts_node_start_byte(_node),
+                                         ts_node_end_byte(_node) - ts_node_start_byte(_node));
 
     return std::make_shared<CommentNode>(text, start.row, start.column, end.row, end.column);
 }
@@ -298,11 +298,11 @@ std::shared_ptr<TemplateNode> SingleParser::parseTemplate(const TSNode& _node)
 
                         if (subType == "typename" || subType == "class")
                         {
-                            tp.keyword = getNodeText(sub, m_source->sourceCode);
+                            tp.keyword = getNodeText(sub, m_source->content);
                         }
                         else if (subType == "type_identifier")
                         {
-                            tp.name = getNodeText(sub, m_source->sourceCode);
+                            tp.name = getNodeText(sub, m_source->content);
                         }
                     }
                 }
@@ -317,11 +317,11 @@ std::shared_ptr<TemplateNode> SingleParser::parseTemplate(const TSNode& _node)
 
                         if (subType == "class" || subType == "typename")
                         {
-                            tp.keyword = getNodeText(sub, m_source->sourceCode);
+                            tp.keyword = getNodeText(sub, m_source->content);
                         }
                         else if (subType == "type_identifier")
                         {
-                            tp.name = getNodeText(sub, m_source->sourceCode);
+                            tp.name = getNodeText(sub, m_source->content);
                         }
                     }
                 }
@@ -381,7 +381,7 @@ std::shared_ptr<IncludeNode> SingleParser::parseInclude(const TSNode& _node)
     {
         TSNode child = ts_node_child(_node, i);
         std::string type = ts_node_type(child);
-        std::string text = getNodeText(child, m_source->sourceCode);
+        std::string text = getNodeText(child, m_source->content);
 
         if (type == "system_lib_string")
         {
@@ -416,11 +416,11 @@ std::shared_ptr<ObjectLikeMacroNode> SingleParser::parseObjectLikeMacro(const TS
 
         if (childType == "identifier" && objMacroNode->name.empty())
         {
-            objMacroNode->name = getNodeText(child, m_source->sourceCode);
+            objMacroNode->name = getNodeText(child, m_source->content);
         }
         else if (childType == "preproc_arg")
         {
-            objMacroNode->body = getNodeText(child, m_source->sourceCode);
+            objMacroNode->body = getNodeText(child, m_source->content);
         }
     }
 
@@ -445,7 +445,7 @@ std::shared_ptr<FunctionLikeMacroNode> SingleParser::parseFunctionLikeMacro(cons
 
         if (childType == "identifier" && fnMacroNode->name.empty())
         {
-            fnMacroNode->name = getNodeText(child, m_source->sourceCode);
+            fnMacroNode->name = getNodeText(child, m_source->content);
         }
         else if (childType == "preproc_params")
         {
@@ -460,7 +460,7 @@ std::shared_ptr<FunctionLikeMacroNode> SingleParser::parseFunctionLikeMacro(cons
 
                 if (paramType == "identifier")
                 {
-                    mp.name = getNodeText(param, m_source->sourceCode);
+                    mp.name = getNodeText(param, m_source->content);
                 }
                 else if (paramType == "...")
                 {
@@ -473,7 +473,7 @@ std::shared_ptr<FunctionLikeMacroNode> SingleParser::parseFunctionLikeMacro(cons
         }
         else if (childType == "preproc_arg")
         {
-            fnMacroNode->body = getNodeText(child, m_source->sourceCode);
+            fnMacroNode->body = getNodeText(child, m_source->content);
         }
     }
 
@@ -494,7 +494,7 @@ std::shared_ptr<NamespaceNode> SingleParser::parseNamespace(const TSNode& _node)
 
             if (type == "namespace_identifier")
             {
-                out.emplace_back(getNodeText(child, m_source->sourceCode));
+                out.emplace_back(getNodeText(child, m_source->content));
             }
             else if (type == "nested_namespace_specifier")
             {
@@ -523,7 +523,7 @@ std::shared_ptr<NamespaceNode> SingleParser::parseNamespace(const TSNode& _node)
         else if (type == "namespace_identifier")
         {
             // e.g. "mynamespace"
-            nsNode->name = getNodeText(child, m_source->sourceCode);
+            nsNode->name = getNodeText(child, m_source->content);
             nsNode->isAnonymous = false;
         }
         else if (type == "nested_namespace_specifier")
@@ -561,12 +561,12 @@ std::shared_ptr<NamespaceAliasNode> SingleParser::parseNamespaceAlias(const TSNo
         {
             if (nsAliasNode->aliasName.empty())
             {
-                nsAliasNode->aliasName = getNodeText(child, m_source->sourceCode); // first is alias
+                nsAliasNode->aliasName = getNodeText(child, m_source->content); // first is alias
             }
             else
             {
                 nsAliasNode->targetNamespace =
-                    getNodeText(child, m_source->sourceCode); // second is target
+                    getNodeText(child, m_source->content); // second is target
             }
         }
     }
@@ -592,7 +592,7 @@ std::shared_ptr<UsingNamespaceNode> SingleParser::parseUsingNamespace(const TSNo
 
         if (childType == "namespace" || childType == "identifier")
         {
-            usingNsNode->name = getNodeText(child, m_source->sourceCode);
+            usingNsNode->name = getNodeText(child, m_source->content);
         }
     }
 
@@ -617,18 +617,18 @@ std::shared_ptr<TypedefNode> SingleParser::parseTypedef(const TSNode& _node)
         if (type == "primitive_type")
         {
             // e.g. "int"
-            typedefNode->targetType = getNodeText(child, m_source->sourceCode);
+            typedefNode->targetType = getNodeText(child, m_source->content);
         }
         else if (type == "struct_specifier" || type == "class_specifier" ||
                  type == "union_specifier")
         {
             // e.g. "struct MyStruct { ... }"
-            typedefNode->targetType = getNodeText(child, m_source->sourceCode);
+            typedefNode->targetType = getNodeText(child, m_source->content);
         }
         else if (type == "type_identifier")
         {
             // e.g. "MyType"
-            typedefNode->aliasName = getNodeText(child, m_source->sourceCode);
+            typedefNode->aliasName = getNodeText(child, m_source->content);
         }
     }
 
@@ -653,12 +653,12 @@ std::shared_ptr<TypeAliasNode> SingleParser::parseTypeAlias(const TSNode& _node)
 
         if (childType == "type_identifier")
         {
-            typeAliasNode->aliasName = getNodeText(child, m_source->sourceCode);
+            typeAliasNode->aliasName = getNodeText(child, m_source->content);
         }
         else if (childType == "type_descriptor" || childType == "primitive_type" ||
                  childType == "identifier")
         {
-            typeAliasNode->targetType = getNodeText(child, m_source->sourceCode);
+            typeAliasNode->targetType = getNodeText(child, m_source->content);
         }
     }
 
@@ -682,7 +682,7 @@ std::shared_ptr<EnumNode> SingleParser::parseEnum(const TSNode& _node)
 
         if (type == "type_identifier")
         {
-            enumNode->name = getNodeText(child, m_source->sourceCode);
+            enumNode->name = getNodeText(child, m_source->content);
         }
         else if (type == "class")
         {
@@ -690,7 +690,7 @@ std::shared_ptr<EnumNode> SingleParser::parseEnum(const TSNode& _node)
         }
         else if (type == "primitive_type")
         {
-            enumNode->underlyingType = getNodeText(child, m_source->sourceCode);
+            enumNode->underlyingType = getNodeText(child, m_source->content);
         }
         else if (type == "enumerator_list")
         {
@@ -721,12 +721,12 @@ std::shared_ptr<EnumNode> SingleParser::parseEnum(const TSNode& _node)
                         if (pType == "identifier")
                         {
                             // e.g. "VALUE1"
-                            enumName = getNodeText(part, m_source->sourceCode);
+                            enumName = getNodeText(part, m_source->content);
                         }
                         else if (pType == "number_literal" || pType == "string_literal")
                         {
                             // e.g. "42" or "\"value\""
-                            enumValue = getNodeText(part, m_source->sourceCode);
+                            enumValue = getNodeText(part, m_source->content);
                         }
                     }
 
@@ -763,13 +763,13 @@ std::shared_ptr<ConceptNode> SingleParser::parseConcept(const TSNode& _node)
         if (childType == "identifier")
         {
             // e.g. "Integral"
-            conceptNode->name = getNodeText(child, m_source->sourceCode);
+            conceptNode->name = getNodeText(child, m_source->content);
         }
         else if (childType == "qualified_identifier" || childType == "identifier" ||
                  childType == "template_function")
         {
             // Entire constraint expression just grab text
-            conceptNode->constraint = getNodeText(child, m_source->sourceCode);
+            conceptNode->constraint = getNodeText(child, m_source->content);
         }
     }
 
@@ -793,11 +793,11 @@ std::shared_ptr<VariableNode> SingleParser::parseVariable(const TSNode& _node)
 
         if (childType == "identifier" || childType == "field_identifier")
         {
-            varNode->name = getNodeText(child, m_source->sourceCode);
+            varNode->name = getNodeText(child, m_source->content);
         }
         else if (childType == "type_qualifier")
         {
-            std::string q = getNodeText(child, m_source->sourceCode);
+            std::string q = getNodeText(child, m_source->content);
 
             if (q == "const")
                 varNode->isConst = true;
@@ -820,7 +820,7 @@ std::shared_ptr<VariableNode> SingleParser::parseVariable(const TSNode& _node)
         }
         else if (childType == "primitive_type" || childType == "type_identifier")
         {
-            varNode->type = getNodeText(child, m_source->sourceCode);
+            varNode->type = getNodeText(child, m_source->content);
         }
         else if (childType == "init_declarator")
         {
@@ -842,11 +842,11 @@ void SingleParser::parseInitDeclarator(const TSNode& _node, std::shared_ptr<Vari
 
         if (type == "identifier" || type == "field_identifier")
         {
-            _varNode->name = getNodeText(child, m_source->sourceCode);
+            _varNode->name = getNodeText(child, m_source->content);
         }
         else if (type == "number_literal" || type == "string_literal")
         {
-            _varNode->initialValue = getNodeText(child, m_source->sourceCode);
+            _varNode->initialValue = getNodeText(child, m_source->content);
         }
         else if (type == "reference_declarator" || type == "pointer_declarator")
         {
@@ -859,11 +859,11 @@ void SingleParser::parseInitDeclarator(const TSNode& _node, std::shared_ptr<Vari
 
                 if (subType == "identifier")
                 {
-                    _varNode->name = getNodeText(subChild, m_source->sourceCode);
+                    _varNode->name = getNodeText(subChild, m_source->content);
                 }
                 else if (subType == "number_literal" || subType == "string_literal")
                 {
-                    _varNode->initialValue = getNodeText(subChild, m_source->sourceCode);
+                    _varNode->initialValue = getNodeText(subChild, m_source->content);
                 }
             }
         }
@@ -888,17 +888,17 @@ std::shared_ptr<FunctionNode> SingleParser::parseFunction(const TSNode& _node)
 
         if (type == "attribute_declaration")
         {
-            fnNode->attributes.emplace_back(getNodeText(child, m_source->sourceCode));
+            fnNode->attributes.emplace_back(getNodeText(child, m_source->content));
         }
         else if (type == "storage_class_specifier")
         {
-            std::string txt = getNodeText(child, m_source->sourceCode);
+            std::string txt = getNodeText(child, m_source->content);
             if (txt == "static") fnNode->isStatic = true;
             if (txt == "inline") fnNode->isInline = true;
         }
         else if (type == "type_qualifier")
         {
-            std::string txt = getNodeText(child, m_source->sourceCode);
+            std::string txt = getNodeText(child, m_source->content);
             if (txt == "constexpr") fnNode->isConstexpr = true;
             if (txt == "consteval") fnNode->isConsteval = true;
             if (txt == "const") fnNode->isConst = true;
@@ -941,7 +941,7 @@ void SingleParser::parseFunctionDeclarator(const TSNode& _node, std::shared_ptr<
 
         if (type == "identifier" || type == "field_identifier" || type == "destructor_name")
         {
-            _fn->name = getNodeText(child, m_source->sourceCode);
+            _fn->name = getNodeText(child, m_source->content);
         }
         else if (type == "template_function" || type == "template_method")
         {
@@ -1004,13 +1004,13 @@ std::shared_ptr<OperatorNode> SingleParser::parseOperator(const TSNode& _node)
         }
         else if (type == "storage_class_specifier")
         {
-            std::string txt = getNodeText(child, m_source->sourceCode);
+            std::string txt = getNodeText(child, m_source->content);
             if (txt == "static") opNode->isStatic = true;
             if (txt == "inline") opNode->isInline = true;
         }
         else if (type == "type_qualifier")
         {
-            std::string text = getNodeText(child, m_source->sourceCode);
+            std::string text = getNodeText(child, m_source->content);
             if (text == "const") opNode->isConst = true;
             if (text == "constexpr") opNode->isConstexpr = true;
             if (text == "explicit") opNode->isExplicit = true;
@@ -1032,7 +1032,7 @@ void SingleParser::parseOperatorDeclarator(const TSNode& _node, std::shared_ptr<
         if (type == "operator_name")
         {
             _op->operatorSymbol =
-                getNodeText(child, m_source->sourceCode).substr(8); // remove "operator"
+                getNodeText(child, m_source->content).substr(8); // remove "operator"
         }
         else if (type == "parameter_list")
         {
@@ -1133,7 +1133,7 @@ std::shared_ptr<UnionNode> SingleParser::parseUnion(const TSNode& _node)
 
         if (childType == "type_identifier")
         {
-            unionNode->name = getNodeText(child, m_source->sourceCode);
+            unionNode->name = getNodeText(child, m_source->content);
         }
         else if (childType == "template_type")
         {
@@ -1141,7 +1141,7 @@ std::shared_ptr<UnionNode> SingleParser::parseUnion(const TSNode& _node)
 
             if (subChildCount == 0) continue;
 
-            auto text = getNodeText(ts_node_child(child, 0), m_source->sourceCode);
+            auto text = getNodeText(ts_node_child(child, 0), m_source->content);
 
             unionNode->name = text;
         }
@@ -1186,11 +1186,11 @@ std::shared_ptr<Node> SingleParser::parseFriend(const TSNode& _node)
 
         if (childType == "struct" || childType == "class")
         {
-            friendNode->kind = getNodeText(child, m_source->sourceCode);
+            friendNode->kind = getNodeText(child, m_source->content);
         }
         else if (childType == "type_identifier" || childType == "qualified_identifier")
         {
-            friendNode->name = getNodeText(child, m_source->sourceCode);
+            friendNode->name = getNodeText(child, m_source->content);
         }
     }
 
@@ -1214,7 +1214,7 @@ std::shared_ptr<StructNode> SingleParser::parseStruct(const TSNode& _node)
 
         if (childType == "type_identifier")
         {
-            structNode->name = getNodeText(child, m_source->sourceCode);
+            structNode->name = getNodeText(child, m_source->content);
         }
         else if (childType == "template_type")
         {
@@ -1222,7 +1222,7 @@ std::shared_ptr<StructNode> SingleParser::parseStruct(const TSNode& _node)
 
             if (subChildCount == 0) continue;
 
-            auto text = getNodeText(ts_node_child(child, 0), m_source->sourceCode);
+            auto text = getNodeText(ts_node_child(child, 0), m_source->content);
 
             structNode->name = text;
         }
@@ -1244,14 +1244,13 @@ std::shared_ptr<StructNode> SingleParser::parseStruct(const TSNode& _node)
 
                 if (baseType == "qualified_identifier" || baseType == "type_identifier")
                 {
-                    structNode->baseClasses.emplace_back(
-                        getNodeText(baseNode, m_source->sourceCode));
+                    structNode->baseClasses.emplace_back(getNodeText(baseNode, m_source->content));
                 }
             }
         }
         else if (childType == "virtual_specifier")
         {
-            structNode->isFinal = getNodeText(child, m_source->sourceCode) == "final";
+            structNode->isFinal = getNodeText(child, m_source->content) == "final";
         }
         else if (childType == "field_declaration_list")
         {
@@ -1283,7 +1282,7 @@ std::shared_ptr<ClassNode> SingleParser::parseClass(const TSNode& _node)
 
         if (childType == "type_identifier")
         {
-            classNode->name = getNodeText(child, m_source->sourceCode);
+            classNode->name = getNodeText(child, m_source->content);
         }
         else if (childType == "template_type")
         {
@@ -1291,7 +1290,7 @@ std::shared_ptr<ClassNode> SingleParser::parseClass(const TSNode& _node)
 
             if (subChildCount == 0) continue;
 
-            auto text = getNodeText(ts_node_child(child, 0), m_source->sourceCode);
+            auto text = getNodeText(ts_node_child(child, 0), m_source->content);
 
             classNode->name = text;
         }
@@ -1304,7 +1303,7 @@ std::shared_ptr<ClassNode> SingleParser::parseClass(const TSNode& _node)
 
         if (type == "virtual_specifier")
         {
-            std::string txt = getNodeText(child, m_source->sourceCode);
+            std::string txt = getNodeText(child, m_source->content);
             if (txt == "final") classNode->isFinal = true;
         }
         else if (type == "base_class_clause")
@@ -1316,7 +1315,7 @@ std::shared_ptr<ClassNode> SingleParser::parseClass(const TSNode& _node)
                 if (ts_node_type(baseChild) == std::string("qualified_identifier") ||
                     ts_node_type(baseChild) == std::string("type_identifier"))
                 {
-                    classNode->baseClasses.push_back(getNodeText(baseChild, m_source->sourceCode));
+                    classNode->baseClasses.push_back(getNodeText(baseChild, m_source->content));
                 }
             }
         }
@@ -1452,15 +1451,15 @@ TypeSignature SingleParser::parseTypeSignature(const TSNode& _node)
 
         if (type == "primitive_type" || type == "type_identifier")
         {
-            sig.baseType += getNodeText(child, m_source->sourceCode);
+            sig.baseType += getNodeText(child, m_source->content);
         }
         else if (type == "qualified_identifier")
         {
-            sig.baseType += getNodeText(child, m_source->sourceCode);
+            sig.baseType += getNodeText(child, m_source->content);
         }
         else if (type == "type_qualifier")
         {
-            std::string txt = getNodeText(child, m_source->sourceCode);
+            std::string txt = getNodeText(child, m_source->content);
             if (txt == "const") sig.isConst = true;
             if (txt == "volatile") sig.isVolatile = true;
             if (txt == "mutable") sig.isMutable = true;
@@ -1471,7 +1470,7 @@ TypeSignature SingleParser::parseTypeSignature(const TSNode& _node)
         }
         else if (type == "reference_declarator")
         {
-            std::string txt = getNodeText(child, m_source->sourceCode);
+            std::string txt = getNodeText(child, m_source->content);
 
             if (txt.find("&&") != std::string::npos)
             {
@@ -1485,7 +1484,7 @@ TypeSignature SingleParser::parseTypeSignature(const TSNode& _node)
         else if (type == "template_type")
         {
             sig.baseType =
-                getNodeText(ts_node_child(child, 0), m_source->sourceCode); // the identifier
+                getNodeText(ts_node_child(child, 0), m_source->content); // the identifier
 
             if (ts_node_child_count(child) > 1)
             {
@@ -1525,7 +1524,7 @@ std::vector<GenericParameter> SingleParser::parseGenericParametersList(const TSN
             TSNode sub = ts_node_child(child, j);
             if (ts_node_type(sub) == std::string("default_value"))
             {
-                gp.defaultValue = getNodeText(sub, m_source->sourceCode);
+                gp.defaultValue = getNodeText(sub, m_source->content);
             }
         }
 
@@ -1557,12 +1556,12 @@ std::vector<TemplateArgument> SingleParser::parseTemplateArgumentsList(const TSN
         else if (type == "number_literal" || type == "string_literal" || type == "true" ||
                  type == "false" || type == "identifier" || type == "qualified_identifier")
         {
-            arg.value = getNodeText(child, m_source->sourceCode);
+            arg.value = getNodeText(child, m_source->content);
         }
         else
         {
             // fallback: raw text
-            arg.value = getNodeText(child, m_source->sourceCode);
+            arg.value = getNodeText(child, m_source->content);
         }
 
         args.emplace_back(std::move(arg));
@@ -1682,7 +1681,7 @@ void SingleParser::parseClassMemberList(
         }
         else if (subType == "access_specifier")
         {
-            std::string txt = getNodeText(subChild, m_source->sourceCode);
+            std::string txt = getNodeText(subChild, m_source->content);
 
             if (txt == "public")
                 currentAccess = AccessSpecifier::Public;
