@@ -1754,14 +1754,15 @@ std::vector<std::shared_ptr<SourceNode>> Parser::parse(
     std::vector<std::future<std::shared_ptr<SourceNode>>> futures;
     std::vector<std::shared_ptr<SourceNode>> results;
 
+    futures.reserve(_sources.size());
+    results.reserve(_sources.size());
+
     for (const auto& source : _sources)
     {
         futures.emplace_back(std::async(std::launch::async,
                                         [this, source]() -> std::shared_ptr<SourceNode>
                                         { return SingleParser(source).parse(); }));
     }
-
-    results.reserve(_sources.size());
 
     for (auto& future : futures)
     {

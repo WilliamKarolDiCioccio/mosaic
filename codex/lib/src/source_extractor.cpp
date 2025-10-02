@@ -49,13 +49,14 @@ std::vector<std::shared_ptr<Source>> SourceExtractor::extract(
     std::vector<std::future<std::shared_ptr<Source>>> futures;
     std::vector<std::shared_ptr<Source>> results;
 
+    futures.reserve(_paths.size());
+    results.reserve(_paths.size());
+
     for (const auto& path : _paths)
     {
         futures.emplace_back(std::async(std::launch::async, [this, path]()
                                         { return SingleSourceExtractor(path).extractSource(); }));
     }
-
-    results.reserve(_paths.size());
 
     for (auto& future : futures)
     {
