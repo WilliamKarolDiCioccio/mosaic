@@ -3,7 +3,6 @@ set(CODEX_SOURCES
     "src/source_extractor.cpp"
     "src/preprocessor.cpp"
     "src/parser.cpp"
-    "src/generators/mdx_generator.cpp"
 )
 
 add_library(codex STATIC ${CODEX_SOURCES})
